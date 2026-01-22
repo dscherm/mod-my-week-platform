@@ -124,6 +124,76 @@ export const vocabulary = {
     term: 'Zero-Day Vulnerability',
     definition: 'A previously unknown security flaw that has no available patch.',
     category: 'General'
+  },
+  'port-scan': {
+    term: 'Port Scan',
+    definition: 'A technique used to discover open ports and services on a network by probing multiple ports systematically.',
+    category: 'Network Security'
+  },
+  'ddos': {
+    term: 'DDoS (Distributed Denial of Service)',
+    definition: 'An attack that overwhelms a target system with traffic from multiple sources, making it unavailable to legitimate users.',
+    category: 'Network Security'
+  },
+  'ids': {
+    term: 'IDS (Intrusion Detection System)',
+    definition: 'A security system that monitors network traffic for suspicious activity and alerts administrators.',
+    category: 'Network Security'
+  },
+  'ips': {
+    term: 'IPS (Intrusion Prevention System)',
+    definition: 'A security system that monitors network traffic and can automatically block detected threats.',
+    category: 'Network Security'
+  },
+  'tcp': {
+    term: 'TCP (Transmission Control Protocol)',
+    definition: 'A connection-oriented protocol that ensures reliable, ordered delivery of data between applications.',
+    category: 'Network Security'
+  },
+  'udp': {
+    term: 'UDP (User Datagram Protocol)',
+    definition: 'A connectionless protocol that provides fast but unreliable data transmission.',
+    category: 'Network Security'
+  },
+  'syn-flood': {
+    term: 'SYN Flood',
+    definition: 'A denial-of-service attack that exploits the TCP handshake by sending many SYN requests without completing connections.',
+    category: 'Network Security'
+  },
+  'data-exfiltration': {
+    term: 'Data Exfiltration',
+    definition: 'The unauthorized transfer of data from a computer or network, often by malware or attackers.',
+    category: 'Network Security'
+  },
+  'dns-tunneling': {
+    term: 'DNS Tunneling',
+    definition: 'A technique that encodes data within DNS queries and responses to bypass security controls or exfiltrate data.',
+    category: 'Network Security'
+  },
+  'network-traffic': {
+    term: 'Network Traffic',
+    definition: 'The data that moves across a network at any given time, including all packets sent and received.',
+    category: 'Network Security'
+  },
+  'packet-capture': {
+    term: 'Packet Capture',
+    definition: 'The process of intercepting and logging network packets for analysis and troubleshooting.',
+    category: 'Network Security'
+  },
+  'tcp-flags': {
+    term: 'TCP Flags',
+    definition: 'Control bits in TCP headers (SYN, ACK, FIN, RST, PSH, URG) that manage connection states and data flow.',
+    category: 'Network Security'
+  },
+  'threat-detection': {
+    term: 'Threat Detection',
+    definition: 'The process of identifying potential security threats through monitoring and analysis of system or network activity.',
+    category: 'Network Security'
+  },
+  'incident-response': {
+    term: 'Incident Response',
+    definition: 'The organized approach to addressing and managing security breaches or attacks.',
+    category: 'Network Security'
   }
 };
 
@@ -163,5 +233,12 @@ export const learningObjectives = {
     'Learn about pretexting and manipulation techniques',
     'Develop critical thinking for security awareness',
     'Understand the human element in cybersecurity'
+  ],
+  'network-monitor': [
+    'Analyze network traffic patterns in real-time',
+    'Identify malicious packets and suspicious activity',
+    'Recognize common attack signatures (port scans, brute force, SQL injection)',
+    'Understand defensive actions like IP blocking and firewall rules',
+    'Practice incident detection and response procedures'
   ]
 };

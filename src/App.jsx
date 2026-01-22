@@ -4,12 +4,14 @@ import Dashboard from './components/Dashboard';
 import ChallengeList from './components/ChallengeList';
 import ChallengeDetail from './components/ChallengeDetail';
 import VocabularyPage from './components/VocabularyPage';
+import NetworkMonitor from './components/NetworkMonitor';
 
 function App() {
   const [currentView, setCurrentView] = useState('dashboard');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedChallenge, setSelectedChallenge] = useState(null);
   const [completedChallenges, setCompletedChallenges] = useState([]);
+  const [completedScenarios, setCompletedScenarios] = useState([]);
   const [totalPoints, setTotalPoints] = useState(0);
 
   // Load progress from localStorage
@@ -19,6 +21,7 @@ function App() {
       try {
         const data = JSON.parse(saved);
         setCompletedChallenges(data.completed || []);
+        setCompletedScenarios(data.completedScenarios || []);
         setTotalPoints(data.points || 0);
       } catch (e) {
         console.error('Error loading progress:', e);
@@ -30,9 +33,10 @@ function App() {
   useEffect(() => {
     localStorage.setItem('cyberrange-progress', JSON.stringify({
       completed: completedChallenges,
+      completedScenarios: completedScenarios,
       points: totalPoints
     }));
-  }, [completedChallenges, totalPoints]);
+  }, [completedChallenges, completedScenarios, totalPoints]);
 
   const handleSelectCategory = (category) => {
     setSelectedCategory(category);
@@ -62,9 +66,17 @@ function App() {
     setCurrentView('dashboard');
   };
 
+  const handleCompleteScenario = (scenarioId, points) => {
+    if (!completedScenarios.includes(scenarioId)) {
+      setCompletedScenarios([...completedScenarios, scenarioId]);
+      setTotalPoints(totalPoints + points);
+    }
+  };
+
   const handleResetProgress = () => {
     if (window.confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
       setCompletedChallenges([]);
+      setCompletedScenarios([]);
       setTotalPoints(0);
       localStorage.removeItem('cyberrange-progress');
       setCurrentView('dashboard');
@@ -82,6 +94,12 @@ function App() {
               onClick={handleBackToDashboard}
             >
               🏠 Dashboard
+            </button>
+            <button
+              className={`nav-btn ${currentView === 'network-monitor' ? 'active' : ''}`}
+              onClick={() => setCurrentView('network-monitor')}
+            >
+              🔍 Network Monitor
             </button>
             <button
               className={`nav-btn ${currentView === 'vocabulary' ? 'active' : ''}`}
@@ -104,7 +122,9 @@ function App() {
         {currentView === 'dashboard' && (
           <Dashboard
             completedChallenges={completedChallenges}
+            completedScenarios={completedScenarios}
             onSelectCategory={handleSelectCategory}
+            onSelectNetworkMonitor={() => setCurrentView('network-monitor')}
           />
         )}
 
@@ -133,6 +153,14 @@ function App() {
         )}
 
         {currentView === 'vocabulary' && <VocabularyPage />}
+
+        {currentView === 'network-monitor' && (
+          <NetworkMonitor
+            completedScenarios={completedScenarios}
+            onCompleteScenario={handleCompleteScenario}
+            onBack={handleBackToDashboard}
+          />
+        )}
       </main>
     </div>
   );

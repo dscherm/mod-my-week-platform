@@ -1,8 +1,9 @@
 import React from 'react';
 import { challenges } from '../data/challenges';
 import { learningObjectives } from '../data/vocabulary';
+import { scenarios, getScenarioStats } from '../data/networkScenarios';
 
-const Dashboard = ({ completedChallenges, onSelectCategory }) => {
+const Dashboard = ({ completedChallenges, completedScenarios = [], onSelectCategory, onSelectNetworkMonitor }) => {
   const totalChallenges = Object.values(challenges).flat().length;
   const totalPoints = completedChallenges.reduce((sum, id) => {
     const challenge = Object.values(challenges)
@@ -127,6 +128,35 @@ const Dashboard = ({ completedChallenges, onSelectCategory }) => {
             </div>
           );
         })}
+      </div>
+
+      <h2 style={{ color: '#00ff88', marginTop: '2rem', marginBottom: '1rem' }}>
+        Interactive Labs
+      </h2>
+
+      <div className="categories">
+        <div
+          className="category-card"
+          onClick={onSelectNetworkMonitor}
+          style={{ borderColor: 'rgba(0, 255, 136, 0.3)' }}
+        >
+          <div className="category-icon">🔍</div>
+          <h3>Network Monitor</h3>
+          <p style={{ color: '#b0b0b0', marginBottom: '1rem' }}>
+            Analyze simulated network traffic, detect cyber attacks in real-time, and practice defensive actions like a security analyst
+          </p>
+          <p style={{ fontSize: '0.9rem', color: '#e0e0e0' }}>
+            {completedScenarios.length} / {scenarios.length} scenarios completed
+          </p>
+          <div className="category-progress">
+            <div
+              className="category-progress-bar"
+              style={{
+                width: `${scenarios.length > 0 ? (completedScenarios.length / scenarios.length) * 100 : 0}%`
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       <div className="learning-objectives" style={{ marginTop: '2rem' }}>
