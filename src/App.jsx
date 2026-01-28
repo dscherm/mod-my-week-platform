@@ -1,13 +1,26 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import Dashboard from './components/Dashboard';
+import UnifiedDashboard from './components/UnifiedDashboard';
 import ChallengeList from './components/ChallengeList';
 import ChallengeDetail from './components/ChallengeDetail';
 import VocabularyPage from './components/VocabularyPage';
 import NetworkMonitor from './components/NetworkMonitor';
 import StudentLogin from './components/StudentLogin';
 import TeacherDashboard from './components/TeacherDashboard';
-import { saveStudentProgress, getStudentProgress, isFirebaseConfigured } from './services/firebaseService';
+import WeekView from './components/arrays-loops/WeekView';
+import ExerciseDetail from './components/arrays-loops/ExerciseDetail';
+import PseudocodeHub from './components/pseudocode/PseudocodeHub';
+import TopicLesson from './components/pseudocode/TopicLesson';
+import TranslationExercise from './components/pseudocode/TranslationExercise';
+import CodeTracer from './components/pseudocode/CodeTracer';
+import RobotGrid from './components/pseudocode/RobotGrid';
+import FlowchartHub from './components/flowchart/FlowchartHub';
+import SymbolLesson from './components/flowchart/SymbolLesson';
+import FlowchartViewer from './components/flowchart/FlowchartViewer';
+import FlowchartBuilder from './components/flowchart/FlowchartBuilder';
+import FlowchartExercise from './components/flowchart/FlowchartExercise';
+import { saveStudentProgress, getStudentProgress, subscribeToAssignments, isFirebaseConfigured } from './services/firebaseService';
 
 function App() {
   // Auth state
@@ -21,7 +34,20 @@ function App() {
   const [selectedChallenge, setSelectedChallenge] = useState(null);
   const [completedChallenges, setCompletedChallenges] = useState([]);
   const [completedScenarios, setCompletedScenarios] = useState([]);
+  const [completedExercises, setCompletedExercises] = useState([]);
   const [totalPoints, setTotalPoints] = useState(0);
+
+  // Assignments & arrays-loops state
+  const [assignments, setAssignments] = useState([]);
+  const [selectedWeek, setSelectedWeek] = useState(null);
+  const [selectedExercise, setSelectedExercise] = useState(null);
+
+  // AP CSP state
+  const [completedPseudocode, setCompletedPseudocode] = useState([]);
+  const [completedFlowcharts, setCompletedFlowcharts] = useState([]);
+  const [selectedTopic, setSelectedTopic] = useState(null);
+  const [selectedPseudocodeExercise, setSelectedPseudocodeExercise] = useState(null);
+  const [selectedFlowchartExercise, setSelectedFlowchartExercise] = useState(null);
 
   // Check for existing session
   useEffect(() => {
@@ -48,7 +74,19 @@ function App() {
         if (progress) {
           setCompletedChallenges(progress.completedChallenges || []);
           setCompletedScenarios(progress.completedScenarios || []);
+          setCompletedExercises(progress.completedExercises || []);
+          setCompletedPseudocode(progress.completedPseudocode || []);
+          setCompletedFlowcharts(progress.completedFlowcharts || []);
           setTotalPoints(progress.totalPoints || 0);
+        }
+
+        // Subscribe to assignments for the user's class
+        if (user.classCode) {
+          const unsubscribe = subscribeToAssignments(user.classCode, (assignmentData) => {
+            setAssignments(assignmentData);
+          });
+          // Store unsubscribe function for cleanup
+          return unsubscribe;
         }
       } catch (e) {
         console.error('Error loading Firebase progress:', e);
@@ -67,6 +105,9 @@ function App() {
         const data = JSON.parse(saved);
         setCompletedChallenges(data.completed || []);
         setCompletedScenarios(data.completedScenarios || []);
+        setCompletedExercises(data.completedExercises || []);
+        setCompletedPseudocode(data.completedPseudocode || []);
+        setCompletedFlowcharts(data.completedFlowcharts || []);
         setTotalPoints(data.points || 0);
       } catch (e) {
         console.error('Error loading local progress:', e);
@@ -75,11 +116,14 @@ function App() {
   };
 
   // Save progress (to Firebase and localStorage)
-  const saveProgress = useCallback(async (challenges, scenarios, points) => {
+  const saveProgress = useCallback(async (challenges, scenarios, exercises, pseudocode, flowcharts, points) => {
     // Always save to localStorage as backup
     localStorage.setItem('cyberrange-progress', JSON.stringify({
       completed: challenges,
       completedScenarios: scenarios,
+      completedExercises: exercises,
+      completedPseudocode: pseudocode,
+      completedFlowcharts: flowcharts,
       points: points
     }));
 
@@ -89,6 +133,9 @@ function App() {
         await saveStudentProgress(currentUser.id, {
           completedChallenges: challenges,
           completedScenarios: scenarios,
+          completedExercises: exercises,
+          completedPseudocode: pseudocode,
+          completedFlowcharts: flowcharts,
           totalPoints: points
         });
       } catch (e) {
@@ -100,9 +147,9 @@ function App() {
   // Save progress when it changes
   useEffect(() => {
     if (currentUser) {
-      saveProgress(completedChallenges, completedScenarios, totalPoints);
+      saveProgress(completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, totalPoints);
     }
-  }, [completedChallenges, completedScenarios, totalPoints, currentUser, saveProgress]);
+  }, [completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, totalPoints, currentUser, saveProgress]);
 
   // Handle student login
   const handleLogin = (user) => {
@@ -114,10 +161,11 @@ function App() {
     if (user.completedChallenges) {
       setCompletedChallenges(user.completedChallenges);
       setCompletedScenarios(user.completedScenarios || []);
+      setCompletedExercises(user.completedExercises || []);
       setTotalPoints(user.totalPoints || 0);
-    } else {
-      loadUserProgress(user);
     }
+    // Always load progress to also subscribe to assignments
+    loadUserProgress(user);
   };
 
   // Handle teacher mode
@@ -133,8 +181,17 @@ function App() {
     setTeacherClassCode(null);
     setCompletedChallenges([]);
     setCompletedScenarios([]);
+    setCompletedExercises([]);
+    setCompletedPseudocode([]);
+    setCompletedFlowcharts([]);
+    setAssignments([]);
     setTotalPoints(0);
     setCurrentView('dashboard');
+    setSelectedWeek(null);
+    setSelectedExercise(null);
+    setSelectedTopic(null);
+    setSelectedPseudocodeExercise(null);
+    setSelectedFlowchartExercise(null);
     localStorage.removeItem('cyberrange-session');
   };
 
@@ -177,10 +234,102 @@ function App() {
     if (window.confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
       setCompletedChallenges([]);
       setCompletedScenarios([]);
+      setCompletedExercises([]);
+      setCompletedPseudocode([]);
+      setCompletedFlowcharts([]);
       setTotalPoints(0);
       localStorage.removeItem('cyberrange-progress');
       setCurrentView('dashboard');
     }
+  };
+
+  // Handlers for arrays-loops exercises
+  const handleSelectWeek = (weekKey) => {
+    setSelectedWeek(weekKey);
+    setCurrentView('week');
+  };
+
+  const handleSelectExercise = (exerciseId) => {
+    setSelectedExercise(exerciseId);
+    setCurrentView('exercise-detail');
+  };
+
+  const handleCompleteExercise = (exerciseId, points) => {
+    if (!completedExercises.includes(exerciseId)) {
+      setCompletedExercises([...completedExercises, exerciseId]);
+      setTotalPoints(totalPoints + points);
+    }
+  };
+
+  const handleBackFromExercise = () => {
+    setSelectedExercise(null);
+    setCurrentView('week');
+  };
+
+  const handleBackFromWeek = () => {
+    setSelectedWeek(null);
+    setCurrentView('dashboard');
+  };
+
+  // Handlers for AP CSP
+  const handleSelectAPCSP = (unitId) => {
+    if (unitId === 'pseudocode') {
+      setCurrentView('pseudocode-hub');
+    } else {
+      setCurrentView('flowchart-hub');
+    }
+  };
+
+  const handleSelectTopic = (topicId) => {
+    setSelectedTopic(topicId);
+    setCurrentView('topic-lesson');
+  };
+
+  const handleSelectPseudocodeExercise = (exerciseId) => {
+    setSelectedPseudocodeExercise(exerciseId);
+    setCurrentView('pseudocode-exercise');
+  };
+
+  const handleCompletePseudocodeExercise = (exerciseId, points) => {
+    if (!completedPseudocode.includes(exerciseId)) {
+      setCompletedPseudocode([...completedPseudocode, exerciseId]);
+      setTotalPoints(totalPoints + points);
+    }
+  };
+
+  const handleSelectFlowchartExercise = (exerciseId) => {
+    setSelectedFlowchartExercise(exerciseId);
+    setCurrentView('flowchart-exercise');
+  };
+
+  const handleCompleteFlowchartExercise = (exerciseId, points) => {
+    if (!completedFlowcharts.includes(exerciseId)) {
+      setCompletedFlowcharts([...completedFlowcharts, exerciseId]);
+      setTotalPoints(totalPoints + points);
+    }
+  };
+
+  const handleBackFromPseudocodeHub = () => {
+    setCurrentView('dashboard');
+  };
+
+  const handleBackFromFlowchartHub = () => {
+    setCurrentView('dashboard');
+  };
+
+  const handleBackFromTopic = () => {
+    setSelectedTopic(null);
+    setCurrentView('pseudocode-hub');
+  };
+
+  const handleBackFromPseudocodeExercise = () => {
+    setSelectedPseudocodeExercise(null);
+    setCurrentView('pseudocode-hub');
+  };
+
+  const handleBackFromFlowchartExercise = () => {
+    setSelectedFlowchartExercise(null);
+    setCurrentView('flowchart-hub');
   };
 
   // Show login screen if no user
@@ -244,18 +393,26 @@ function App() {
 
       <main className="main-content">
         {currentView === 'dashboard' && (
-          <Dashboard
+          <UnifiedDashboard
+            studentName={currentUser?.name}
+            totalPoints={totalPoints}
+            assignments={assignments}
             completedChallenges={completedChallenges}
             completedScenarios={completedScenarios}
+            completedExercises={completedExercises}
+            completedPseudocode={completedPseudocode}
+            completedFlowcharts={completedFlowcharts}
             onSelectCategory={handleSelectCategory}
             onSelectNetworkMonitor={() => setCurrentView('network-monitor')}
+            onSelectWeek={handleSelectWeek}
+            onSelectAPCSP={handleSelectAPCSP}
           />
         )}
 
         {currentView === 'challenges' && selectedCategory && (
           <>
             <button className="back-btn" onClick={handleBackToDashboard}>
-              &larr; Back to Dashboard
+              Back to Dashboard
             </button>
             <div style={{ marginTop: '1rem' }}>
               <ChallengeList
@@ -276,6 +433,24 @@ function App() {
           />
         )}
 
+        {currentView === 'week' && selectedWeek && (
+          <WeekView
+            weekKey={selectedWeek}
+            onSelectExercise={handleSelectExercise}
+            onBack={handleBackFromWeek}
+            completedExercises={completedExercises}
+          />
+        )}
+
+        {currentView === 'exercise-detail' && selectedExercise && (
+          <ExerciseDetail
+            exerciseId={selectedExercise}
+            onComplete={handleCompleteExercise}
+            onBack={handleBackFromExercise}
+            isCompleted={completedExercises.includes(selectedExercise)}
+          />
+        )}
+
         {currentView === 'vocabulary' && <VocabularyPage />}
 
         {currentView === 'network-monitor' && (
@@ -284,6 +459,67 @@ function App() {
             onCompleteScenario={handleCompleteScenario}
             onBack={handleBackToDashboard}
           />
+        )}
+
+        {currentView === 'pseudocode-hub' && (
+          <PseudocodeHub
+            completedExercises={completedPseudocode}
+            onSelectTopic={handleSelectTopic}
+            onSelectExercise={handleSelectPseudocodeExercise}
+            onBack={handleBackFromPseudocodeHub}
+          />
+        )}
+
+        {currentView === 'topic-lesson' && selectedTopic && (
+          <TopicLesson
+            topicId={selectedTopic}
+            onBack={handleBackFromTopic}
+            onSelectExercise={handleSelectPseudocodeExercise}
+          />
+        )}
+
+        {currentView === 'pseudocode-exercise' && selectedPseudocodeExercise && (
+          <TranslationExercise
+            exerciseId={selectedPseudocodeExercise}
+            onComplete={handleCompletePseudocodeExercise}
+            onBack={handleBackFromPseudocodeExercise}
+            isCompleted={completedPseudocode.includes(selectedPseudocodeExercise)}
+          />
+        )}
+
+        {currentView === 'code-tracer' && (
+          <CodeTracer onBack={handleBackFromPseudocodeHub} />
+        )}
+
+        {currentView === 'robot-grid' && (
+          <RobotGrid onBack={handleBackFromPseudocodeHub} />
+        )}
+
+        {currentView === 'flowchart-hub' && (
+          <FlowchartHub
+            completedExercises={completedFlowcharts}
+            onSelectExercise={handleSelectFlowchartExercise}
+            onSelectBuilder={() => setCurrentView('flowchart-builder')}
+            onSelectSymbols={() => setCurrentView('symbol-lesson')}
+            onBack={handleBackFromFlowchartHub}
+          />
+        )}
+
+        {currentView === 'symbol-lesson' && (
+          <SymbolLesson onBack={() => setCurrentView('flowchart-hub')} />
+        )}
+
+        {currentView === 'flowchart-exercise' && selectedFlowchartExercise && (
+          <FlowchartExercise
+            exerciseId={selectedFlowchartExercise}
+            onComplete={handleCompleteFlowchartExercise}
+            onBack={handleBackFromFlowchartExercise}
+            isCompleted={completedFlowcharts.includes(selectedFlowchartExercise)}
+          />
+        )}
+
+        {currentView === 'flowchart-builder' && (
+          <FlowchartBuilder onBack={() => setCurrentView('flowchart-hub')} />
         )}
       </main>
     </div>
