@@ -9,6 +9,7 @@ import {
   getDocs,
   onSnapshot,
   updateDoc,
+  deleteDoc,
   serverTimestamp,
   query,
   where,
@@ -213,10 +214,38 @@ export const subscribeToAssignments = (classCode, callback) => {
       id: doc.id,
       ...doc.data(),
       dueDate: doc.data().dueDate?.toDate?.() || null,
-      createdAt: doc.data().createdAt?.toDate?.() || null
+      createdAt: doc.data().createdAt?.toDate?.() || null,
+      assignedAt: doc.data().assignedAt?.toDate?.() || doc.data().createdAt?.toDate?.() || null
     }));
     callback(assignments);
   });
+};
+
+// Create a new assignment for a class
+export const createAssignment = async (classCode, assignmentData) => {
+  if (!db) return null;
+
+  const assignmentsRef = collection(db, CLASSES_COLLECTION, classCode, 'assignments');
+
+  const newAssignment = {
+    type: assignmentData.type,
+    items: assignmentData.items || [],
+    title: assignmentData.title,
+    assignedAt: serverTimestamp(),
+    createdAt: serverTimestamp(),
+    dueDate: assignmentData.dueDate || null
+  };
+
+  const docRef = await setDoc(doc(assignmentsRef), newAssignment);
+  return docRef;
+};
+
+// Delete an assignment from a class
+export const deleteAssignment = async (classCode, assignmentId) => {
+  if (!db) return;
+
+  const assignmentRef = doc(db, CLASSES_COLLECTION, classCode, 'assignments', assignmentId);
+  await deleteDoc(assignmentRef);
 };
 
 // ============================================

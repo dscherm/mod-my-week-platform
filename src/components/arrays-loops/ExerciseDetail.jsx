@@ -2,6 +2,45 @@ import React, { useState, useEffect, useRef } from 'react';
 import { getExerciseById } from '../data/exercises';
 import { vocabulary } from '../data/vocabulary';
 
+// Helper to ensure p5.js is loaded
+const loadP5 = () => {
+  return new Promise((resolve, reject) => {
+    // Check if p5 is already available
+    if (window.p5 && typeof window.p5 === 'function') {
+      resolve(window.p5);
+      return;
+    }
+
+    // Check if script is already loading
+    const existingScript = document.querySelector('script[src*="p5.min.js"]');
+    if (existingScript) {
+      existingScript.addEventListener('load', () => {
+        if (window.p5 && typeof window.p5 === 'function') {
+          resolve(window.p5);
+        } else {
+          reject(new Error('p5.js loaded but window.p5 is not available'));
+        }
+      });
+      existingScript.addEventListener('error', () => reject(new Error('Failed to load p5.js')));
+      return;
+    }
+
+    // Load p5.js dynamically
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js';
+    script.async = true;
+    script.onload = () => {
+      if (window.p5 && typeof window.p5 === 'function') {
+        resolve(window.p5);
+      } else {
+        reject(new Error('p5.js loaded but window.p5 is not available'));
+      }
+    };
+    script.onerror = () => reject(new Error('Failed to load p5.js'));
+    document.head.appendChild(script);
+  });
+};
+
 function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted }) {
   const exercise = getExerciseById(exerciseId);
   const [code, setCode] = useState(exercise?.starterCode || '');
@@ -9,8 +48,23 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted }) {
   const [showSolution, setShowSolution] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [selectedTerm, setSelectedTerm] = useState(null);
+  const [p5Ready, setP5Ready] = useState(false);
+  const [p5Error, setP5Error] = useState(null);
   const canvasRef = useRef(null);
   const p5InstanceRef = useRef(null);
+
+  // Load p5.js on component mount
+  useEffect(() => {
+    loadP5()
+      .then(() => {
+        setP5Ready(true);
+        setP5Error(null);
+      })
+      .catch((err) => {
+        console.error('Failed to load p5.js:', err);
+        setP5Error(err.message);
+      });
+  }, []);
 
   useEffect(() => {
     if (exercise) {
@@ -38,7 +92,7 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted }) {
     );
   }
 
-  const runCode = () => {
+  const runCode = async () => {
     // Clean up previous instance
     if (p5InstanceRef.current) {
       p5InstanceRef.current.remove();
@@ -53,12 +107,38 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted }) {
     setIsRunning(true);
 
     try {
+      // Ensure p5 is loaded
+      if (!window.p5 || typeof window.p5 !== 'function') {
+        if (canvasRef.current) {
+          canvasRef.current.innerHTML = '<div class="canvas-placeholder">Loading p5.js...</div>';
+        }
+        await loadP5();
+      }
+
+      // Transform global-mode p5 code to instance-mode
+      // Convert "function setup()" to "p.setup = function()" etc.
+      const p5Functions = [
+        'setup', 'draw', 'preload',
+        'mousePressed', 'mouseReleased', 'mouseClicked', 'mouseMoved', 'mouseDragged',
+        'mouseWheel', 'doubleClicked',
+        'keyPressed', 'keyReleased', 'keyTyped',
+        'touchStarted', 'touchMoved', 'touchEnded',
+        'windowResized'
+      ];
+
+      let transformedCode = code;
+      p5Functions.forEach(fn => {
+        // Match "function functionName(" or "function functionName ("
+        const regex = new RegExp(`function\\s+${fn}\\s*\\(`, 'g');
+        transformedCode = transformedCode.replace(regex, `p.${fn} = function(`);
+      });
+
       // Create a new p5 instance
       const sketch = (p) => {
         // Execute the user's code in p5 context
         const userCode = new Function('p', `
           with (p) {
-            ${code}
+            ${transformedCode}
           }
         `);
         userCode(p);
@@ -185,7 +265,21 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted }) {
         <div className="canvas-section">
           <h3>Output</h3>
           <div ref={canvasRef} className="canvas-container">
-            <div className="canvas-placeholder">Click "Run Code" to see your sketch</div>
+            {p5Error ? (
+              <div className="error-message">
+                Failed to load p5.js: {p5Error}
+                <button
+                  onClick={() => { setP5Error(null); loadP5().then(() => setP5Ready(true)).catch(e => setP5Error(e.message)); }}
+                  style={{ marginTop: '10px', display: 'block' }}
+                >
+                  Retry
+                </button>
+              </div>
+            ) : !p5Ready ? (
+              <div className="canvas-placeholder">Loading p5.js...</div>
+            ) : (
+              <div className="canvas-placeholder">Click "Run Code" to see your sketch</div>
+            )}
           </div>
         </div>
       </div>

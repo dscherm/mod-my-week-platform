@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
-import { subscribeToClassProgress, getClassInfo } from '../services/firebaseService';
+import { subscribeToClassProgress, getClassInfo, subscribeToAssignments } from '../services/firebaseService';
 import { challenges } from '../data/challenges';
 import { scenarios } from '../data/networkScenarios';
+import AssignmentManager from './teacher/AssignmentManager';
+import ActivityManager from './teacher/ActivityManager';
 
 const TeacherDashboard = ({ classCode, onBack }) => {
   const [students, setStudents] = useState([]);
   const [classInfo, setClassInfo] = useState(null);
+  const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [sortBy, setSortBy] = useState('points'); // 'points', 'name', 'activity'
+  const [activeTab, setActiveTab] = useState('students'); // 'students', 'assignments', 'activities'
 
   const totalChallenges = Object.values(challenges).flat().length;
   const totalScenarios = scenarios.length;
@@ -22,12 +26,20 @@ const TeacherDashboard = ({ classCode, onBack }) => {
     loadClassInfo();
 
     // Subscribe to real-time student updates
-    const unsubscribe = subscribeToClassProgress(classCode, (studentData) => {
+    const unsubscribeStudents = subscribeToClassProgress(classCode, (studentData) => {
       setStudents(studentData);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    // Subscribe to real-time assignment updates
+    const unsubscribeAssignments = subscribeToAssignments(classCode, (assignmentData) => {
+      setAssignments(assignmentData);
+    });
+
+    return () => {
+      unsubscribeStudents();
+      unsubscribeAssignments();
+    };
   }, [classCode]);
 
   const sortedStudents = [...students].sort((a, b) => {
@@ -123,24 +135,60 @@ const TeacherDashboard = ({ classCode, onBack }) => {
         </div>
       </div>
 
-      <div className="td-controls">
-        <div className="sort-controls">
-          <label>Sort by:</label>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-            <option value="points">Points (High to Low)</option>
-            <option value="name">Name (A-Z)</option>
-            <option value="activity">Recent Activity</option>
-          </select>
-        </div>
+      <div className="td-tabs">
         <button
-          className="btn-refresh"
-          onClick={() => window.location.reload()}
+          className={`td-tab ${activeTab === 'students' ? 'active' : ''}`}
+          onClick={() => setActiveTab('students')}
         >
-          Refresh
+          Students
+        </button>
+        <button
+          className={`td-tab ${activeTab === 'assignments' ? 'active' : ''}`}
+          onClick={() => setActiveTab('assignments')}
+        >
+          Module Assignments
+        </button>
+        <button
+          className={`td-tab ${activeTab === 'activities' ? 'active' : ''}`}
+          onClick={() => setActiveTab('activities')}
+        >
+          View Activities
         </button>
       </div>
 
-      <div className="td-content">
+      {activeTab === 'assignments' && (
+        <AssignmentManager
+          classCode={classCode}
+          assignments={assignments}
+        />
+      )}
+
+      {activeTab === 'activities' && (
+        <ActivityManager
+          classCode={classCode}
+        />
+      )}
+
+      {activeTab === 'students' && (
+        <>
+          <div className="td-controls">
+            <div className="sort-controls">
+              <label>Sort by:</label>
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                <option value="points">Points (High to Low)</option>
+                <option value="name">Name (A-Z)</option>
+                <option value="activity">Recent Activity</option>
+              </select>
+            </div>
+            <button
+              className="btn-refresh"
+              onClick={() => window.location.reload()}
+            >
+              Refresh
+            </button>
+          </div>
+
+          <div className="td-content">
         <div className="student-list-panel">
           <h2>Students ({students.length})</h2>
 
@@ -270,6 +318,8 @@ const TeacherDashboard = ({ classCode, onBack }) => {
           )}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };
