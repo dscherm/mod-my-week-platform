@@ -21,6 +21,10 @@ const NetworkMonitor = ({ completedScenarios, onCompleteScenario, onBack }) => {
   const [selectedPacket, setSelectedPacket] = useState(null);
   const [packetStats, setPacketStats] = useState({ total: 0, perSecond: 0, bytes: 0 });
 
+  // Speed control state
+  const [isPaused, setIsPaused] = useState(false);
+  const [speedMultiplier, setSpeedMultiplier] = useState(0.5); // Default to slower speed for learning
+
   // User actions state
   const [flaggedPackets, setFlaggedPackets] = useState([]);
   const [blockedIPs, setBlockedIPs] = useState([]);
@@ -101,19 +105,28 @@ const NetworkMonitor = ({ completedScenarios, onCompleteScenario, onBack }) => {
     if (!isRunning || !generatorRef.current) return;
 
     intervalRef.current = setInterval(() => {
+      // Skip updates when paused (but keep the interval running)
+      if (isPaused) {
+        lastTickRef.current = Date.now();
+        return;
+      }
+
       const now = Date.now();
       const deltaSeconds = (now - lastTickRef.current) / 1000;
       lastTickRef.current = now;
 
-      // Generate new packets
-      const newPackets = generatorRef.current.generatePackets(deltaSeconds);
+      // Apply speed multiplier to packet generation
+      const adjustedDelta = deltaSeconds * speedMultiplier;
+
+      // Generate new packets at adjusted speed
+      const newPackets = generatorRef.current.generatePackets(adjustedDelta);
 
       setPackets(prev => {
         const updated = [...prev, ...newPackets].slice(-200); // Keep last 200 packets
         return updated;
       });
 
-      // Update time
+      // Update time (timer runs at normal speed even if packets are slow)
       setTimeRemaining(prev => {
         const newTime = Math.max(0, prev - deltaSeconds);
         if (newTime <= 0) {
@@ -125,17 +138,17 @@ const NetworkMonitor = ({ completedScenarios, onCompleteScenario, onBack }) => {
       // Update stats
       setPacketStats(prev => ({
         total: prev.total + newPackets.length,
-        perSecond: Math.round(newPackets.length / deltaSeconds),
+        perSecond: Math.round(newPackets.length / (deltaSeconds || 0.001)),
         bytes: prev.bytes + newPackets.reduce((sum, p) => sum + p.length, 0),
       }));
-    }, 200); // 5 updates per second
+    }, 400); // Slower update rate (2.5 updates per second) for easier interaction
 
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isRunning, completeScenario]);
+  }, [isRunning, isPaused, speedMultiplier, completeScenario]);
 
   // Detect attacks periodically
   useEffect(() => {
@@ -302,6 +315,28 @@ const NetworkMonitor = ({ completedScenarios, onCompleteScenario, onBack }) => {
           <div className="stat">
             <span className="stat-value">{Math.round(packetStats.bytes / 1024)}KB</span>
             <span className="stat-label">Data</span>
+          </div>
+        </div>
+        <div className="nm-controls">
+          <button
+            className={`btn-pause ${isPaused ? 'paused' : ''}`}
+            onClick={() => setIsPaused(!isPaused)}
+            title={isPaused ? 'Resume packet capture' : 'Pause to analyze packets'}
+          >
+            {isPaused ? '▶ Resume' : '⏸ Pause'}
+          </button>
+          <div className="speed-control">
+            <label>Speed:</label>
+            <select
+              value={speedMultiplier}
+              onChange={(e) => setSpeedMultiplier(parseFloat(e.target.value))}
+              title="Adjust packet speed for easier analysis"
+            >
+              <option value="0.25">0.25x (Very Slow)</option>
+              <option value="0.5">0.5x (Slow - Recommended)</option>
+              <option value="1">1x (Normal)</option>
+              <option value="2">2x (Fast)</option>
+            </select>
           </div>
         </div>
         <button className="btn-complete" onClick={completeScenario}>

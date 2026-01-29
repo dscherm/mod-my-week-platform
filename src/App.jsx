@@ -6,6 +6,7 @@ import ChallengeList from './components/ChallengeList';
 import ChallengeDetail from './components/ChallengeDetail';
 import VocabularyPage from './components/VocabularyPage';
 import NetworkMonitor from './components/NetworkMonitor';
+import InteractiveTools from './components/InteractiveTools';
 import StudentLogin from './components/StudentLogin';
 import TeacherDashboard from './components/TeacherDashboard';
 import WeekView from './components/arrays-loops/WeekView';
@@ -370,6 +371,12 @@ function App() {
               Network Monitor
             </button>
             <button
+              className={`nav-btn ${currentView === 'tools' ? 'active' : ''}`}
+              onClick={() => setCurrentView('tools')}
+            >
+              Tools
+            </button>
+            <button
               className={`nav-btn ${currentView === 'vocabulary' ? 'active' : ''}`}
               onClick={() => setCurrentView('vocabulary')}
             >
@@ -452,6 +459,8 @@ function App() {
         )}
 
         {currentView === 'vocabulary' && <VocabularyPage />}
+
+        {currentView === 'tools' && <InteractiveTools />}
 
         {currentView === 'network-monitor' && (
           <NetworkMonitor

@@ -23,12 +23,12 @@ export const scenarios = [
       'The attacker IP will have connections to ports like 21, 22, 23, 80, 443, etc.',
     ],
     backgroundTraffic: {
-      packetsPerSecond: 2,
+      packetsPerSecond: 1, // Reduced for easier learning
       protocols: ['HTTP', 'HTTPS', 'DNS'],
     },
     attackConfig: {
-      startDelay: 5, // seconds before attack starts
-      packetsPerSecond: 3,
+      startDelay: 8, // More time to observe before attack starts
+      packetsPerSecond: 1.5, // Slower attack for easier identification
       attackerIP: '185.220.101.42',
       targetPorts: [21, 22, 23, 25, 80, 110, 143, 443, 445, 3389, 8080, 8443],
     },
@@ -53,12 +53,12 @@ export const scenarios = [
       'Brute force attacks try common usernames: root, admin, user',
     ],
     backgroundTraffic: {
-      packetsPerSecond: 3,
+      packetsPerSecond: 1.5, // Reduced for easier learning
       protocols: ['HTTP', 'HTTPS', 'DNS', 'TCP'],
     },
     attackConfig: {
-      startDelay: 8,
-      packetsPerSecond: 2,
+      startDelay: 10, // More observation time
+      packetsPerSecond: 1, // Slower attack for easier identification
       attackerIP: '198.51.100.77',
       targetPort: 22,
       usernames: ['root', 'admin', 'administrator', 'user', 'guest', 'test'],
@@ -84,12 +84,12 @@ export const scenarios = [
       'Check URL parameters and POST data for suspicious patterns',
     ],
     backgroundTraffic: {
-      packetsPerSecond: 4,
+      packetsPerSecond: 1.5, // Reduced for easier learning
       protocols: ['HTTP', 'HTTPS', 'DNS'],
     },
     attackConfig: {
-      startDelay: 6,
-      packetsPerSecond: 1.5,
+      startDelay: 10, // More observation time
+      packetsPerSecond: 0.75, // Slower attack for easier identification
       attackerIP: '203.0.113.99',
       targetPort: 80,
     },
@@ -114,12 +114,12 @@ export const scenarios = [
       'Look for sustained transfers to the same external destination',
     ],
     backgroundTraffic: {
-      packetsPerSecond: 3,
+      packetsPerSecond: 1.5, // Reduced for easier learning
       protocols: ['HTTP', 'HTTPS', 'DNS', 'TCP'],
     },
     attackConfig: {
-      startDelay: 10,
-      packetsPerSecond: 2,
+      startDelay: 12, // More observation time
+      packetsPerSecond: 1, // Slower attack for easier identification
       attackerIP: '45.33.32.156', // External destination receiving data
       sourceIP: '192.168.1.105', // Compromised internal system
       minPacketSize: 5000,
