@@ -16,9 +16,24 @@ import {
 } from 'firebase/firestore';
 import firebaseConfig from '../config/firebase';
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// Check if Firebase is properly configured
+export const isFirebaseConfigured = () => {
+  return firebaseConfig.apiKey !== "YOUR_API_KEY" &&
+         firebaseConfig.projectId !== "YOUR_PROJECT_ID";
+};
+
+// Initialize Firebase only if configured
+let app = null;
+let db = null;
+
+if (isFirebaseConfigured()) {
+  try {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+  } catch (error) {
+    console.warn('Firebase initialization failed:', error);
+  }
+}
 
 // Collection references
 const STUDENTS_COLLECTION = 'students';
@@ -30,6 +45,8 @@ const CLASSES_COLLECTION = 'classes';
 
 // Register or login a student
 export const loginStudent = async (studentName, classCode) => {
+  if (!db) return null;
+
   const studentId = `${classCode}_${studentName.toLowerCase().replace(/\s+/g, '_')}`;
   const studentRef = doc(db, STUDENTS_COLLECTION, studentId);
 
@@ -60,10 +77,15 @@ export const loginStudent = async (studentName, classCode) => {
 
 // Save student progress
 export const saveStudentProgress = async (studentId, progress) => {
+  if (!db) return;
+
   const studentRef = doc(db, STUDENTS_COLLECTION, studentId);
   await updateDoc(studentRef, {
     completedChallenges: progress.completedChallenges || [],
     completedScenarios: progress.completedScenarios || [],
+    completedExercises: progress.completedExercises || [],
+    completedPseudocode: progress.completedPseudocode || [],
+    completedFlowcharts: progress.completedFlowcharts || [],
     totalPoints: progress.totalPoints || 0,
     lastActivity: serverTimestamp()
   });
@@ -71,6 +93,8 @@ export const saveStudentProgress = async (studentId, progress) => {
 
 // Get student progress
 export const getStudentProgress = async (studentId) => {
+  if (!db) return null;
+
   const studentRef = doc(db, STUDENTS_COLLECTION, studentId);
   const studentDoc = await getDoc(studentRef);
 
@@ -82,6 +106,8 @@ export const getStudentProgress = async (studentId) => {
 
 // Record specific activity (for detailed tracking)
 export const recordActivity = async (studentId, activity) => {
+  if (!db) return;
+
   const studentRef = doc(db, STUDENTS_COLLECTION, studentId);
   const activitiesRef = collection(studentRef, 'activities');
 
@@ -97,6 +123,8 @@ export const recordActivity = async (studentId, activity) => {
 
 // Create a new class
 export const createClass = async (className, teacherName) => {
+  if (!db) return null;
+
   const classCode = generateClassCode();
   const classRef = doc(db, CLASSES_COLLECTION, classCode);
 
@@ -113,6 +141,8 @@ export const createClass = async (className, teacherName) => {
 
 // Get class info
 export const getClassInfo = async (classCode) => {
+  if (!db) return null;
+
   const classRef = doc(db, CLASSES_COLLECTION, classCode);
   const classDoc = await getDoc(classRef);
 
@@ -124,6 +154,8 @@ export const getClassInfo = async (classCode) => {
 
 // Validate class code exists
 export const validateClassCode = async (classCode) => {
+  if (!db) return false;
+
   const classRef = doc(db, CLASSES_COLLECTION, classCode);
   const classDoc = await getDoc(classRef);
   return classDoc.exists();
@@ -131,6 +163,8 @@ export const validateClassCode = async (classCode) => {
 
 // Get all students in a class
 export const getClassStudents = async (classCode) => {
+  if (!db) return [];
+
   const studentsQuery = query(
     collection(db, STUDENTS_COLLECTION),
     where('classCode', '==', classCode),
@@ -143,6 +177,11 @@ export const getClassStudents = async (classCode) => {
 
 // Subscribe to real-time class updates (for teacher dashboard)
 export const subscribeToClassProgress = (classCode, callback) => {
+  if (!db) {
+    callback([]);
+    return () => {};
+  }
+
   const studentsQuery = query(
     collection(db, STUDENTS_COLLECTION),
     where('classCode', '==', classCode)
@@ -160,6 +199,26 @@ export const subscribeToClassProgress = (classCode, callback) => {
   });
 };
 
+// Subscribe to assignments for a class
+export const subscribeToAssignments = (classCode, callback) => {
+  if (!db) {
+    callback([]);
+    return () => {};
+  }
+
+  const assignmentsRef = collection(db, CLASSES_COLLECTION, classCode, 'assignments');
+
+  return onSnapshot(assignmentsRef, (snapshot) => {
+    const assignments = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      dueDate: doc.data().dueDate?.toDate?.() || null,
+      createdAt: doc.data().createdAt?.toDate?.() || null
+    }));
+    callback(assignments);
+  });
+};
+
 // ============================================
 // UTILITY FUNCTIONS
 // ============================================
@@ -172,12 +231,6 @@ const generateClassCode = () => {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return code;
-};
-
-// Check if Firebase is properly configured
-export const isFirebaseConfigured = () => {
-  return firebaseConfig.apiKey !== "YOUR_API_KEY" &&
-         firebaseConfig.projectId !== "YOUR_PROJECT_ID";
 };
 
 // Export db for direct access if needed

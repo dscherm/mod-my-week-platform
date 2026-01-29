@@ -1,0 +1,2178 @@
+// Arrays, Loops & Traversal - Exercise Data
+// Organized by week and day
+
+export const exercises = {
+  week1: {
+    title: "Arrays Basics",
+    bigIdea: "Arrays store collections of values that we can access by index.",
+    days: [
+      {
+        day: 1,
+        title: "Intro to Arrays",
+        objective: "Store multiple values in an array and access by index",
+        exercises: [
+          {
+            id: "w1d1-1",
+            title: "Color Palette Array",
+            difficulty: "Easy",
+            points: 10,
+            description: "Create an array of 5 color names and display them",
+            prompt: "Create an array called `palette` with 5 colors. Use `palette[0]` to set the background color.",
+            starterCode: `function setup() {
+  createCanvas(800, 500);
+  // Create your palette array here
+}
+
+function draw() {
+  // Use palette[0] for background
+  background(240);
+}`,
+            solutionCode: `let palette = ["red", "orange", "yellow", "green", "blue"];
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(palette[0]);
+}`,
+            hints: [
+              "Arrays are created with square brackets: let arr = []",
+              "Put strings in quotes inside the brackets",
+              "Access elements with arrayName[index]",
+              "The first element is at index 0"
+            ],
+            vocabularyTerms: ["array", "index", "element"]
+          },
+          {
+            id: "w1d1-2",
+            title: "First, Last, Middle",
+            difficulty: "Easy",
+            points: 10,
+            description: "Access different positions in an array",
+            prompt: "Given an array of words, display the first word, last word, and middle word on screen.",
+            starterCode: `let words = ["loop", "array", "pixel", "code", "mouse"];
+
+function setup() {
+  createCanvas(800, 500);
+  textSize(32);
+}
+
+function draw() {
+  background(220);
+  // Display first word at y=100
+  // Display last word at y=200
+  // Display middle word at y=300
+}`,
+            solutionCode: `let words = ["loop", "array", "pixel", "code", "mouse"];
+
+function setup() {
+  createCanvas(800, 500);
+  textSize(32);
+}
+
+function draw() {
+  background(220);
+  text("First: " + words[0], 50, 100);
+  text("Last: " + words[words.length - 1], 50, 200);
+  text("Middle: " + words[Math.floor(words.length / 2)], 50, 300);
+}`,
+            hints: [
+              "First element is at index 0",
+              "Last element is at index array.length - 1",
+              "Middle index is Math.floor(array.length / 2)"
+            ],
+            vocabularyTerms: ["array", "index", "length"]
+          },
+          {
+            id: "w1d1-3",
+            title: "Random Word Display",
+            difficulty: "Easy",
+            points: 15,
+            description: "Pick and display a random element from an array",
+            prompt: "Display a random word from the array. Click to show a new random word.",
+            starterCode: `let words = ["loop", "array", "pixel", "code", "mouse"];
+let currentWord = "";
+
+function setup() {
+  createCanvas(800, 500);
+  textSize(48);
+  textAlign(CENTER, CENTER);
+  // Pick initial random word
+}
+
+function draw() {
+  background(220);
+  text(currentWord, width/2, height/2);
+}
+
+function mousePressed() {
+  // Pick new random word
+}`,
+            solutionCode: `let words = ["loop", "array", "pixel", "code", "mouse"];
+let currentWord = "";
+
+function setup() {
+  createCanvas(800, 500);
+  textSize(48);
+  textAlign(CENTER, CENTER);
+  currentWord = words[floor(random(words.length))];
+}
+
+function draw() {
+  background(220);
+  text(currentWord, width/2, height/2);
+}
+
+function mousePressed() {
+  currentWord = words[floor(random(words.length))];
+}`,
+            hints: [
+              "random(n) gives a number from 0 to n",
+              "floor() rounds down to a whole number",
+              "Use random(words.length) to get a valid index"
+            ],
+            vocabularyTerms: ["array", "random", "index"]
+          }
+        ],
+        exitTicket: "What does words[0] mean in an array called words?"
+      },
+      {
+        day: 2,
+        title: "Push and Pop",
+        objective: "Add and remove items with push() and pop()",
+        exercises: [
+          {
+            id: "w1d2-1",
+            title: "Click to Add",
+            difficulty: "Easy",
+            points: 10,
+            description: "Use push() to add mouse positions to an array",
+            prompt: "Click anywhere to add that X position to an array. Draw circles at all saved positions.",
+            starterCode: `let xs = [];
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  // Draw circles at each saved x position
+}
+
+function mousePressed() {
+  // Add mouseX to the array
+}`,
+            solutionCode: `let xs = [];
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  for (let i = 0; i < xs.length; i++) {
+    circle(xs[i], height / 2, 20);
+  }
+}
+
+function mousePressed() {
+  xs.push(mouseX);
+}`,
+            hints: [
+              "push() adds to the end of an array",
+              "Use a for loop to go through all elements",
+              "xs.length tells you how many items"
+            ],
+            vocabularyTerms: ["push", "array", "length"]
+          },
+          {
+            id: "w1d2-2",
+            title: "Undo with Pop",
+            difficulty: "Easy",
+            points: 15,
+            description: "Use pop() to remove the last item",
+            prompt: "Click to add dots. Press 'U' to undo (remove) the last dot.",
+            starterCode: `let xs = [];
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  for (let i = 0; i < xs.length; i++) {
+    circle(xs[i], height / 2, 20);
+  }
+}
+
+function mousePressed() {
+  xs.push(mouseX);
+}
+
+function keyPressed() {
+  // If key is 'U', remove last item
+}`,
+            solutionCode: `let xs = [];
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  for (let i = 0; i < xs.length; i++) {
+    circle(xs[i], height / 2, 20);
+  }
+}
+
+function mousePressed() {
+  xs.push(mouseX);
+}
+
+function keyPressed() {
+  if (key == 'U' || key == 'u') {
+    xs.pop();
+  }
+}`,
+            hints: [
+              "pop() removes the last element",
+              "Check which key was pressed with key == 'U'",
+              "pop() returns the removed item (but you don't need to use it)"
+            ],
+            vocabularyTerms: ["pop", "push", "keyPressed"]
+          }
+        ],
+        exitTicket: "What's the difference between push() and pop()?"
+      },
+      {
+        day: 3,
+        title: "Parallel Arrays",
+        objective: "Use multiple arrays to store related data",
+        exercises: [
+          {
+            id: "w1d3-1",
+            title: "X and Y Positions",
+            difficulty: "Medium",
+            points: 15,
+            description: "Store both x and y coordinates in parallel arrays",
+            prompt: "Click to place dots. Store x positions in one array and y positions in another.",
+            starterCode: `let xs = [];
+let ys = [];
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  // Draw circles at each (xs[i], ys[i]) position
+}
+
+function mousePressed() {
+  // Add mouseX to xs and mouseY to ys
+}`,
+            solutionCode: `let xs = [];
+let ys = [];
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  for (let i = 0; i < xs.length; i++) {
+    circle(xs[i], ys[i], 20);
+  }
+}
+
+function mousePressed() {
+  xs.push(mouseX);
+  ys.push(mouseY);
+}`,
+            hints: [
+              "Parallel arrays have the same length",
+              "Index i refers to the same item in both arrays",
+              "Push to both arrays at the same time"
+            ],
+            vocabularyTerms: ["parallel-arrays", "index", "push"]
+          },
+          {
+            id: "w1d3-2",
+            title: "Three Parallel Arrays",
+            difficulty: "Medium",
+            points: 20,
+            description: "Add random sizes to each dot",
+            prompt: "Extend the previous exercise: also store a random size for each dot.",
+            starterCode: `let xs = [];
+let ys = [];
+let sizes = [];
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  // Draw circles with their individual sizes
+}
+
+function mousePressed() {
+  // Add position and random size (10-50)
+}`,
+            solutionCode: `let xs = [];
+let ys = [];
+let sizes = [];
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  for (let i = 0; i < xs.length; i++) {
+    circle(xs[i], ys[i], sizes[i]);
+  }
+}
+
+function mousePressed() {
+  xs.push(mouseX);
+  ys.push(mouseY);
+  sizes.push(random(10, 50));
+}`,
+            hints: [
+              "random(10, 50) gives a number between 10 and 50",
+              "All three arrays must stay the same length",
+              "Use sizes[i] for the diameter of each circle"
+            ],
+            vocabularyTerms: ["parallel-arrays", "random"]
+          }
+        ],
+        exitTicket: "Why must parallel arrays always have the same length?"
+      },
+      {
+        day: 4,
+        title: "Random Selection",
+        objective: "Select random elements and change array values",
+        exercises: [
+          {
+            id: "w1d4-1",
+            title: "Color Switcher",
+            difficulty: "Easy",
+            points: 10,
+            description: "Click to pick a random background color from a palette",
+            prompt: "Each click should pick a new random color from your palette array.",
+            starterCode: `let colors = ["red", "orange", "yellow", "green", "blue"];
+let currentColor;
+
+function setup() {
+  createCanvas(800, 500);
+  currentColor = colors[0];
+}
+
+function draw() {
+  background(currentColor);
+}
+
+function mousePressed() {
+  // Pick random color from array
+}`,
+            solutionCode: `let colors = ["red", "orange", "yellow", "green", "blue"];
+let currentColor;
+
+function setup() {
+  createCanvas(800, 500);
+  currentColor = colors[0];
+}
+
+function draw() {
+  background(currentColor);
+}
+
+function mousePressed() {
+  let index = floor(random(colors.length));
+  currentColor = colors[index];
+}`,
+            hints: [
+              "Get array length with colors.length",
+              "random(n) gives 0 to n-1 (but as a decimal)",
+              "floor() rounds down to an integer"
+            ],
+            vocabularyTerms: ["random", "index", "floor"]
+          }
+        ],
+        exitTicket: "Why do we need floor() when picking a random index?"
+      },
+      {
+        day: 5,
+        title: "Mini-Project: Click Collector",
+        objective: "Build a complete interactive sketch using arrays",
+        exercises: [
+          {
+            id: "w1d5-project",
+            title: "Click Collector",
+            difficulty: "Medium",
+            points: 50,
+            isProject: true,
+            description: "Create an interactive dot collector with undo and clear features",
+            prompt: "Build a sketch where:\n- Click to place colored dots\n- Press 'U' to undo last dot\n- Press 'C' to clear all dots\n- Each dot has a random color",
+            starterCode: `let xs = [];
+let ys = [];
+let colors = [];
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(255);
+  // Draw all dots with their colors
+}
+
+function mousePressed() {
+  // Add new dot with random color
+}
+
+function keyPressed() {
+  // U = undo, C = clear
+}`,
+            solutionCode: `let xs = [];
+let ys = [];
+let cs = [];
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(255);
+  for (let i = 0; i < xs.length; i++) {
+    fill(cs[i]);
+    noStroke();
+    circle(xs[i], ys[i], 30);
+  }
+
+  // Show count
+  fill(0);
+  textSize(16);
+  text("Dots: " + xs.length, 10, 20);
+  text("U = Undo | C = Clear", 10, 40);
+}
+
+function mousePressed() {
+  xs.push(mouseX);
+  ys.push(mouseY);
+  cs.push(color(random(255), random(255), random(255)));
+}
+
+function keyPressed() {
+  if (key == 'U' || key == 'u') {
+    xs.pop();
+    ys.pop();
+    cs.pop();
+  }
+  if (key == 'C' || key == 'c') {
+    xs = [];
+    ys = [];
+    cs = [];
+  }
+}`,
+            hints: [
+              "Use color(r, g, b) to create a color object",
+              "Pop from ALL arrays when undoing",
+              "Set arrays to [] to clear them"
+            ],
+            vocabularyTerms: ["parallel-arrays", "push", "pop"],
+            rubric: {
+              functionality: "Click adds dots, U undoes, C clears",
+              arrays: "Uses parallel arrays correctly",
+              colors: "Each dot has random color",
+              display: "Shows helpful information to user"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  week2: {
+    title: "Loops Basics",
+    bigIdea: "Loops repeat instructions efficiently.",
+    days: [
+      {
+        day: 6,
+        title: "For Loops",
+        objective: "Use for-loops to repeat drawing commands",
+        exercises: [
+          {
+            id: "w2d6-1",
+            title: "Row of Circles",
+            difficulty: "Easy",
+            points: 10,
+            description: "Draw 10 circles in a row using a for-loop",
+            prompt: "Use a for-loop to draw 10 circles evenly spaced across the canvas.",
+            starterCode: `function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  // Use a for-loop to draw 10 circles
+}`,
+            solutionCode: `function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  for (let i = 0; i < 10; i++) {
+    let x = 80 + i * 70;
+    circle(x, height / 2, 40);
+  }
+}`,
+            hints: [
+              "for (let i = 0; i < 10; i++) repeats 10 times",
+              "Use i to calculate different x positions",
+              "Multiply i by a spacing value"
+            ],
+            vocabularyTerms: ["for-loop", "iteration", "loop-variable"]
+          },
+          {
+            id: "w2d6-2",
+            title: "Spacing Formula",
+            difficulty: "Medium",
+            points: 15,
+            description: "Calculate spacing to fit any number of circles",
+            prompt: "Draw n circles that are always evenly spaced, regardless of the value of n.",
+            starterCode: `let n = 8;
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  // Draw n circles evenly spaced
+  // Formula: x = width / (n + 1) * (i + 1)
+}`,
+            solutionCode: `let n = 8;
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  let spacing = width / (n + 1);
+  for (let i = 0; i < n; i++) {
+    let x = spacing * (i + 1);
+    circle(x, height / 2, 30);
+  }
+}`,
+            hints: [
+              "Divide width by (n + 1) to get spacing",
+              "Multiply spacing by (i + 1) for each position",
+              "Try changing n to see if it still works"
+            ],
+            vocabularyTerms: ["for-loop", "spacing"]
+          }
+        ],
+        exitTicket: "What are the three parts of a for-loop declaration?"
+      },
+      {
+        day: 7,
+        title: "Loop Patterns",
+        objective: "Use loop variables to create visual patterns",
+        exercises: [
+          {
+            id: "w2d7-1",
+            title: "Staircase",
+            difficulty: "Medium",
+            points: 15,
+            description: "Draw a staircase pattern using a loop",
+            prompt: "Draw rectangles that form a staircase going up from left to right.",
+            starterCode: `function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  // Draw staircase: each step shifts right and up
+}`,
+            solutionCode: `function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  for (let i = 0; i < 10; i++) {
+    rect(50 + i * 50, 400 - i * 30, 40, 30);
+  }
+}`,
+            hints: [
+              "X position increases with i",
+              "Y position decreases with i (going up)",
+              "Use i * stepSize for both"
+            ],
+            vocabularyTerms: ["for-loop", "pattern"]
+          },
+          {
+            id: "w2d7-2",
+            title: "Growing Circles",
+            difficulty: "Medium",
+            points: 15,
+            description: "Draw circles that grow in size",
+            prompt: "Draw 8 circles where each one is larger than the last.",
+            starterCode: `function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  // Draw circles with increasing size
+}`,
+            solutionCode: `function setup() {
+  createCanvas(800, 500);
+  noFill();
+}
+
+function draw() {
+  background(240);
+  for (let i = 0; i < 8; i++) {
+    let size = 20 + i * 20;
+    circle(width / 2, height / 2, size);
+  }
+}`,
+            hints: [
+              "Size can also depend on i",
+              "Start with a base size and add i * increment",
+              "noFill() makes circles hollow"
+            ],
+            vocabularyTerms: ["for-loop", "loop-variable"]
+          }
+        ],
+        exitTicket: "How can you make each loop iteration draw something different?"
+      },
+      {
+        day: 8,
+        title: "Animation with Loops",
+        objective: "Combine loops with animation",
+        exercises: [
+          {
+            id: "w2d8-1",
+            title: "Moving Object",
+            difficulty: "Easy",
+            points: 10,
+            description: "Animate a circle moving across the screen",
+            prompt: "Make a circle move from left to right, resetting when it goes off screen.",
+            starterCode: `let x = 0;
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  // Draw and move the circle
+  // Reset when off screen
+}`,
+            solutionCode: `let x = 0;
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  circle(x, height / 2, 40);
+  x += 3;
+  if (x > width) {
+    x = 0;
+  }
+}`,
+            hints: [
+              "Increment x each frame",
+              "Check if x > width to reset",
+              "The draw() function is already a loop!"
+            ],
+            vocabularyTerms: ["animation", "frame", "conditional"]
+          },
+          {
+            id: "w2d8-2",
+            title: "Multiple Moving Objects",
+            difficulty: "Medium",
+            points: 20,
+            description: "Animate multiple circles at different speeds",
+            prompt: "Create 5 circles at different y positions, each moving at a different speed.",
+            starterCode: `let xs = [0, 0, 0, 0, 0];
+let speeds = [1, 2, 3, 4, 5];
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  // Move and draw all circles
+}`,
+            solutionCode: `let xs = [0, 0, 0, 0, 0];
+let speeds = [1, 2, 3, 4, 5];
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  for (let i = 0; i < 5; i++) {
+    let y = 100 + i * 80;
+    circle(xs[i], y, 30);
+    xs[i] += speeds[i];
+    if (xs[i] > width) {
+      xs[i] = 0;
+    }
+  }
+}`,
+            hints: [
+              "Each circle has its own x in the array",
+              "Each circle has its own speed",
+              "Update each x by its corresponding speed"
+            ],
+            vocabularyTerms: ["animation", "parallel-arrays", "for-loop"]
+          }
+        ],
+        exitTicket: "Why don't we need a for-loop to make something animate?"
+      },
+      {
+        day: 9,
+        title: "While Loops",
+        objective: "Use while-loops for conditional repetition",
+        exercises: [
+          {
+            id: "w2d9-1",
+            title: "Dice Roller",
+            difficulty: "Easy",
+            points: 10,
+            description: "Roll dice until you get a 6",
+            prompt: "Use a while-loop to count how many rolls it takes to get a 6.",
+            starterCode: `function setup() {
+  createCanvas(800, 500);
+  textSize(24);
+
+  let rolls = 0;
+  let value = 0;
+
+  // While loop: keep rolling until value is 6
+
+  text("Rolled a 6 after " + rolls + " rolls", 50, 100);
+}`,
+            solutionCode: `function setup() {
+  createCanvas(800, 500);
+  textSize(24);
+
+  let rolls = 0;
+  let value = 0;
+
+  while (value != 6) {
+    value = floor(random(1, 7));
+    rolls++;
+  }
+
+  text("Rolled a 6 after " + rolls + " rolls", 50, 100);
+}`,
+            hints: [
+              "while (condition) repeats until condition is false",
+              "random(1, 7) gives 1-6 (not including 7)",
+              "Increment rolls inside the loop"
+            ],
+            vocabularyTerms: ["while-loop", "condition", "random"]
+          },
+          {
+            id: "w2d9-2",
+            title: "Random Dots Until Full",
+            difficulty: "Medium",
+            points: 15,
+            description: "Place random dots until you have 100",
+            prompt: "Use a while-loop to place 100 random dots on the canvas.",
+            starterCode: `function setup() {
+  createCanvas(800, 500);
+  background(240);
+
+  let count = 0;
+
+  // While loop: place dots until count reaches 100
+}`,
+            solutionCode: `function setup() {
+  createCanvas(800, 500);
+  background(240);
+
+  let count = 0;
+
+  while (count < 100) {
+    let x = random(width);
+    let y = random(height);
+    point(x, y);
+    count++;
+  }
+}`,
+            hints: [
+              "while (count < 100) runs until count is 100",
+              "Place one dot per iteration",
+              "Don't forget to increment count!"
+            ],
+            vocabularyTerms: ["while-loop", "random", "iteration"]
+          }
+        ],
+        exitTicket: "When would you use a while-loop instead of a for-loop?"
+      },
+      {
+        day: 10,
+        title: "Mini-Project: Pattern Poster Generator",
+        objective: "Create an interactive pattern generator using loops",
+        exercises: [
+          {
+            id: "w2d10-project",
+            title: "Pattern Poster Generator",
+            difficulty: "Medium",
+            points: 50,
+            isProject: true,
+            description: "Create a tool that generates different loop-based patterns",
+            prompt: "Build a sketch where:\n- Press 1-5 to show different patterns\n- Each pattern uses loops creatively\n- Press 'R' to randomize parameters",
+            starterCode: `let mode = 1;
+let param1 = 20;
+let param2 = 40;
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(255);
+
+  if (mode == 1) {
+    // Pattern 1: Row of circles
+  }
+
+  if (mode == 2) {
+    // Pattern 2: Grid of squares
+  }
+
+  // Add more patterns...
+}
+
+function keyPressed() {
+  // Switch modes with 1-5
+  // R to randomize
+}`,
+            solutionCode: `let mode = 1;
+let count = 15;
+let spacing = 40;
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(30);
+  stroke(0, 255, 150);
+  noFill();
+
+  if (mode == 1) {
+    // Circles in a row
+    for (let i = 0; i < count; i++) {
+      let x = spacing + i * spacing;
+      circle(x, height / 2, 30);
+    }
+  }
+
+  if (mode == 2) {
+    // Staircase
+    fill(0, 255, 150);
+    for (let i = 0; i < count; i++) {
+      rect(50 + i * spacing, 400 - i * 25, 30, 30);
+    }
+  }
+
+  if (mode == 3) {
+    // Concentric circles
+    for (let i = 0; i < count; i++) {
+      circle(width / 2, height / 2, i * spacing);
+    }
+  }
+
+  if (mode == 4) {
+    // Random dots
+    for (let i = 0; i < count * 10; i++) {
+      point(random(width), random(height));
+    }
+  }
+
+  if (mode == 5) {
+    // Spiral
+    for (let i = 0; i < count * 20; i++) {
+      let angle = i * 0.1;
+      let r = i * 0.5;
+      let x = width / 2 + cos(angle) * r;
+      let y = height / 2 + sin(angle) * r;
+      point(x, y);
+    }
+  }
+
+  // Instructions
+  fill(255);
+  noStroke();
+  text("Mode: " + mode + " | Keys 1-5 to change | R to randomize", 10, 20);
+}
+
+function keyPressed() {
+  if (key >= '1' && key <= '5') {
+    mode = int(key);
+  }
+  if (key == 'R' || key == 'r') {
+    count = floor(random(10, 25));
+    spacing = floor(random(20, 50));
+  }
+}`,
+            hints: [
+              "Use if (mode == n) to show different patterns",
+              "Each pattern should use a for-loop",
+              "Parameters like count and spacing make patterns adjustable"
+            ],
+            vocabularyTerms: ["for-loop", "pattern", "parameter"],
+            rubric: {
+              patterns: "At least 3 different loop patterns",
+              switching: "Keys switch between patterns",
+              randomize: "R randomizes parameters",
+              creativity: "Patterns are visually interesting"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  week3: {
+    title: "Traversing Arrays",
+    bigIdea: "Loops + arrays = traversal. Read and update every element.",
+    days: [
+      {
+        day: 11,
+        title: "Traversal Basics",
+        objective: "Loop through arrays to draw many objects",
+        exercises: [
+          {
+            id: "w3d11-1",
+            title: "Draw All Points",
+            difficulty: "Easy",
+            points: 10,
+            description: "Traverse an array to draw all stored points",
+            prompt: "Click to add points. Use a loop to draw a circle at every saved position.",
+            starterCode: `let xs = [];
+let ys = [];
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  // Traverse arrays and draw all circles
+}
+
+function mousePressed() {
+  xs.push(mouseX);
+  ys.push(mouseY);
+}`,
+            solutionCode: `let xs = [];
+let ys = [];
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);
+  for (let i = 0; i < xs.length; i++) {
+    circle(xs[i], ys[i], 20);
+  }
+}
+
+function mousePressed() {
+  xs.push(mouseX);
+  ys.push(mouseY);
+}`,
+            hints: [
+              "Traversal means visiting every element",
+              "Loop from 0 to array.length",
+              "Use i as the index for both arrays"
+            ],
+            vocabularyTerms: ["traversal", "for-loop", "array"]
+          }
+        ],
+        exitTicket: "What does 'traversing an array' mean?"
+      },
+      {
+        day: 12,
+        title: "Computing Values",
+        objective: "Traverse to compute min, max, and average",
+        exercises: [
+          {
+            id: "w3d12-1",
+            title: "Sum and Average",
+            difficulty: "Medium",
+            points: 15,
+            description: "Calculate the average of array values",
+            prompt: "Given an array of scores, calculate and display the average.",
+            starterCode: `let scores = [85, 92, 78, 95, 88, 72, 90];
+
+function setup() {
+  createCanvas(800, 500);
+  textSize(24);
+
+  let sum = 0;
+  // Calculate sum by traversing
+
+  let average = 0;
+  // Calculate average
+
+  text("Average: " + average, 50, 100);
+}`,
+            solutionCode: `let scores = [85, 92, 78, 95, 88, 72, 90];
+
+function setup() {
+  createCanvas(800, 500);
+  textSize(24);
+
+  let sum = 0;
+  for (let i = 0; i < scores.length; i++) {
+    sum += scores[i];
+  }
+
+  let average = sum / scores.length;
+
+  text("Average: " + average.toFixed(1), 50, 100);
+}`,
+            hints: [
+              "Start sum at 0",
+              "Add each element to sum",
+              "Divide sum by length for average"
+            ],
+            vocabularyTerms: ["traversal", "accumulator", "average"]
+          },
+          {
+            id: "w3d12-2",
+            title: "Find Min and Max",
+            difficulty: "Medium",
+            points: 20,
+            description: "Find the smallest and largest values",
+            prompt: "Traverse the array to find both minimum and maximum values.",
+            starterCode: `let nums = [34, 67, 12, 89, 45, 23, 78];
+
+function setup() {
+  createCanvas(800, 500);
+  textSize(24);
+
+  let minVal = nums[0];
+  let maxVal = nums[0];
+
+  // Traverse to find min and max
+
+  text("Min: " + minVal, 50, 100);
+  text("Max: " + maxVal, 50, 150);
+}`,
+            solutionCode: `let nums = [34, 67, 12, 89, 45, 23, 78];
+
+function setup() {
+  createCanvas(800, 500);
+  textSize(24);
+
+  let minVal = nums[0];
+  let maxVal = nums[0];
+
+  for (let i = 0; i < nums.length; i++) {
+    if (nums[i] < minVal) {
+      minVal = nums[i];
+    }
+    if (nums[i] > maxVal) {
+      maxVal = nums[i];
+    }
+  }
+
+  text("Min: " + minVal, 50, 100);
+  text("Max: " + maxVal, 50, 150);
+}`,
+            hints: [
+              "Start min and max with first element",
+              "Compare each element to current min/max",
+              "Update if you find a smaller/larger value"
+            ],
+            vocabularyTerms: ["traversal", "minimum", "maximum"]
+          }
+        ],
+        exitTicket: "Why do we initialize min and max with the first array element?"
+      },
+      {
+        day: 13,
+        title: "Conditional Highlighting",
+        objective: "Traverse with conditions to highlight specific elements",
+        exercises: [
+          {
+            id: "w3d13-1",
+            title: "Closest to Mouse",
+            difficulty: "Medium",
+            points: 20,
+            description: "Find and highlight the point closest to the mouse",
+            prompt: "Traverse all points to find which one is closest to the mouse, and highlight it.",
+            starterCode: `let xs = [];
+let ys = [];
+
+function setup() {
+  createCanvas(800, 500);
+  // Add some initial points
+  for (let i = 0; i < 10; i++) {
+    xs.push(random(width));
+    ys.push(random(height));
+  }
+}
+
+function draw() {
+  background(240);
+
+  // Find closest point index
+  let closestIndex = -1;
+  let closestDist = Infinity;
+
+  // Traverse to find closest
+
+  // Draw all points, highlight closest
+}`,
+            solutionCode: `let xs = [];
+let ys = [];
+
+function setup() {
+  createCanvas(800, 500);
+  for (let i = 0; i < 10; i++) {
+    xs.push(random(width));
+    ys.push(random(height));
+  }
+}
+
+function draw() {
+  background(240);
+
+  let closestIndex = -1;
+  let closestDist = Infinity;
+
+  for (let i = 0; i < xs.length; i++) {
+    let d = dist(mouseX, mouseY, xs[i], ys[i]);
+    if (d < closestDist) {
+      closestDist = d;
+      closestIndex = i;
+    }
+  }
+
+  for (let i = 0; i < xs.length; i++) {
+    if (i == closestIndex) {
+      fill(255, 0, 0);
+      circle(xs[i], ys[i], 30);
+    } else {
+      fill(100);
+      circle(xs[i], ys[i], 20);
+    }
+  }
+}`,
+            hints: [
+              "dist() calculates distance between two points",
+              "Infinity is larger than any number",
+              "Track both the closest distance AND index"
+            ],
+            vocabularyTerms: ["traversal", "dist", "conditional"]
+          }
+        ],
+        exitTicket: "Why do we need two separate loops in the closest-point solution?"
+      },
+      {
+        day: 14,
+        title: "Updating Elements",
+        objective: "Traverse to modify array values",
+        exercises: [
+          {
+            id: "w3d14-1",
+            title: "Moving All Points",
+            difficulty: "Medium",
+            points: 15,
+            description: "Add velocity to make all points move",
+            prompt: "Each point has a velocity. Update all positions each frame.",
+            starterCode: `let xs = [];
+let ys = [];
+let vx = [];
+let vy = [];
+
+function setup() {
+  createCanvas(800, 500);
+  for (let i = 0; i < 10; i++) {
+    xs.push(random(width));
+    ys.push(random(height));
+    vx.push(random(-2, 2));
+    vy.push(random(-2, 2));
+  }
+}
+
+function draw() {
+  background(240);
+
+  // Traverse: update positions and draw
+}`,
+            solutionCode: `let xs = [];
+let ys = [];
+let vx = [];
+let vy = [];
+
+function setup() {
+  createCanvas(800, 500);
+  for (let i = 0; i < 10; i++) {
+    xs.push(random(width));
+    ys.push(random(height));
+    vx.push(random(-2, 2));
+    vy.push(random(-2, 2));
+  }
+}
+
+function draw() {
+  background(240);
+
+  for (let i = 0; i < xs.length; i++) {
+    xs[i] += vx[i];
+    ys[i] += vy[i];
+    circle(xs[i], ys[i], 20);
+  }
+}`,
+            hints: [
+              "vx and vy are velocity (speed + direction)",
+              "Add velocity to position each frame",
+              "xs[i] += vx[i] updates the position"
+            ],
+            vocabularyTerms: ["traversal", "velocity", "update"]
+          },
+          {
+            id: "w3d14-2",
+            title: "Bounce Off Walls",
+            difficulty: "Medium",
+            points: 20,
+            description: "Make points bounce when they hit edges",
+            prompt: "Extend the moving points: reverse velocity when hitting walls.",
+            starterCode: `let xs = [];
+let ys = [];
+let vx = [];
+let vy = [];
+
+function setup() {
+  createCanvas(800, 500);
+  for (let i = 0; i < 10; i++) {
+    xs.push(random(width));
+    ys.push(random(height));
+    vx.push(random(-3, 3));
+    vy.push(random(-3, 3));
+  }
+}
+
+function draw() {
+  background(240);
+
+  for (let i = 0; i < xs.length; i++) {
+    // Update position
+
+    // Bounce off walls
+
+    circle(xs[i], ys[i], 20);
+  }
+}`,
+            solutionCode: `let xs = [];
+let ys = [];
+let vx = [];
+let vy = [];
+
+function setup() {
+  createCanvas(800, 500);
+  for (let i = 0; i < 10; i++) {
+    xs.push(random(width));
+    ys.push(random(height));
+    vx.push(random(-3, 3));
+    vy.push(random(-3, 3));
+  }
+}
+
+function draw() {
+  background(240);
+
+  for (let i = 0; i < xs.length; i++) {
+    xs[i] += vx[i];
+    ys[i] += vy[i];
+
+    if (xs[i] < 0 || xs[i] > width) {
+      vx[i] *= -1;
+    }
+    if (ys[i] < 0 || ys[i] > height) {
+      vy[i] *= -1;
+    }
+
+    circle(xs[i], ys[i], 20);
+  }
+}`,
+            hints: [
+              "Check if position is outside bounds",
+              "Multiply velocity by -1 to reverse",
+              "Check x and y separately"
+            ],
+            vocabularyTerms: ["traversal", "bounce", "conditional"]
+          }
+        ],
+        exitTicket: "How do you reverse a velocity value?"
+      },
+      {
+        day: 15,
+        title: "Mini-Project: Particle Fountain",
+        objective: "Create a particle system with spawning and removal",
+        exercises: [
+          {
+            id: "w3d15-project",
+            title: "Particle Fountain",
+            difficulty: "Hard",
+            points: 50,
+            isProject: true,
+            description: "Create an interactive particle system",
+            prompt: "Build a particle fountain:\n- Click to spawn burst of particles\n- Particles have gravity\n- Particles shrink over time\n- Remove particles when too small",
+            starterCode: `let xs = [];
+let ys = [];
+let vx = [];
+let vy = [];
+let life = [];
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(0);
+
+  // Traverse backwards (important for removal!)
+  for (let i = xs.length - 1; i >= 0; i--) {
+    // Update position
+    // Apply gravity
+    // Decrease life
+    // Draw particle
+    // Remove if dead
+  }
+}
+
+function mousePressed() {
+  // Spawn 20 particles at mouse position
+}`,
+            solutionCode: `let xs = [];
+let ys = [];
+let vx = [];
+let vy = [];
+let life = [];
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(0);
+
+  for (let i = xs.length - 1; i >= 0; i--) {
+    // Update
+    xs[i] += vx[i];
+    ys[i] += vy[i];
+    vy[i] += 0.2; // gravity
+    life[i] -= 2;
+
+    // Draw
+    fill(255, life[i] * 2.5);
+    noStroke();
+    circle(xs[i], ys[i], life[i] / 3);
+
+    // Remove dead particles
+    if (life[i] <= 0) {
+      xs.splice(i, 1);
+      ys.splice(i, 1);
+      vx.splice(i, 1);
+      vy.splice(i, 1);
+      life.splice(i, 1);
+    }
+  }
+
+  // UI
+  fill(255);
+  text("Particles: " + xs.length, 10, 20);
+  text("Click to spawn", 10, 40);
+}
+
+function mousePressed() {
+  for (let i = 0; i < 20; i++) {
+    xs.push(mouseX);
+    ys.push(mouseY);
+    vx.push(random(-3, 3));
+    vy.push(random(-6, -1));
+    life.push(100);
+  }
+}`,
+            hints: [
+              "Loop BACKWARDS when removing elements",
+              "splice(i, 1) removes element at index i",
+              "Gravity: add to vy each frame",
+              "Life decreases; remove when <= 0"
+            ],
+            vocabularyTerms: ["traversal", "splice", "particle-system"],
+            rubric: {
+              spawning: "Click spawns multiple particles",
+              physics: "Gravity affects particles",
+              lifecycle: "Particles shrink and are removed",
+              visuals: "Particles look good (fade, color, etc.)"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  week4: {
+    title: "Filtering and 2D Arrays",
+    bigIdea: "Traversal can filter, transform, and work with grids.",
+    days: [
+      {
+        day: 16,
+        title: "Filtering",
+        objective: "Keep only elements that match a condition",
+        exercises: [
+          {
+            id: "w4d16-1",
+            title: "Filter Big Numbers",
+            difficulty: "Medium",
+            points: 15,
+            description: "Create a new array with only values above 50",
+            prompt: "Given an array of numbers, create a new array containing only values greater than 50.",
+            starterCode: `let nums = [10, 40, 70, 20, 90, 55, 30, 85];
+
+function setup() {
+  createCanvas(800, 500);
+  textSize(20);
+
+  let big = [];
+
+  // Filter: keep only nums > 50
+
+  text("Original: " + nums.join(", "), 50, 100);
+  text("Filtered: " + big.join(", "), 50, 150);
+}`,
+            solutionCode: `let nums = [10, 40, 70, 20, 90, 55, 30, 85];
+
+function setup() {
+  createCanvas(800, 500);
+  textSize(20);
+
+  let big = [];
+
+  for (let i = 0; i < nums.length; i++) {
+    if (nums[i] > 50) {
+      big.push(nums[i]);
+    }
+  }
+
+  text("Original: " + nums.join(", "), 50, 100);
+  text("Filtered: " + big.join(", "), 50, 150);
+}`,
+            hints: [
+              "Create an empty result array",
+              "Traverse the original array",
+              "Push elements that match the condition"
+            ],
+            vocabularyTerms: ["filter", "traversal", "conditional"]
+          },
+          {
+            id: "w4d16-2",
+            title: "Visual Filter",
+            difficulty: "Medium",
+            points: 20,
+            description: "Draw only particles on the right side",
+            prompt: "Only draw particles whose x position is greater than width/2.",
+            starterCode: `let xs = [];
+let ys = [];
+
+function setup() {
+  createCanvas(800, 500);
+  for (let i = 0; i < 50; i++) {
+    xs.push(random(width));
+    ys.push(random(height));
+  }
+}
+
+function draw() {
+  background(240);
+
+  // Draw line at center
+  stroke(200);
+  line(width / 2, 0, width / 2, height);
+
+  // Only draw dots on right side
+  noStroke();
+  fill(0, 150, 255);
+}`,
+            solutionCode: `let xs = [];
+let ys = [];
+
+function setup() {
+  createCanvas(800, 500);
+  for (let i = 0; i < 50; i++) {
+    xs.push(random(width));
+    ys.push(random(height));
+  }
+}
+
+function draw() {
+  background(240);
+
+  stroke(200);
+  line(width / 2, 0, width / 2, height);
+
+  noStroke();
+  fill(0, 150, 255);
+
+  for (let i = 0; i < xs.length; i++) {
+    if (xs[i] > width / 2) {
+      circle(xs[i], ys[i], 15);
+    }
+  }
+
+  fill(0);
+  text("Showing only right-side dots", 10, 20);
+}`,
+            hints: [
+              "You don't need to create a new array",
+              "Just add a condition before drawing",
+              "Only draw if x > width/2"
+            ],
+            vocabularyTerms: ["filter", "conditional", "traversal"]
+          }
+        ],
+        exitTicket: "What's the difference between filtering into a new array vs filtering during drawing?"
+      },
+      {
+        day: 17,
+        title: "Reducing",
+        objective: "Compute a single value from an array",
+        exercises: [
+          {
+            id: "w4d17-1",
+            title: "Total Score",
+            difficulty: "Easy",
+            points: 10,
+            description: "Sum all values to get a total",
+            prompt: "Calculate the total score from an array of point values.",
+            starterCode: `let points = [10, 25, 15, 30, 20, 5];
+
+function setup() {
+  createCanvas(800, 500);
+  textSize(24);
+
+  let total = 0;
+
+  // Calculate total
+
+  text("Total Points: " + total, 50, 100);
+}`,
+            solutionCode: `let points = [10, 25, 15, 30, 20, 5];
+
+function setup() {
+  createCanvas(800, 500);
+  textSize(24);
+
+  let total = 0;
+
+  for (let i = 0; i < points.length; i++) {
+    total += points[i];
+  }
+
+  text("Total Points: " + total, 50, 100);
+}`,
+            hints: [
+              "Start with total = 0",
+              "Add each element to total",
+              "This is called 'reducing' to a single value"
+            ],
+            vocabularyTerms: ["reduce", "accumulator", "sum"]
+          },
+          {
+            id: "w4d17-2",
+            title: "Energy Meter",
+            difficulty: "Medium",
+            points: 20,
+            description: "Sum particle sizes to show total 'energy'",
+            prompt: "Create particles with random sizes. Show total 'energy' (sum of all sizes) as a bar.",
+            starterCode: `let sizes = [];
+
+function setup() {
+  createCanvas(800, 500);
+  for (let i = 0; i < 20; i++) {
+    sizes.push(random(10, 50));
+  }
+}
+
+function draw() {
+  background(240);
+
+  // Calculate total energy
+  let energy = 0;
+
+  // Draw energy bar
+
+  // Draw particles
+}`,
+            solutionCode: `let xs = [];
+let ys = [];
+let sizes = [];
+
+function setup() {
+  createCanvas(800, 500);
+  for (let i = 0; i < 20; i++) {
+    xs.push(random(100, width - 100));
+    ys.push(random(100, height - 50));
+    sizes.push(random(10, 50));
+  }
+}
+
+function draw() {
+  background(240);
+
+  // Calculate total energy
+  let energy = 0;
+  for (let i = 0; i < sizes.length; i++) {
+    energy += sizes[i];
+  }
+
+  // Draw energy bar
+  fill(100);
+  rect(50, 20, 300, 20);
+  fill(0, 200, 100);
+  rect(50, 20, energy / 2, 20);
+  fill(0);
+  text("Energy: " + floor(energy), 360, 35);
+
+  // Draw particles
+  for (let i = 0; i < xs.length; i++) {
+    fill(0, 150, 255, 150);
+    circle(xs[i], ys[i], sizes[i]);
+  }
+}`,
+            hints: [
+              "Sum all sizes to get energy",
+              "Draw a bar proportional to energy",
+              "Scale the bar width appropriately"
+            ],
+            vocabularyTerms: ["reduce", "sum", "visualization"]
+          }
+        ],
+        exitTicket: "What does 'reducing' an array mean?"
+      },
+      {
+        day: 18,
+        title: "2D Arrays and Grids",
+        objective: "Use nested loops to create and draw grids",
+        exercises: [
+          {
+            id: "w4d18-1",
+            title: "Draw a Grid",
+            difficulty: "Medium",
+            points: 15,
+            description: "Use nested loops to draw a grid of squares",
+            prompt: "Draw a 10x10 grid of squares using nested for-loops.",
+            starterCode: `function setup() {
+  createCanvas(500, 500);
+}
+
+function draw() {
+  background(220);
+
+  // Nested loops: rows and columns
+  // Each cell is 50x50 pixels
+}`,
+            solutionCode: `function setup() {
+  createCanvas(500, 500);
+}
+
+function draw() {
+  background(220);
+
+  for (let row = 0; row < 10; row++) {
+    for (let col = 0; col < 10; col++) {
+      let x = col * 50;
+      let y = row * 50;
+      stroke(0);
+      noFill();
+      rect(x, y, 50, 50);
+    }
+  }
+}`,
+            hints: [
+              "Outer loop controls rows",
+              "Inner loop controls columns",
+              "x depends on col, y depends on row"
+            ],
+            vocabularyTerms: ["nested-loop", "grid", "2d-array"]
+          },
+          {
+            id: "w4d18-2",
+            title: "Checkerboard",
+            difficulty: "Medium",
+            points: 20,
+            description: "Color the grid like a checkerboard",
+            prompt: "Make alternating squares black and white like a checkerboard.",
+            starterCode: `function setup() {
+  createCanvas(500, 500);
+}
+
+function draw() {
+  background(220);
+
+  for (let row = 0; row < 10; row++) {
+    for (let col = 0; col < 10; col++) {
+      let x = col * 50;
+      let y = row * 50;
+
+      // Alternate colors based on row + col
+
+      rect(x, y, 50, 50);
+    }
+  }
+}`,
+            solutionCode: `function setup() {
+  createCanvas(500, 500);
+}
+
+function draw() {
+  background(220);
+
+  for (let row = 0; row < 10; row++) {
+    for (let col = 0; col < 10; col++) {
+      let x = col * 50;
+      let y = row * 50;
+
+      if ((row + col) % 2 == 0) {
+        fill(255);
+      } else {
+        fill(0);
+      }
+
+      noStroke();
+      rect(x, y, 50, 50);
+    }
+  }
+}`,
+            hints: [
+              "(row + col) % 2 alternates between 0 and 1",
+              "Use this to choose between two colors",
+              "% is the modulo (remainder) operator"
+            ],
+            vocabularyTerms: ["nested-loop", "modulo", "pattern"]
+          }
+        ],
+        exitTicket: "What does (row + col) % 2 calculate?"
+      },
+      {
+        day: 19,
+        title: "2D Array Data",
+        objective: "Store and access data in a 2D array",
+        exercises: [
+          {
+            id: "w4d19-1",
+            title: "Random Walls",
+            difficulty: "Medium",
+            points: 20,
+            description: "Create a 2D array where some cells are walls",
+            prompt: "Create a 2D array grid where 0=floor and 1=wall. Draw walls as black squares.",
+            starterCode: `let grid = [];
+
+function setup() {
+  createCanvas(500, 500);
+
+  // Initialize 2D array
+  for (let r = 0; r < 10; r++) {
+    grid[r] = [];
+    for (let c = 0; c < 10; c++) {
+      // 20% chance of wall
+    }
+  }
+}
+
+function draw() {
+  background(220);
+
+  // Draw grid based on values
+}`,
+            solutionCode: `let grid = [];
+
+function setup() {
+  createCanvas(500, 500);
+
+  for (let r = 0; r < 10; r++) {
+    grid[r] = [];
+    for (let c = 0; c < 10; c++) {
+      grid[r][c] = random() < 0.2 ? 1 : 0;
+    }
+  }
+}
+
+function draw() {
+  background(220);
+
+  for (let r = 0; r < 10; r++) {
+    for (let c = 0; c < 10; c++) {
+      let x = c * 50;
+      let y = r * 50;
+
+      if (grid[r][c] == 1) {
+        fill(0);
+      } else {
+        fill(255);
+      }
+
+      stroke(100);
+      rect(x, y, 50, 50);
+    }
+  }
+}`,
+            hints: [
+              "grid[r] = [] creates a row",
+              "grid[r][c] accesses row r, column c",
+              "random() < 0.2 is true 20% of the time"
+            ],
+            vocabularyTerms: ["2d-array", "grid", "random"]
+          },
+          {
+            id: "w4d19-2",
+            title: "Player Movement",
+            difficulty: "Hard",
+            points: 25,
+            description: "Add a player that moves on the grid",
+            prompt: "Add arrow key movement. The player cannot move into walls.",
+            starterCode: `let grid = [];
+let playerR = 0;
+let playerC = 0;
+
+function setup() {
+  createCanvas(500, 500);
+
+  for (let r = 0; r < 10; r++) {
+    grid[r] = [];
+    for (let c = 0; c < 10; c++) {
+      grid[r][c] = random() < 0.2 ? 1 : 0;
+    }
+  }
+  grid[0][0] = 0; // Start clear
+}
+
+function draw() {
+  // Draw grid and player
+}
+
+function keyPressed() {
+  // Move player with arrow keys
+  // Don't allow moving into walls
+}`,
+            solutionCode: `let grid = [];
+let playerR = 0;
+let playerC = 0;
+
+function setup() {
+  createCanvas(500, 500);
+
+  for (let r = 0; r < 10; r++) {
+    grid[r] = [];
+    for (let c = 0; c < 10; c++) {
+      grid[r][c] = random() < 0.2 ? 1 : 0;
+    }
+  }
+  grid[0][0] = 0;
+}
+
+function draw() {
+  background(220);
+
+  for (let r = 0; r < 10; r++) {
+    for (let c = 0; c < 10; c++) {
+      let x = c * 50;
+      let y = r * 50;
+
+      if (grid[r][c] == 1) {
+        fill(40);
+      } else {
+        fill(200);
+      }
+      stroke(100);
+      rect(x, y, 50, 50);
+    }
+  }
+
+  // Draw player
+  fill(0, 150, 255);
+  rect(playerC * 50 + 5, playerR * 50 + 5, 40, 40);
+}
+
+function keyPressed() {
+  let newR = playerR;
+  let newC = playerC;
+
+  if (keyCode == UP_ARROW) newR--;
+  if (keyCode == DOWN_ARROW) newR++;
+  if (keyCode == LEFT_ARROW) newC--;
+  if (keyCode == RIGHT_ARROW) newC++;
+
+  // Check bounds and walls
+  if (newR >= 0 && newR < 10 && newC >= 0 && newC < 10) {
+    if (grid[newR][newC] != 1) {
+      playerR = newR;
+      playerC = newC;
+    }
+  }
+}`,
+            hints: [
+              "Calculate new position first, don't move yet",
+              "Check if new position is in bounds",
+              "Check if new position is not a wall",
+              "Only then update player position"
+            ],
+            vocabularyTerms: ["2d-array", "collision", "keyCode"]
+          }
+        ],
+        exitTicket: "How do you check if a grid cell is a wall before moving?"
+      },
+      {
+        day: 20,
+        title: "Final Capstone Project",
+        objective: "Apply all concepts in a complete project",
+        exercises: [
+          {
+            id: "w4d20-capstone",
+            title: "Grid Adventure Game",
+            difficulty: "Hard",
+            points: 100,
+            isProject: true,
+            isCapstone: true,
+            description: "Create a complete grid-based game",
+            prompt: "Build a Grid Adventure Game:\n- 2D array map (0=floor, 1=wall, 2=goal, 3=coin)\n- Player moves with arrow keys\n- Collect coins for points\n- Reach the goal to win\n- Display score and instructions",
+            starterCode: `let grid = [];
+let playerR = 0;
+let playerC = 0;
+let score = 0;
+let gameWon = false;
+
+function setup() {
+  createCanvas(500, 550);
+  initializeMap();
+}
+
+function initializeMap() {
+  // Create 10x10 grid
+  // Place walls, coins, and goal
+}
+
+function draw() {
+  background(30);
+
+  if (gameWon) {
+    // Show win screen
+  } else {
+    // Draw map
+    // Draw player
+    // Draw UI
+  }
+}
+
+function keyPressed() {
+  if (gameWon) return;
+
+  // Handle movement
+  // Check for coin collection
+  // Check for goal reached
+}`,
+            solutionCode: `let grid = [];
+let playerR = 0;
+let playerC = 0;
+let score = 0;
+let gameWon = false;
+
+function setup() {
+  createCanvas(500, 550);
+  initializeMap();
+}
+
+function initializeMap() {
+  for (let r = 0; r < 10; r++) {
+    grid[r] = [];
+    for (let c = 0; c < 10; c++) {
+      let rand = random();
+      if (rand < 0.15) {
+        grid[r][c] = 1; // wall
+      } else if (rand < 0.25) {
+        grid[r][c] = 3; // coin
+      } else {
+        grid[r][c] = 0; // floor
+      }
+    }
+  }
+  grid[0][0] = 0; // start
+  grid[9][9] = 2; // goal
+}
+
+function draw() {
+  background(30);
+
+  if (gameWon) {
+    textSize(48);
+    fill(0, 255, 150);
+    textAlign(CENTER, CENTER);
+    text("YOU WIN!", width / 2, height / 2 - 30);
+    textSize(24);
+    text("Score: " + score, width / 2, height / 2 + 20);
+    text("Press R to restart", width / 2, height / 2 + 60);
+    return;
+  }
+
+  // Draw grid
+  for (let r = 0; r < 10; r++) {
+    for (let c = 0; c < 10; c++) {
+      let x = c * 50;
+      let y = r * 50;
+
+      if (grid[r][c] == 1) {
+        fill(60);
+      } else if (grid[r][c] == 2) {
+        fill(0, 255, 150);
+      } else if (grid[r][c] == 3) {
+        fill(255, 215, 0);
+      } else {
+        fill(40);
+      }
+
+      stroke(80);
+      rect(x, y, 50, 50);
+
+      if (grid[r][c] == 3) {
+        fill(255, 180, 0);
+        circle(x + 25, y + 25, 20);
+      }
+    }
+  }
+
+  // Draw player
+  fill(0, 150, 255);
+  noStroke();
+  rect(playerC * 50 + 8, playerR * 50 + 8, 34, 34, 5);
+
+  // UI
+  fill(255);
+  textSize(16);
+  textAlign(LEFT, CENTER);
+  text("Score: " + score + " | Arrow keys to move | Reach the green goal!", 10, 525);
+}
+
+function keyPressed() {
+  if (gameWon) {
+    if (key == 'R' || key == 'r') {
+      score = 0;
+      playerR = 0;
+      playerC = 0;
+      gameWon = false;
+      initializeMap();
+    }
+    return;
+  }
+
+  let newR = playerR;
+  let newC = playerC;
+
+  if (keyCode == UP_ARROW) newR--;
+  if (keyCode == DOWN_ARROW) newR++;
+  if (keyCode == LEFT_ARROW) newC--;
+  if (keyCode == RIGHT_ARROW) newC++;
+
+  if (newR >= 0 && newR < 10 && newC >= 0 && newC < 10) {
+    if (grid[newR][newC] != 1) {
+      playerR = newR;
+      playerC = newC;
+
+      // Collect coin
+      if (grid[playerR][playerC] == 3) {
+        score += 10;
+        grid[playerR][playerC] = 0;
+      }
+
+      // Check win
+      if (grid[playerR][playerC] == 2) {
+        gameWon = true;
+      }
+    }
+  }
+}`,
+            hints: [
+              "Initialize the grid with nested loops",
+              "Use different numbers for different tile types",
+              "Check what tile player moves onto",
+              "Change coin tiles to floor after collection"
+            ],
+            vocabularyTerms: ["2d-array", "game-loop", "collision", "state"],
+            rubric: {
+              grid: "10x10 grid displays correctly",
+              tiles: "Different tile types visible (floor, wall, goal, coin)",
+              movement: "Player moves with arrow keys",
+              collision: "Cannot walk through walls",
+              coins: "Coins can be collected, score increases",
+              goal: "Reaching goal triggers win state",
+              ui: "Score and instructions displayed",
+              polish: "Game is visually clear and playable"
+            }
+          }
+        ]
+      }
+    ]
+  }
+};
+
+// Helper functions
+export function getExerciseById(id) {
+  for (const week of Object.values(exercises)) {
+    for (const day of week.days) {
+      for (const exercise of day.exercises) {
+        if (exercise.id === id) {
+          return exercise;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+export function getAllExercises() {
+  const all = [];
+  for (const week of Object.values(exercises)) {
+    for (const day of week.days) {
+      all.push(...day.exercises);
+    }
+  }
+  return all;
+}
+
+export function getWeekExercises(weekKey) {
+  const week = exercises[weekKey];
+  if (!week) return [];
+  const all = [];
+  for (const day of week.days) {
+    all.push(...day.exercises);
+  }
+  return all;
+}
+
+export function getDayExercises(weekKey, dayNum) {
+  const week = exercises[weekKey];
+  if (!week) return [];
+  const day = week.days.find(d => d.day === dayNum);
+  return day ? day.exercises : [];
+}
