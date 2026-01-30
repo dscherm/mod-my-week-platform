@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { pseudocodeExercises, pseudocodeTopics } from '../../data/pseudocode';
 
-function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted }) {
+function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted, onNextExercise, allExerciseIds = [] }) {
   const exercise = pseudocodeExercises.find(ex => ex.id === exerciseId);
   const topic = exercise ? pseudocodeTopics.find(t => t.id === exercise.topic) : null;
 
@@ -11,6 +11,39 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted }) {
   const [isCorrect, setIsCorrect] = useState(false);
   const [showHints, setShowHints] = useState(false);
   const [currentHintIndex, setCurrentHintIndex] = useState(0);
+  const [showErrorHighlight, setShowErrorHighlight] = useState(false);
+  const [attemptCount, setAttemptCount] = useState(0);
+
+  // Reset state when exerciseId changes (e.g., when clicking "Next Activity")
+  useEffect(() => {
+    setUserAnswer('');
+    setFillBlanks({});
+    setIsSubmitted(false);
+    setIsCorrect(false);
+    setShowHints(false);
+    setCurrentHintIndex(0);
+    setShowErrorHighlight(false);
+    setAttemptCount(0);
+  }, [exerciseId]);
+
+  // Get the next exercise ID
+  const getNextExerciseId = () => {
+    if (!allExerciseIds || allExerciseIds.length === 0) {
+      // Fall back to using pseudocodeExercises order
+      const currentIndex = pseudocodeExercises.findIndex(ex => ex.id === exerciseId);
+      if (currentIndex >= 0 && currentIndex < pseudocodeExercises.length - 1) {
+        return pseudocodeExercises[currentIndex + 1].id;
+      }
+      return null;
+    }
+    const currentIndex = allExerciseIds.indexOf(exerciseId);
+    if (currentIndex >= 0 && currentIndex < allExerciseIds.length - 1) {
+      return allExerciseIds[currentIndex + 1];
+    }
+    return null;
+  };
+
+  const nextExerciseId = getNextExerciseId();
 
   // Parse fill-in-the-blank template
   const blanksData = useMemo(() => {
@@ -119,21 +152,203 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted }) {
     return false;
   };
 
+  // Generate line-by-line diff between user answer and correct answer
+  const generateDiff = () => {
+    if (!exercise || exercise.type === 'fill-blank') return null;
+
+    const correctAnswer = exercise.answer;
+    const userLines = userAnswer.split('\n').map(l => l.trim()).filter(l => l);
+    const correctLines = correctAnswer.split('\n').map(l => l.trim()).filter(l => l);
+
+    const diff = [];
+    const maxLines = Math.max(userLines.length, correctLines.length);
+
+    for (let i = 0; i < maxLines; i++) {
+      const userLine = userLines[i] || '';
+      const correctLine = correctLines[i] || '';
+      const isPseudocode = exercise.type === 'js-to-pseudocode';
+      const normalize = isPseudocode ? normalizePseudocode : normalizeJavaScript;
+
+      const normalizedUser = normalize(userLine);
+      const normalizedCorrect = normalize(correctLine);
+
+      if (normalizedUser === normalizedCorrect) {
+        diff.push({ type: 'match', user: userLine, correct: correctLine, line: i + 1 });
+      } else if (!userLine && correctLine) {
+        diff.push({ type: 'missing', user: '', correct: correctLine, line: i + 1 });
+      } else if (userLine && !correctLine) {
+        diff.push({ type: 'extra', user: userLine, correct: '', line: i + 1 });
+      } else {
+        diff.push({ type: 'different', user: userLine, correct: correctLine, line: i + 1 });
+      }
+    }
+
+    return diff;
+  };
+
+  // Find specific issues in user's code
+  const findLineIssues = (userLine, correctLine, isPseudocode) => {
+    const issues = [];
+
+    if (isPseudocode) {
+      // Check for common pseudocode mistakes
+      if (correctLine.includes('←') && userLine.includes('=') && !userLine.includes('←')) {
+        issues.push('Use ← for assignment instead of =');
+      }
+      if (correctLine.includes('DISPLAY') && !userLine.toUpperCase().includes('DISPLAY')) {
+        issues.push('Use DISPLAY() for output');
+      }
+      if (correctLine.includes('REPEAT') && !userLine.toUpperCase().includes('REPEAT')) {
+        issues.push('Use REPEAT for loops');
+      }
+      if (correctLine.includes('MOD') && userLine.includes('%')) {
+        issues.push('Use MOD instead of %');
+      }
+    } else {
+      // Check for common JavaScript mistakes
+      if (correctLine.includes('===') && userLine.includes('=') && !userLine.includes('===') && !userLine.includes('==')) {
+        issues.push('Missing comparison operator (use === or ==)');
+      }
+      if (correctLine.includes('console.log') && !userLine.includes('console.log')) {
+        issues.push('Use console.log() for output');
+      }
+      if (correctLine.includes('let ') && !userLine.includes('let ') && !userLine.includes('const ') && !userLine.includes('var ')) {
+        issues.push('Missing variable declaration (let/const/var)');
+      }
+      if (correctLine.includes(';') && !userLine.includes(';')) {
+        issues.push('Missing semicolon');
+      }
+    }
+
+    return issues;
+  };
+
+  // Highlight differences character by character
+  const highlightDifferences = (userStr, correctStr) => {
+    const result = [];
+    const maxLen = Math.max(userStr.length, correctStr.length);
+
+    for (let i = 0; i < maxLen; i++) {
+      const userChar = userStr[i] || '';
+      const correctChar = correctStr[i] || '';
+
+      if (userChar === correctChar) {
+        result.push({ char: userChar, type: 'match' });
+      } else if (!userChar) {
+        result.push({ char: correctChar, type: 'missing' });
+      } else if (!correctChar) {
+        result.push({ char: userChar, type: 'extra' });
+      } else {
+        result.push({ char: userChar, type: 'wrong', expected: correctChar });
+      }
+    }
+
+    return result;
+  };
+
+  // Flexible matching for trace/text answers (not code)
+  const flexibleTraceMatch = (userInput, correctAnswer) => {
+    // Normalize both strings
+    const normalizeTrace = (str) => {
+      return str
+        .toString()
+        .toLowerCase()
+        .trim()
+        // Remove extra whitespace
+        .replace(/\s+/g, ' ')
+        // Normalize equals signs with optional spaces
+        .replace(/\s*=\s*/g, '=')
+        // Normalize separators (comma, semicolon, and, newline all become comma)
+        .replace(/[,;\n]+/g, ',')
+        .replace(/\s+and\s+/gi, ',')
+        // Remove spaces around commas
+        .replace(/\s*,\s*/g, ',')
+        // Remove trailing comma
+        .replace(/,+$/, '')
+        .replace(/^,+/, '');
+    };
+
+    const normalizedUser = normalizeTrace(userInput);
+    const normalizedCorrect = normalizeTrace(correctAnswer);
+
+    // Direct match
+    if (normalizedUser === normalizedCorrect) return true;
+
+    // Check if it's a variable assignment answer (contains =)
+    if (normalizedCorrect.includes('=')) {
+      // Parse into key-value pairs and compare as sets
+      const parseAssignments = (str) => {
+        const pairs = str.split(',').filter(p => p.includes('='));
+        return new Set(pairs.map(p => p.trim()));
+      };
+
+      const userPairs = parseAssignments(normalizedUser);
+      const correctPairs = parseAssignments(normalizedCorrect);
+
+      // Check if all correct pairs exist in user answer (order doesn't matter)
+      if (userPairs.size === correctPairs.size) {
+        let allMatch = true;
+        correctPairs.forEach(pair => {
+          if (!userPairs.has(pair)) allMatch = false;
+        });
+        if (allMatch) return true;
+      }
+    }
+
+    // Check if it's a simple numeric or single-word answer
+    const userNumbers = normalizedUser.match(/\d+/g) || [];
+    const correctNumbers = normalizedCorrect.match(/\d+/g) || [];
+    if (userNumbers.length === 1 && correctNumbers.length === 1 && userNumbers[0] === correctNumbers[0]) {
+      return true;
+    }
+
+    // Try removing all non-alphanumeric characters for very flexible match
+    const stripSpecial = (s) => s.replace(/[^a-z0-9]/g, '');
+    if (stripSpecial(normalizedUser) === stripSpecial(normalizedCorrect)) return true;
+
+    return false;
+  };
+
   const checkAnswer = () => {
     let correct = false;
     const isPseudocodeAnswer = exercise.type === 'js-to-pseudocode';
 
     if (exercise.type === 'fill-blank') {
       // Check fill-in-the-blank answers
-      correct = Object.entries(exercise.blankAnswers || {}).every(([key, acceptableAnswers]) => {
-        const userValue = (fillBlanks[key] || '').trim().toLowerCase();
-        if (Array.isArray(acceptableAnswers)) {
-          return acceptableAnswers.some(ans => ans.toLowerCase() === userValue);
+      if (exercise.blankAnswers) {
+        // Multiple named blanks with template
+        correct = Object.entries(exercise.blankAnswers).every(([key, acceptableAnswers]) => {
+          const userValue = (fillBlanks[key] || '').trim().toLowerCase();
+          if (Array.isArray(acceptableAnswers)) {
+            return acceptableAnswers.some(ans => ans.toLowerCase() === userValue);
+          }
+          return acceptableAnswers.toLowerCase() === userValue;
+        });
+      } else if (exercise.answer) {
+        // Simple single blank with 'given' field - use userAnswer
+        const userValue = userAnswer.trim().toLowerCase();
+        const correctValue = exercise.answer.toString().trim().toLowerCase();
+        correct = userValue === correctValue;
+
+        // Also check acceptable alternatives
+        if (!correct && exercise.acceptableAnswers) {
+          correct = exercise.acceptableAnswers.some(
+            alt => userValue === alt.toString().trim().toLowerCase()
+          );
         }
-        return acceptableAnswers.toLowerCase() === userValue;
-      });
+      }
+    } else if (exercise.type === 'trace' || exercise.type === 'multiple-choice') {
+      // For trace and multiple-choice, use flexible matching
+      correct = flexibleTraceMatch(userAnswer, exercise.answer);
+
+      // Also check acceptable alternatives with flexible matching
+      if (!correct && exercise.acceptableAnswers) {
+        correct = exercise.acceptableAnswers.some(
+          alt => flexibleTraceMatch(userAnswer, alt)
+        );
+      }
     } else {
-      // Check translation answer
+      // Check translation answer (actual code)
       correct = compareCode(userAnswer, exercise.answer, isPseudocodeAnswer);
 
       // Check acceptable alternatives
@@ -147,18 +362,30 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted }) {
     setIsCorrect(correct);
     setIsSubmitted(true);
 
+    // Increment attempt count if wrong
+    if (!correct) {
+      setAttemptCount(prev => prev + 1);
+    }
+
     if (correct && !isCompleted) {
       onComplete(exercise.id, 10);
     }
   };
 
-  const handleReset = () => {
-    setUserAnswer('');
-    setFillBlanks({});
+  // "Try Again" - keeps user's answer so they can edit it
+  const handleTryAgain = () => {
     setIsSubmitted(false);
     setIsCorrect(false);
-    setShowHints(false);
-    setCurrentHintIndex(0);
+    setShowErrorHighlight(false);
+  };
+
+  // Skip activity after 5 failed attempts
+  const handleSkip = () => {
+    if (nextExerciseId && onNextExercise) {
+      onNextExercise(nextExerciseId);
+    } else {
+      onBack();
+    }
   };
 
   const showNextHint = () => {
@@ -169,34 +396,65 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted }) {
 
   // Render fill-in-the-blank template
   const renderFillBlank = () => {
-    if (!exercise.template) return null;
+    // Handle template with named blanks (___blankX___)
+    if (exercise.template) {
+      const parts = exercise.template.split(/(___\w+___)/g);
 
-    const parts = exercise.template.split(/(___\w+___)/g);
+      return (
+        <div className="fill-blank-container">
+          <pre className="fill-blank-code">
+            {parts.map((part, index) => {
+              const match = part.match(/___(\w+)___/);
+              if (match) {
+                const blankId = match[1];
+                return (
+                  <input
+                    key={index}
+                    type="text"
+                    className={`fill-blank-input ${isSubmitted ? (isCorrect ? 'correct' : 'incorrect') : ''}`}
+                    value={fillBlanks[blankId] || ''}
+                    onChange={(e) => setFillBlanks({ ...fillBlanks, [blankId]: e.target.value })}
+                    placeholder="..."
+                    disabled={isSubmitted && isCorrect}
+                  />
+                );
+              }
+              return <span key={index}>{part}</span>;
+            })}
+          </pre>
+        </div>
+      );
+    }
 
-    return (
-      <div className="fill-blank-container">
-        <pre className="fill-blank-code">
-          {parts.map((part, index) => {
-            const match = part.match(/___(\w+)___/);
-            if (match) {
-              const blankId = match[1];
-              return (
-                <input
-                  key={index}
-                  type="text"
-                  className={`fill-blank-input ${isSubmitted ? (isCorrect ? 'correct' : 'incorrect') : ''}`}
-                  value={fillBlanks[blankId] || ''}
-                  onChange={(e) => setFillBlanks({ ...fillBlanks, [blankId]: e.target.value })}
-                  placeholder="..."
-                  disabled={isSubmitted && isCorrect}
-                />
-              );
-            }
-            return <span key={index}>{part}</span>;
-          })}
-        </pre>
-      </div>
-    );
+    // Handle simple blanks in 'given' field (just ___ without named ids)
+    if (exercise.given) {
+      const parts = exercise.given.split(/(_{2,})/g);
+
+      return (
+        <div className="fill-blank-container">
+          <pre className="fill-blank-code">
+            {parts.map((part, index) => {
+              if (/^_{2,}$/.test(part)) {
+                return (
+                  <input
+                    key={index}
+                    type="text"
+                    className={`fill-blank-input ${isSubmitted ? (isCorrect ? 'correct' : 'incorrect') : ''}`}
+                    value={userAnswer}
+                    onChange={(e) => setUserAnswer(e.target.value)}
+                    placeholder="..."
+                    disabled={isSubmitted && isCorrect}
+                  />
+                );
+              }
+              return <span key={index}>{part}</span>;
+            })}
+          </pre>
+        </div>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -222,8 +480,53 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted }) {
 
       {exercise.type === 'fill-blank' ? (
         renderFillBlank()
+      ) : exercise.type === 'trace' || exercise.type === 'multiple-choice' ? (
+        // Trace and multiple-choice exercises - show code and simple answer input
+        <div className="trace-exercise">
+          <div className="code-panel full-width">
+            <div className="code-panel-header given">
+              {exercise.given?.includes('←') || exercise.given?.includes('DISPLAY') || exercise.given?.includes('REPEAT') ? 'Pseudocode' : 'Code'}
+            </div>
+            <div className="code-panel-content">
+              <pre>{exercise.given}</pre>
+            </div>
+          </div>
+
+          {exercise.type === 'multiple-choice' && exercise.options ? (
+            <div className="multiple-choice-options">
+              {exercise.options.map((option, idx) => (
+                <label key={idx} className={`mc-option ${userAnswer === option ? 'selected' : ''} ${isSubmitted ? (option === exercise.answer ? 'correct-answer' : userAnswer === option && !isCorrect ? 'wrong-answer' : '') : ''}`}>
+                  <input
+                    type="radio"
+                    name="mc-answer"
+                    value={option}
+                    checked={userAnswer === option}
+                    onChange={(e) => setUserAnswer(e.target.value)}
+                    disabled={isSubmitted && isCorrect}
+                  />
+                  <span>{option}</span>
+                </label>
+              ))}
+            </div>
+          ) : (
+            <div className="trace-answer">
+              <label>Your Answer:</label>
+              <input
+                type="text"
+                value={userAnswer}
+                onChange={(e) => setUserAnswer(e.target.value)}
+                placeholder="Enter the result..."
+                disabled={isSubmitted && isCorrect}
+                className="trace-input"
+              />
+            </div>
+          )}
+        </div>
       ) : (
+        // Translation exercises - show two code panels side by side
         <div className="code-panels">
+          {/* For js-to-pseudocode: JavaScript on LEFT, Your Pseudocode on RIGHT */}
+          {/* For pseudocode-to-js: Pseudocode on LEFT, Your JavaScript on RIGHT */}
           <div className="code-panel">
             <div className="code-panel-header given">
               {exercise.type === 'pseudocode-to-js' ? 'Pseudocode' : 'JavaScript'}
@@ -249,18 +552,20 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted }) {
         </div>
       )}
 
-      <div className="format-help">
-        <details>
-          <summary>Accepted formats</summary>
-          <ul>
-            <li><code>←</code> or <code>&lt;--</code> or <code>&lt;-</code> for assignment</li>
-            <li><code>DISPLAY(x)</code> or <code>DISPLAY x</code> for output</li>
-            <li><code>≠</code> or <code>!=</code> or <code>&lt;&gt;</code> for not equal</li>
-            <li><code>≥</code> or <code>&gt;=</code> and <code>≤</code> or <code>&lt;=</code></li>
-            <li>Spacing and newlines are flexible</li>
-          </ul>
-        </details>
-      </div>
+      {(exercise.type === 'pseudocode-to-js' || exercise.type === 'js-to-pseudocode') && (
+        <div className="format-help">
+          <details>
+            <summary>Accepted formats</summary>
+            <ul>
+              <li><code>←</code> or <code>&lt;--</code> or <code>&lt;-</code> for assignment</li>
+              <li><code>DISPLAY(x)</code> or <code>DISPLAY x</code> for output</li>
+              <li><code>≠</code> or <code>!=</code> or <code>&lt;&gt;</code> for not equal</li>
+              <li><code>≥</code> or <code>&gt;=</code> and <code>≤</code> or <code>&lt;=</code></li>
+              <li>Spacing and newlines are flexible</li>
+            </ul>
+          </details>
+        </div>
+      )}
 
       <div className="exercise-actions">
         {!isSubmitted ? (
@@ -275,7 +580,7 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted }) {
               className="action-btn primary"
               onClick={checkAnswer}
               disabled={exercise.type === 'fill-blank'
-                ? Object.keys(fillBlanks).length === 0
+                ? (exercise.blankAnswers ? Object.keys(fillBlanks).length === 0 : !userAnswer.trim())
                 : !userAnswer.trim()}
             >
               Check Answer
@@ -283,22 +588,25 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted }) {
           </>
         ) : (
           <>
-            <button className="action-btn" onClick={handleReset}>
-              Try Again
-            </button>
             {!isCorrect && (
-              <button
-                className="action-btn"
-                onClick={() => {
-                  if (exercise.type === 'fill-blank') {
-                    setFillBlanks(exercise.blankAnswers || {});
-                  } else {
-                    setUserAnswer(exercise.answer);
-                  }
-                }}
-              >
-                Show Solution
-              </button>
+              <>
+                <button className="action-btn" onClick={handleTryAgain}>
+                  Try Again
+                </button>
+                {(exercise.type === 'pseudocode-to-js' || exercise.type === 'js-to-pseudocode') && (
+                  <button
+                    className="action-btn highlight-btn"
+                    onClick={() => setShowErrorHighlight(!showErrorHighlight)}
+                  >
+                    {showErrorHighlight ? 'Hide Errors' : 'Highlight Errors'}
+                  </button>
+                )}
+                {attemptCount >= 5 && (
+                  <button className="action-btn skip-btn" onClick={handleSkip}>
+                    Skip Activity →
+                  </button>
+                )}
+              </>
             )}
           </>
         )}
@@ -326,11 +634,26 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted }) {
             <>
               <h3>✓ Correct!</h3>
               <p>Great job! You've mastered this translation.</p>
+              {nextExerciseId && onNextExercise && (
+                <button
+                  className="action-btn primary next-activity-btn"
+                  onClick={() => onNextExercise(nextExerciseId)}
+                >
+                  Next Activity →
+                </button>
+              )}
+              {!nextExerciseId && (
+                <p className="completion-message">You've completed all exercises in this section!</p>
+              )}
             </>
           ) : (
             <>
               <h3>✗ Not Quite</h3>
-              <p>Check your answer and try again, or view the solution.</p>
+              <p>Check your answer and try again.</p>
+              <p className="attempt-counter">
+                Attempt {attemptCount} of 5
+                {attemptCount >= 5 && ' - You can now skip this activity'}
+              </p>
             </>
           )}
         </div>
@@ -340,6 +663,63 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted }) {
         <div className="explanation-box">
           <h4>Explanation</h4>
           <p>{exercise.explanation}</p>
+        </div>
+      )}
+
+      {showErrorHighlight && !isCorrect && (exercise.type === 'pseudocode-to-js' || exercise.type === 'js-to-pseudocode') && (
+        <div className="error-highlight-section">
+          <h4>Error Analysis</h4>
+          <div className="diff-legend">
+            <span className="legend-item"><span className="legend-color match"></span> Correct</span>
+            <span className="legend-item"><span className="legend-color different"></span> Needs fixing</span>
+            <span className="legend-item"><span className="legend-color missing"></span> Missing</span>
+            <span className="legend-item"><span className="legend-color extra"></span> Extra</span>
+          </div>
+          <div className="diff-container">
+            {generateDiff()?.map((line, idx) => {
+              const isPseudocode = exercise.type === 'js-to-pseudocode';
+              const issues = line.type === 'different'
+                ? findLineIssues(line.user, line.correct, isPseudocode)
+                : [];
+
+              return (
+                <div key={idx} className={`diff-line ${line.type}`}>
+                  <span className="diff-line-num">{line.line}</span>
+                  <div className="diff-content">
+                    {line.type === 'match' ? (
+                      <span className="diff-text match">{line.user}</span>
+                    ) : line.type === 'missing' ? (
+                      <span className="diff-text missing">+ {line.correct}</span>
+                    ) : line.type === 'extra' ? (
+                      <span className="diff-text extra">- {line.user}</span>
+                    ) : (
+                      <div className="diff-comparison">
+                        <div className="diff-yours">
+                          <span className="diff-label">Yours:</span>
+                          <span className="diff-text">
+                            {highlightDifferences(line.user, line.correct).map((ch, i) => (
+                              <span key={i} className={`char-${ch.type}`} title={ch.expected ? `Expected: ${ch.expected}` : ''}>{ch.char || '\u00A0'}</span>
+                            ))}
+                          </span>
+                        </div>
+                        <div className="diff-expected">
+                          <span className="diff-label">Expected:</span>
+                          <span className="diff-text correct">{line.correct}</span>
+                        </div>
+                        {issues.length > 0 && (
+                          <div className="diff-issues">
+                            {issues.map((issue, i) => (
+                              <span key={i} className="diff-issue">Hint: {issue}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

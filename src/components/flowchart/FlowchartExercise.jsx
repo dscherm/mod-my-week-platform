@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { flowchartExercises } from '../../data/flowcharts';
+import { useState, useMemo, useEffect } from 'react';
+import { flowchartExercises, flowchartExamples } from '../../data/flowcharts';
+import FlowchartViewer from './FlowchartViewer';
 
-function FlowchartExercise({ exerciseId, onComplete, onBack, isCompleted }) {
+function FlowchartExercise({ exerciseId, onComplete, onBack, isCompleted, onNextExercise, allExerciseIds = [] }) {
   const exercise = flowchartExercises.find(ex => ex.id === exerciseId);
 
   const [userAnswer, setUserAnswer] = useState('');
@@ -9,6 +10,42 @@ function FlowchartExercise({ exerciseId, onComplete, onBack, isCompleted }) {
   const [isCorrect, setIsCorrect] = useState(false);
   const [showHints, setShowHints] = useState(false);
   const [currentHintIndex, setCurrentHintIndex] = useState(0);
+  const [attemptCount, setAttemptCount] = useState(0);
+
+  // Reset state when exerciseId changes (e.g., when clicking "Next Activity")
+  useEffect(() => {
+    setUserAnswer('');
+    setIsSubmitted(false);
+    setIsCorrect(false);
+    setShowHints(false);
+    setCurrentHintIndex(0);
+    setAttemptCount(0);
+  }, [exerciseId]);
+
+  // Get the next exercise ID
+  const getNextExerciseId = () => {
+    if (!allExerciseIds || allExerciseIds.length === 0) {
+      // Fall back to using flowchartExercises order
+      const currentIndex = flowchartExercises.findIndex(ex => ex.id === exerciseId);
+      if (currentIndex >= 0 && currentIndex < flowchartExercises.length - 1) {
+        return flowchartExercises[currentIndex + 1].id;
+      }
+      return null;
+    }
+    const currentIndex = allExerciseIds.indexOf(exerciseId);
+    if (currentIndex >= 0 && currentIndex < allExerciseIds.length - 1) {
+      return allExerciseIds[currentIndex + 1];
+    }
+    return null;
+  };
+
+  const nextExerciseId = getNextExerciseId();
+
+  // Get the referenced flowchart if it exists
+  const referencedFlowchart = useMemo(() => {
+    if (!exercise?.flowchartRef) return null;
+    return flowchartExamples.find(fc => fc.id === exercise.flowchartRef);
+  }, [exercise]);
 
   if (!exercise) {
     return (
@@ -21,25 +58,97 @@ function FlowchartExercise({ exerciseId, onComplete, onBack, isCompleted }) {
     );
   }
 
-  const checkAnswer = () => {
-    const normalizedUser = userAnswer.trim().toLowerCase();
-    const normalizedAnswer = exercise.answer.trim().toLowerCase();
+  // Flexible matching for flowchart answers
+  const flexibleMatch = (userInput, correctAnswer) => {
+    const normalizeAnswer = (str) => {
+      return str
+        .toString()
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, ' ')
+        .replace(/\s*=\s*/g, '=')
+        .replace(/[,;\n]+/g, ',')
+        .replace(/\s*,\s*/g, ',');
+    };
 
-    const correct = normalizedUser === normalizedAnswer;
+    const normalizedUser = normalizeAnswer(userInput);
+    const normalizedCorrect = normalizeAnswer(correctAnswer);
+
+    // Direct match
+    if (normalizedUser === normalizedCorrect) return true;
+
+    // Check if it's a variable assignment answer (contains =)
+    if (normalizedCorrect.includes('=')) {
+      const parseAssignments = (str) => {
+        const pairs = str.split(',').filter(p => p.includes('='));
+        return new Set(pairs.map(p => p.trim()));
+      };
+
+      const userPairs = parseAssignments(normalizedUser);
+      const correctPairs = parseAssignments(normalizedCorrect);
+
+      if (userPairs.size === correctPairs.size) {
+        let allMatch = true;
+        correctPairs.forEach(pair => {
+          if (!userPairs.has(pair)) allMatch = false;
+        });
+        if (allMatch) return true;
+      }
+    }
+
+    // Check for numeric answer match
+    const userNumbers = normalizedUser.match(/\d+/g) || [];
+    const correctNumbers = normalizedCorrect.match(/\d+/g) || [];
+    if (userNumbers.length === 1 && correctNumbers.length === 1 && userNumbers[0] === correctNumbers[0]) {
+      return true;
+    }
+
+    // Strip special characters for flexible match
+    const stripSpecial = (s) => s.replace(/[^a-z0-9]/g, '');
+    if (stripSpecial(normalizedUser) === stripSpecial(normalizedCorrect)) return true;
+
+    // Check if answer contains the key parts (for flexible answers like "8 (max ← b)")
+    const answerParts = normalizedCorrect.split(/[\s()]+/).filter(p => p.length > 0);
+    const keyPart = answerParts[0];
+    if (normalizedUser.includes(keyPart) || keyPart.includes(normalizedUser)) return true;
+
+    return false;
+  };
+
+  const checkAnswer = () => {
+    let correct = flexibleMatch(userAnswer, exercise.answer);
+
+    // Also check acceptable alternatives
+    if (!correct && exercise.acceptableAnswers) {
+      correct = exercise.acceptableAnswers.some(alt => flexibleMatch(userAnswer, alt));
+    }
+
     setIsCorrect(correct);
     setIsSubmitted(true);
+
+    // Increment attempt count if wrong
+    if (!correct) {
+      setAttemptCount(prev => prev + 1);
+    }
 
     if (correct && !isCompleted) {
       onComplete(exercise.id, 10);
     }
   };
 
-  const handleReset = () => {
-    setUserAnswer('');
+  // "Try Again" - keeps user's answer so they can edit it
+  const handleTryAgain = () => {
     setIsSubmitted(false);
     setIsCorrect(false);
-    setShowHints(false);
-    setCurrentHintIndex(0);
+  };
+
+  // Skip activity after 5 failed attempts
+  const handleSkip = () => {
+    if (nextExerciseId && onNextExercise) {
+      onNextExercise(nextExerciseId);
+    } else {
+      onBack();
+    }
   };
 
   return (
@@ -61,6 +170,17 @@ function FlowchartExercise({ exerciseId, onComplete, onBack, isCompleted }) {
 
       <p className="exercise-description">{exercise.description}</p>
 
+      {/* Show the referenced flowchart */}
+      {referencedFlowchart && (
+        <div className="flowchart-reference">
+          <h3>Flowchart</h3>
+          <FlowchartViewer
+            flowchartData={referencedFlowchart}
+            showBackButton={false}
+          />
+        </div>
+      )}
+
       <div className="flowchart-question">
         <h3>Question</h3>
         <p className="question-text">{exercise.question}</p>
@@ -74,6 +194,7 @@ function FlowchartExercise({ exerciseId, onComplete, onBack, isCompleted }) {
           onChange={(e) => setUserAnswer(e.target.value)}
           placeholder="Type your answer..."
           disabled={isSubmitted && isCorrect}
+          onKeyPress={(e) => e.key === 'Enter' && userAnswer.trim() && checkAnswer()}
         />
       </div>
 
@@ -96,16 +217,17 @@ function FlowchartExercise({ exerciseId, onComplete, onBack, isCompleted }) {
           </>
         ) : (
           <>
-            <button className="action-btn" onClick={handleReset}>
-              Try Again
-            </button>
             {!isCorrect && (
-              <button
-                className="action-btn"
-                onClick={() => setUserAnswer(exercise.answer)}
-              >
-                Show Solution
-              </button>
+              <>
+                <button className="action-btn" onClick={handleTryAgain}>
+                  Try Again
+                </button>
+                {attemptCount >= 5 && (
+                  <button className="action-btn skip-btn" onClick={handleSkip}>
+                    Skip Activity →
+                  </button>
+                )}
+              </>
             )}
           </>
         )}
@@ -136,11 +258,26 @@ function FlowchartExercise({ exerciseId, onComplete, onBack, isCompleted }) {
             <>
               <h3>✓ Correct!</h3>
               <p>You correctly interpreted the flowchart.</p>
+              {nextExerciseId && onNextExercise && (
+                <button
+                  className="action-btn primary next-activity-btn"
+                  onClick={() => onNextExercise(nextExerciseId)}
+                >
+                  Next Activity →
+                </button>
+              )}
+              {!nextExerciseId && (
+                <p className="completion-message">You've completed all flowchart exercises!</p>
+              )}
             </>
           ) : (
             <>
               <h3>✗ Not Quite</h3>
               <p>Check your answer and try again.</p>
+              <p className="attempt-counter">
+                Attempt {attemptCount} of 5
+                {attemptCount >= 5 && ' - You can now skip this activity'}
+              </p>
             </>
           )}
         </div>

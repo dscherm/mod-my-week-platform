@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 
 function FlowchartBuilder({ onBack }) {
   const [nodes, setNodes] = useState([
@@ -8,6 +8,49 @@ function FlowchartBuilder({ onBack }) {
   ]);
 
   const [selectedNode, setSelectedNode] = useState(null);
+  const [dragging, setDragging] = useState(null);
+  const dragOffset = useRef({ x: 0, y: 0 });
+  const canvasRef = useRef(null);
+
+  // Start dragging a node
+  const handleMouseDown = (e, nodeId) => {
+    e.preventDefault();
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node) return;
+
+    const canvasRect = canvasRef.current?.getBoundingClientRect();
+    if (!canvasRect) return;
+
+    dragOffset.current = {
+      x: e.clientX - canvasRect.left - node.x,
+      y: e.clientY - canvasRect.top - node.y
+    };
+
+    setDragging(nodeId);
+    setSelectedNode(nodeId);
+  };
+
+  // Move the node while dragging
+  const handleMouseMove = useCallback((e) => {
+    if (!dragging || !canvasRef.current) return;
+
+    const canvasRect = canvasRef.current.getBoundingClientRect();
+    const newX = e.clientX - canvasRect.left - dragOffset.current.x;
+    const newY = e.clientY - canvasRect.top - dragOffset.current.y;
+
+    // Keep node within canvas bounds
+    const boundedX = Math.max(0, Math.min(newX, canvasRect.width - 100));
+    const boundedY = Math.max(0, Math.min(newY, canvasRect.height - 50));
+
+    setNodes(prev => prev.map(n =>
+      n.id === dragging ? { ...n, x: boundedX, y: boundedY } : n
+    ));
+  }, [dragging]);
+
+  // Stop dragging
+  const handleMouseUp = useCallback(() => {
+    setDragging(null);
+  }, []);
 
   const addNode = (type) => {
     const labels = {
@@ -67,13 +110,19 @@ function FlowchartBuilder({ onBack }) {
         </div>
 
         <div className="builder-canvas">
-          <div className="canvas-area">
+          <div
+            className="canvas-area"
+            ref={canvasRef}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          >
             {nodes.map(node => (
               <div
                 key={node.id}
-                className={`builder-node ${node.type} ${selectedNode === node.id ? 'selected' : ''}`}
+                className={`builder-node ${node.type} ${selectedNode === node.id ? 'selected' : ''} ${dragging === node.id ? 'dragging' : ''}`}
                 style={{ left: node.x, top: node.y }}
-                onClick={() => setSelectedNode(node.id)}
+                onMouseDown={(e) => handleMouseDown(e, node.id)}
               >
                 {node.type === 'oval' && <span className="node-shape oval-shape">{node.label}</span>}
                 {node.type === 'rectangle' && <span className="node-shape rect-shape">{node.label}</span>}
@@ -101,7 +150,7 @@ function FlowchartBuilder({ onBack }) {
       </div>
 
       <div className="builder-tips">
-        <p>Click a symbol to add it. Click a node to edit or delete it.</p>
+        <p>Click a symbol to add it. Drag nodes to move them. Click a node to edit or delete it.</p>
       </div>
     </div>
   );

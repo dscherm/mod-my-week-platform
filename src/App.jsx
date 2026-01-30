@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import Dashboard from './components/Dashboard';
 import UnifiedDashboard from './components/UnifiedDashboard';
+import ThemeSwitcher, { useTheme } from './components/ThemeSwitcher';
+import TeacherLogin from './components/TeacherLogin';
+import TeacherHome from './components/TeacherHome';
 import ChallengeList from './components/ChallengeList';
 import ChallengeDetail from './components/ChallengeDetail';
 import VocabularyPage from './components/VocabularyPage';
@@ -24,10 +27,15 @@ import FlowchartExercise from './components/flowchart/FlowchartExercise';
 import { saveStudentProgress, getStudentProgress, subscribeToAssignments, isFirebaseConfigured } from './services/firebaseService';
 
 function App() {
+  // Initialize theme on load
+  useTheme();
+
   // Auth state
   const [currentUser, setCurrentUser] = useState(null);
-  const [isTeacherMode, setIsTeacherMode] = useState(false);
+  const [currentTeacher, setCurrentTeacher] = useState(null);
   const [teacherClassCode, setTeacherClassCode] = useState(null);
+  const [showTeacherLogin, setShowTeacherLogin] = useState(false);
+  const [showThemeSwitcher, setShowThemeSwitcher] = useState(false);
 
   // App state
   const [currentView, setCurrentView] = useState('dashboard');
@@ -46,6 +54,7 @@ function App() {
   // AP CSP state
   const [completedPseudocode, setCompletedPseudocode] = useState([]);
   const [completedFlowcharts, setCompletedFlowcharts] = useState([]);
+  const [exitTicketResponses, setExitTicketResponses] = useState({});
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [selectedPseudocodeExercise, setSelectedPseudocodeExercise] = useState(null);
   const [selectedFlowchartExercise, setSelectedFlowchartExercise] = useState(null);
@@ -65,6 +74,19 @@ function App() {
         console.error('Error loading session:', e);
       }
     }
+
+    // Check for teacher session
+    const savedTeacherSession = localStorage.getItem('cyberrange-teacher-session');
+    if (savedTeacherSession) {
+      try {
+        const session = JSON.parse(savedTeacherSession);
+        if (session.teacher) {
+          setCurrentTeacher(session.teacher);
+        }
+      } catch (e) {
+        console.error('Error loading teacher session:', e);
+      }
+    }
   }, []);
 
   // Load user progress
@@ -78,6 +100,7 @@ function App() {
           setCompletedExercises(progress.completedExercises || []);
           setCompletedPseudocode(progress.completedPseudocode || []);
           setCompletedFlowcharts(progress.completedFlowcharts || []);
+          setExitTicketResponses(progress.exitTicketResponses || {});
           setTotalPoints(progress.totalPoints || 0);
         }
 
@@ -109,6 +132,7 @@ function App() {
         setCompletedExercises(data.completedExercises || []);
         setCompletedPseudocode(data.completedPseudocode || []);
         setCompletedFlowcharts(data.completedFlowcharts || []);
+        setExitTicketResponses(data.exitTicketResponses || {});
         setTotalPoints(data.points || 0);
       } catch (e) {
         console.error('Error loading local progress:', e);
@@ -117,7 +141,7 @@ function App() {
   };
 
   // Save progress (to Firebase and localStorage)
-  const saveProgress = useCallback(async (challenges, scenarios, exercises, pseudocode, flowcharts, points) => {
+  const saveProgress = useCallback(async (challenges, scenarios, exercises, pseudocode, flowcharts, exitTickets, points) => {
     // Always save to localStorage as backup
     localStorage.setItem('cyberrange-progress', JSON.stringify({
       completed: challenges,
@@ -125,6 +149,7 @@ function App() {
       completedExercises: exercises,
       completedPseudocode: pseudocode,
       completedFlowcharts: flowcharts,
+      exitTicketResponses: exitTickets,
       points: points
     }));
 
@@ -137,6 +162,7 @@ function App() {
           completedExercises: exercises,
           completedPseudocode: pseudocode,
           completedFlowcharts: flowcharts,
+          exitTicketResponses: exitTickets,
           totalPoints: points
         });
       } catch (e) {
@@ -148,9 +174,9 @@ function App() {
   // Save progress when it changes
   useEffect(() => {
     if (currentUser) {
-      saveProgress(completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, totalPoints);
+      saveProgress(completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, exitTicketResponses, totalPoints);
     }
-  }, [completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, totalPoints, currentUser, saveProgress]);
+  }, [completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, exitTicketResponses, totalPoints, currentUser, saveProgress]);
 
   // Handle student login
   const handleLogin = (user) => {
@@ -169,10 +195,29 @@ function App() {
     loadUserProgress(user);
   };
 
-  // Handle teacher mode
-  const handleTeacherMode = (classCode) => {
-    setIsTeacherMode(true);
+  // Handle teacher login
+  const handleTeacherLogin = (teacher) => {
+    setCurrentTeacher(teacher);
+    setShowTeacherLogin(false);
+    localStorage.setItem('cyberrange-teacher-session', JSON.stringify({ teacher }));
+  };
+
+  // Handle teacher selecting a class
+  const handleSelectClass = (classCode) => {
     setTeacherClassCode(classCode);
+  };
+
+  // Handle teacher going back to class list
+  const handleBackToClassList = () => {
+    setTeacherClassCode(null);
+  };
+
+  // Handle teacher logout
+  const handleTeacherLogout = () => {
+    setCurrentTeacher(null);
+    setTeacherClassCode(null);
+    setShowTeacherLogin(false);
+    localStorage.removeItem('cyberrange-teacher-session');
   };
 
   // Handle logout
@@ -185,6 +230,7 @@ function App() {
     setCompletedExercises([]);
     setCompletedPseudocode([]);
     setCompletedFlowcharts([]);
+    setExitTicketResponses({});
     setAssignments([]);
     setTotalPoints(0);
     setCurrentView('dashboard');
@@ -238,6 +284,7 @@ function App() {
       setCompletedExercises([]);
       setCompletedPseudocode([]);
       setCompletedFlowcharts([]);
+      setExitTicketResponses({});
       setTotalPoints(0);
       localStorage.removeItem('cyberrange-progress');
       setCurrentView('dashboard');
@@ -260,6 +307,13 @@ function App() {
       setCompletedExercises([...completedExercises, exerciseId]);
       setTotalPoints(totalPoints + points);
     }
+  };
+
+  const handleSubmitExitTicket = (ticketId, response, question) => {
+    setExitTicketResponses(prev => ({
+      ...prev,
+      [ticketId]: response
+    }));
   };
 
   const handleBackFromExercise = () => {
@@ -333,20 +387,43 @@ function App() {
     setCurrentView('flowchart-hub');
   };
 
-  // Show login screen if no user
-  if (!currentUser && !isTeacherMode) {
-    return <StudentLogin onLogin={handleLogin} onTeacherMode={handleTeacherMode} />;
+  // Show teacher login
+  if (showTeacherLogin) {
+    return (
+      <TeacherLogin
+        onLogin={handleTeacherLogin}
+        onBack={() => setShowTeacherLogin(false)}
+      />
+    );
   }
 
-  // Show teacher dashboard
-  if (isTeacherMode && teacherClassCode) {
+  // Show teacher home (class list)
+  if (currentTeacher && !teacherClassCode) {
+    return (
+      <TeacherHome
+        teacher={currentTeacher}
+        onSelectClass={handleSelectClass}
+        onLogout={handleTeacherLogout}
+      />
+    );
+  }
+
+  // Show teacher dashboard for specific class
+  if (currentTeacher && teacherClassCode) {
     return (
       <TeacherDashboard
         classCode={teacherClassCode}
-        onBack={() => {
-          setIsTeacherMode(false);
-          setTeacherClassCode(null);
-        }}
+        onBack={handleBackToClassList}
+      />
+    );
+  }
+
+  // Show login screen if no user
+  if (!currentUser) {
+    return (
+      <StudentLogin
+        onLogin={handleLogin}
+        onTeacherLogin={() => setShowTeacherLogin(true)}
       />
     );
   }
@@ -381,6 +458,13 @@ function App() {
               onClick={() => setCurrentView('vocabulary')}
             >
               Vocabulary
+            </button>
+            <button
+              className="nav-btn theme-btn"
+              onClick={() => setShowThemeSwitcher(true)}
+              title="Change Theme"
+            >
+              Theme
             </button>
             <button
               className="nav-btn"
@@ -446,6 +530,8 @@ function App() {
             onSelectExercise={handleSelectExercise}
             onBack={handleBackFromWeek}
             completedExercises={completedExercises}
+            exitTicketResponses={exitTicketResponses}
+            onSubmitExitTicket={handleSubmitExitTicket}
           />
         )}
 
@@ -493,6 +579,7 @@ function App() {
             onComplete={handleCompletePseudocodeExercise}
             onBack={handleBackFromPseudocodeExercise}
             isCompleted={completedPseudocode.includes(selectedPseudocodeExercise)}
+            onNextExercise={handleSelectPseudocodeExercise}
           />
         )}
 
@@ -524,6 +611,7 @@ function App() {
             onComplete={handleCompleteFlowchartExercise}
             onBack={handleBackFromFlowchartExercise}
             isCompleted={completedFlowcharts.includes(selectedFlowchartExercise)}
+            onNextExercise={handleSelectFlowchartExercise}
           />
         )}
 
@@ -531,6 +619,10 @@ function App() {
           <FlowchartBuilder onBack={() => setCurrentView('flowchart-hub')} />
         )}
       </main>
+
+      {showThemeSwitcher && (
+        <ThemeSwitcher onClose={() => setShowThemeSwitcher(false)} />
+      )}
     </div>
   );
 }

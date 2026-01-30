@@ -4,15 +4,20 @@ import { challenges } from '../data/challenges';
 import { scenarios } from '../data/networkScenarios';
 import AssignmentManager from './teacher/AssignmentManager';
 import ActivityManager from './teacher/ActivityManager';
+import ModuleEditor from './teacher/ModuleEditor';
+import ThemeSwitcher, { useTheme } from './ThemeSwitcher';
 
 const TeacherDashboard = ({ classCode, onBack }) => {
+  useTheme();
+
   const [students, setStudents] = useState([]);
   const [classInfo, setClassInfo] = useState(null);
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [sortBy, setSortBy] = useState('points'); // 'points', 'name', 'activity'
-  const [activeTab, setActiveTab] = useState('students'); // 'students', 'assignments', 'activities'
+  const [activeTab, setActiveTab] = useState('students'); // 'students', 'assignments', 'activities', 'modules'
+  const [showThemeSwitcher, setShowThemeSwitcher] = useState(false);
 
   const totalChallenges = Object.values(challenges).flat().length;
   const totalScenarios = scenarios.length;
@@ -114,6 +119,13 @@ const TeacherDashboard = ({ classCode, onBack }) => {
             Class Code: <strong>{classCode}</strong>
           </div>
         </div>
+        <button
+          className="theme-btn nav-btn"
+          onClick={() => setShowThemeSwitcher(true)}
+          title="Change Theme"
+        >
+          Theme
+        </button>
       </header>
 
       <div className="td-stats">
@@ -154,6 +166,12 @@ const TeacherDashboard = ({ classCode, onBack }) => {
         >
           View Activities
         </button>
+        <button
+          className={`td-tab ${activeTab === 'modules' ? 'active' : ''}`}
+          onClick={() => setActiveTab('modules')}
+        >
+          Modules
+        </button>
       </div>
 
       {activeTab === 'assignments' && (
@@ -165,6 +183,12 @@ const TeacherDashboard = ({ classCode, onBack }) => {
 
       {activeTab === 'activities' && (
         <ActivityManager
+          classCode={classCode}
+        />
+      )}
+
+      {activeTab === 'modules' && (
+        <ModuleEditor
           classCode={classCode}
         />
       )}
@@ -319,6 +343,10 @@ const TeacherDashboard = ({ classCode, onBack }) => {
         </div>
       </div>
         </>
+      )}
+
+      {showThemeSwitcher && (
+        <ThemeSwitcher onClose={() => setShowThemeSwitcher(false)} />
       )}
     </div>
   );
