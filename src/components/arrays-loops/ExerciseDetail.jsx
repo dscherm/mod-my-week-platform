@@ -316,7 +316,37 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit 
         </div>
       </div>
 
-      {/* Solution section hidden - teachers can view student submissions in the dashboard */}
+      {exercise.resources && exercise.resources.length > 0 && (
+        <div className="resources-section">
+          <h3>p5.js Reference</h3>
+          <div className="resources-list">
+            {exercise.resources.map((resource, index) => (
+              <a
+                key={index}
+                href={resource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="resource-link"
+              >
+                {resource.title}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="solution-section">
+        {!showSolution ? (
+          <button className="solution-button" onClick={handleShowSolution}>
+            Show Solution (try on your own first!)
+          </button>
+        ) : (
+          <div className="solution-revealed">
+            <h3>Solution</h3>
+            <pre className="solution-code">{exercise.solutionCode}</pre>
+          </div>
+        )}
+      </div>
 
       {exercise.rubric && (
         <div className="rubric-section">

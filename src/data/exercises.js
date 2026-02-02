@@ -42,7 +42,11 @@ function draw() {
               "Access elements with arrayName[index]",
               "The first element is at index 0"
             ],
-            vocabularyTerms: ["array", "index", "element"]
+            vocabularyTerms: ["array", "index", "element"],
+            resources: [
+              { title: "background()", url: "https://p5js.org/reference/p5/background/" },
+              { title: "createCanvas()", url: "https://p5js.org/reference/p5/createCanvas/" }
+            ]
           },
           {
             id: "w1d1-2",
@@ -82,7 +86,12 @@ function draw() {
               "Last element is at index array.length - 1",
               "Middle index is Math.floor(array.length / 2)"
             ],
-            vocabularyTerms: ["array", "index", "length"]
+            vocabularyTerms: ["array", "index", "length"],
+            resources: [
+              { title: "text()", url: "https://p5js.org/reference/p5/text/" },
+              { title: "textSize()", url: "https://p5js.org/reference/p5/textSize/" },
+              { title: "background()", url: "https://p5js.org/reference/p5/background/" }
+            ]
           },
           {
             id: "w1d1-3",
@@ -132,7 +141,15 @@ function mousePressed() {
               "floor() rounds down to a whole number",
               "Use random(words.length) to get a valid index"
             ],
-            vocabularyTerms: ["array", "random", "index"]
+            vocabularyTerms: ["array", "random", "index"],
+            resources: [
+              { title: "text()", url: "https://p5js.org/reference/p5/text/" },
+              { title: "textAlign()", url: "https://p5js.org/reference/p5/textAlign/" },
+              { title: "textSize()", url: "https://p5js.org/reference/p5/textSize/" },
+              { title: "random()", url: "https://p5js.org/reference/p5/random/" },
+              { title: "floor()", url: "https://p5js.org/reference/p5/floor/" },
+              { title: "mousePressed()", url: "https://p5js.org/reference/p5/mousePressed/" }
+            ]
           }
         ],
         exitTicket: "What does words[0] mean in an array called words?"
@@ -184,7 +201,13 @@ function mousePressed() {
               "Use a for loop to go through all elements",
               "xs.length tells you how many items"
             ],
-            vocabularyTerms: ["push", "array", "length"]
+            vocabularyTerms: ["push", "array", "length"],
+            resources: [
+              { title: "circle()", url: "https://p5js.org/reference/p5/circle/" },
+              { title: "mouseX / mouseY", url: "https://p5js.org/reference/p5/mouseX/" },
+              { title: "mousePressed()", url: "https://p5js.org/reference/p5/mousePressed/" },
+              { title: "height", url: "https://p5js.org/reference/p5/height/" }
+            ]
           },
           {
             id: "w1d2-2",
@@ -240,7 +263,12 @@ function keyPressed() {
               "Check which key was pressed with key == 'U'",
               "pop() returns the removed item (but you don't need to use it)"
             ],
-            vocabularyTerms: ["pop", "push", "keyPressed"]
+            vocabularyTerms: ["pop", "push", "keyPressed"],
+            resources: [
+              { title: "circle()", url: "https://p5js.org/reference/p5/circle/" },
+              { title: "keyPressed()", url: "https://p5js.org/reference/p5/keyPressed/" },
+              { title: "key", url: "https://p5js.org/reference/p5/key/" }
+            ]
           }
         ],
         exitTicket: "What's the difference between push() and pop()?"
@@ -295,7 +323,12 @@ function mousePressed() {
               "Index i refers to the same item in both arrays",
               "Push to both arrays at the same time"
             ],
-            vocabularyTerms: ["parallel-arrays", "index", "push"]
+            vocabularyTerms: ["parallel-arrays", "index", "push"],
+            resources: [
+              { title: "circle()", url: "https://p5js.org/reference/p5/circle/" },
+              { title: "mouseX / mouseY", url: "https://p5js.org/reference/p5/mouseX/" },
+              { title: "mousePressed()", url: "https://p5js.org/reference/p5/mousePressed/" }
+            ]
           },
           {
             id: "w1d3-2",
@@ -345,7 +378,11 @@ function mousePressed() {
               "All three arrays must stay the same length",
               "Use sizes[i] for the diameter of each circle"
             ],
-            vocabularyTerms: ["parallel-arrays", "random"]
+            vocabularyTerms: ["parallel-arrays", "random"],
+            resources: [
+              { title: "circle()", url: "https://p5js.org/reference/p5/circle/" },
+              { title: "random()", url: "https://p5js.org/reference/p5/random/" }
+            ]
           }
         ],
         exitTicket: "Why must parallel arrays always have the same length?"
@@ -398,7 +435,13 @@ function mousePressed() {
               "random(n) gives 0 to n-1 (but as a decimal)",
               "floor() rounds down to an integer"
             ],
-            vocabularyTerms: ["random", "index", "floor"]
+            vocabularyTerms: ["random", "index", "floor"],
+            resources: [
+              { title: "background()", url: "https://p5js.org/reference/p5/background/" },
+              { title: "random()", url: "https://p5js.org/reference/p5/random/" },
+              { title: "floor()", url: "https://p5js.org/reference/p5/floor/" },
+              { title: "mousePressed()", url: "https://p5js.org/reference/p5/mousePressed/" }
+            ]
           }
         ],
         exitTicket: "Why do we need floor() when picking a random index?"
@@ -483,6 +526,16 @@ function keyPressed() {
               "Set arrays to [] to clear them"
             ],
             vocabularyTerms: ["parallel-arrays", "push", "pop"],
+            resources: [
+              { title: "circle()", url: "https://p5js.org/reference/p5/circle/" },
+              { title: "fill()", url: "https://p5js.org/reference/p5/fill/" },
+              { title: "noStroke()", url: "https://p5js.org/reference/p5/noStroke/" },
+              { title: "color()", url: "https://p5js.org/reference/p5/color/" },
+              { title: "random()", url: "https://p5js.org/reference/p5/random/" },
+              { title: "text()", url: "https://p5js.org/reference/p5/text/" },
+              { title: "textSize()", url: "https://p5js.org/reference/p5/textSize/" },
+              { title: "keyPressed()", url: "https://p5js.org/reference/p5/keyPressed/" }
+            ],
             rubric: {
               functionality: "Click adds dots, U undoes, C clears",
               arrays: "Uses parallel arrays correctly",
@@ -534,7 +587,12 @@ function draw() {
               "Use i to calculate different x positions",
               "Multiply i by a spacing value"
             ],
-            vocabularyTerms: ["for-loop", "iteration", "loop-variable"]
+            vocabularyTerms: ["for-loop", "iteration", "loop-variable"],
+            resources: [
+              { title: "circle()", url: "https://p5js.org/reference/p5/circle/" },
+              { title: "height", url: "https://p5js.org/reference/p5/height/" },
+              { title: "width", url: "https://p5js.org/reference/p5/width/" }
+            ]
           },
           {
             id: "w2d6-2",
@@ -573,7 +631,12 @@ function draw() {
               "Multiply spacing by (i + 1) for each position",
               "Try changing n to see if it still works"
             ],
-            vocabularyTerms: ["for-loop", "spacing"]
+            vocabularyTerms: ["for-loop", "spacing"],
+            resources: [
+              { title: "circle()", url: "https://p5js.org/reference/p5/circle/" },
+              { title: "width", url: "https://p5js.org/reference/p5/width/" },
+              { title: "height", url: "https://p5js.org/reference/p5/height/" }
+            ]
           }
         ],
         exitTicket: "What are the three parts of a for-loop declaration?"
@@ -613,7 +676,11 @@ function draw() {
               "Y position decreases with i (going up)",
               "Use i * stepSize for both"
             ],
-            vocabularyTerms: ["for-loop", "pattern"]
+            vocabularyTerms: ["for-loop", "pattern"],
+            resources: [
+              { title: "rect()", url: "https://p5js.org/reference/p5/rect/" },
+              { title: "background()", url: "https://p5js.org/reference/p5/background/" }
+            ]
           },
           {
             id: "w2d7-2",
@@ -647,7 +714,13 @@ function draw() {
               "Start with a base size and add i * increment",
               "noFill() makes circles hollow"
             ],
-            vocabularyTerms: ["for-loop", "loop-variable"]
+            vocabularyTerms: ["for-loop", "loop-variable"],
+            resources: [
+              { title: "circle()", url: "https://p5js.org/reference/p5/circle/" },
+              { title: "noFill()", url: "https://p5js.org/reference/p5/noFill/" },
+              { title: "width", url: "https://p5js.org/reference/p5/width/" },
+              { title: "height", url: "https://p5js.org/reference/p5/height/" }
+            ]
           }
         ],
         exitTicket: "How can you make each loop iteration draw something different?"
@@ -694,7 +767,12 @@ function draw() {
               "Check if x > width to reset",
               "The draw() function is already a loop!"
             ],
-            vocabularyTerms: ["animation", "frame", "conditional"]
+            vocabularyTerms: ["animation", "frame", "conditional"],
+            resources: [
+              { title: "circle()", url: "https://p5js.org/reference/p5/circle/" },
+              { title: "width", url: "https://p5js.org/reference/p5/width/" },
+              { title: "height", url: "https://p5js.org/reference/p5/height/" }
+            ]
           },
           {
             id: "w2d8-2",
@@ -737,7 +815,12 @@ function draw() {
               "Each circle has its own speed",
               "Update each x by its corresponding speed"
             ],
-            vocabularyTerms: ["animation", "parallel-arrays", "for-loop"]
+            vocabularyTerms: ["animation", "parallel-arrays", "for-loop"],
+            resources: [
+              { title: "circle()", url: "https://p5js.org/reference/p5/circle/" },
+              { title: "width", url: "https://p5js.org/reference/p5/width/" },
+              { title: "background()", url: "https://p5js.org/reference/p5/background/" }
+            ]
           }
         ],
         exitTicket: "Why don't we need a for-loop to make something animate?"
@@ -784,7 +867,13 @@ function draw() {
               "random(1, 7) gives 1-6 (not including 7)",
               "Increment rolls inside the loop"
             ],
-            vocabularyTerms: ["while-loop", "condition", "random"]
+            vocabularyTerms: ["while-loop", "condition", "random"],
+            resources: [
+              { title: "text()", url: "https://p5js.org/reference/p5/text/" },
+              { title: "textSize()", url: "https://p5js.org/reference/p5/textSize/" },
+              { title: "random()", url: "https://p5js.org/reference/p5/random/" },
+              { title: "floor()", url: "https://p5js.org/reference/p5/floor/" }
+            ]
           },
           {
             id: "w2d9-2",
@@ -819,7 +908,13 @@ function draw() {
               "Place one dot per iteration",
               "Don't forget to increment count!"
             ],
-            vocabularyTerms: ["while-loop", "random", "iteration"]
+            vocabularyTerms: ["while-loop", "random", "iteration"],
+            resources: [
+              { title: "point()", url: "https://p5js.org/reference/p5/point/" },
+              { title: "random()", url: "https://p5js.org/reference/p5/random/" },
+              { title: "width", url: "https://p5js.org/reference/p5/width/" },
+              { title: "height", url: "https://p5js.org/reference/p5/height/" }
+            ]
           }
         ],
         exitTicket: "When would you use a while-loop instead of a for-loop?"
@@ -938,6 +1033,18 @@ function keyPressed() {
               "Parameters like count and spacing make patterns adjustable"
             ],
             vocabularyTerms: ["for-loop", "pattern", "parameter"],
+            resources: [
+              { title: "circle()", url: "https://p5js.org/reference/p5/circle/" },
+              { title: "rect()", url: "https://p5js.org/reference/p5/rect/" },
+              { title: "point()", url: "https://p5js.org/reference/p5/point/" },
+              { title: "text()", url: "https://p5js.org/reference/p5/text/" },
+              { title: "stroke()", url: "https://p5js.org/reference/p5/stroke/" },
+              { title: "noFill()", url: "https://p5js.org/reference/p5/noFill/" },
+              { title: "fill()", url: "https://p5js.org/reference/p5/fill/" },
+              { title: "cos()", url: "https://p5js.org/reference/p5/cos/" },
+              { title: "sin()", url: "https://p5js.org/reference/p5/sin/" },
+              { title: "keyPressed()", url: "https://p5js.org/reference/p5/keyPressed/" }
+            ],
             rubric: {
               patterns: "At least 3 different loop patterns",
               switching: "Keys switch between patterns",
@@ -1004,7 +1111,12 @@ function mousePressed() {
               "Loop from 0 to array.length",
               "Use i as the index for both arrays"
             ],
-            vocabularyTerms: ["traversal", "for-loop", "array"]
+            vocabularyTerms: ["traversal", "for-loop", "array"],
+            resources: [
+              { title: "circle()", url: "https://p5js.org/reference/p5/circle/" },
+              { title: "mouseX / mouseY", url: "https://p5js.org/reference/p5/mouseX/" },
+              { title: "mousePressed()", url: "https://p5js.org/reference/p5/mousePressed/" }
+            ]
           }
         ],
         exitTicket: "What does 'traversing an array' mean?"
@@ -1055,7 +1167,11 @@ function setup() {
               "Add each element to sum",
               "Divide sum by length for average"
             ],
-            vocabularyTerms: ["traversal", "accumulator", "average"]
+            vocabularyTerms: ["traversal", "accumulator", "average"],
+            resources: [
+              { title: "text()", url: "https://p5js.org/reference/p5/text/" },
+              { title: "textSize()", url: "https://p5js.org/reference/p5/textSize/" }
+            ]
           },
           {
             id: "w3d12-2",
@@ -1104,7 +1220,11 @@ function setup() {
               "Compare each element to current min/max",
               "Update if you find a smaller/larger value"
             ],
-            vocabularyTerms: ["traversal", "minimum", "maximum"]
+            vocabularyTerms: ["traversal", "minimum", "maximum"],
+            resources: [
+              { title: "text()", url: "https://p5js.org/reference/p5/text/" },
+              { title: "textSize()", url: "https://p5js.org/reference/p5/textSize/" }
+            ]
           }
         ],
         exitTicket: "Why do we initialize min and max with the first array element?"
@@ -1184,7 +1304,14 @@ function draw() {
               "Infinity is larger than any number",
               "Track both the closest distance AND index"
             ],
-            vocabularyTerms: ["traversal", "dist", "conditional"]
+            vocabularyTerms: ["traversal", "dist", "conditional"],
+            resources: [
+              { title: "circle()", url: "https://p5js.org/reference/p5/circle/" },
+              { title: "fill()", url: "https://p5js.org/reference/p5/fill/" },
+              { title: "dist()", url: "https://p5js.org/reference/p5/dist/" },
+              { title: "random()", url: "https://p5js.org/reference/p5/random/" },
+              { title: "mouseX / mouseY", url: "https://p5js.org/reference/p5/mouseX/" }
+            ]
           }
         ],
         exitTicket: "Why do we need two separate loops in the closest-point solution?"
@@ -1250,7 +1377,13 @@ function draw() {
               "Add velocity to position each frame",
               "xs[i] += vx[i] updates the position"
             ],
-            vocabularyTerms: ["traversal", "velocity", "update"]
+            vocabularyTerms: ["traversal", "velocity", "update"],
+            resources: [
+              { title: "circle()", url: "https://p5js.org/reference/p5/circle/" },
+              { title: "random()", url: "https://p5js.org/reference/p5/random/" },
+              { title: "width", url: "https://p5js.org/reference/p5/width/" },
+              { title: "height", url: "https://p5js.org/reference/p5/height/" }
+            ]
           },
           {
             id: "w3d14-2",
@@ -1322,7 +1455,13 @@ function draw() {
               "Multiply velocity by -1 to reverse",
               "Check x and y separately"
             ],
-            vocabularyTerms: ["traversal", "bounce", "conditional"]
+            vocabularyTerms: ["traversal", "bounce", "conditional"],
+            resources: [
+              { title: "circle()", url: "https://p5js.org/reference/p5/circle/" },
+              { title: "random()", url: "https://p5js.org/reference/p5/random/" },
+              { title: "width", url: "https://p5js.org/reference/p5/width/" },
+              { title: "height", url: "https://p5js.org/reference/p5/height/" }
+            ]
           }
         ],
         exitTicket: "How do you reverse a velocity value?"
@@ -1423,6 +1562,14 @@ function mousePressed() {
               "Life decreases; remove when <= 0"
             ],
             vocabularyTerms: ["traversal", "splice", "particle-system"],
+            resources: [
+              { title: "circle()", url: "https://p5js.org/reference/p5/circle/" },
+              { title: "fill()", url: "https://p5js.org/reference/p5/fill/" },
+              { title: "noStroke()", url: "https://p5js.org/reference/p5/noStroke/" },
+              { title: "text()", url: "https://p5js.org/reference/p5/text/" },
+              { title: "random()", url: "https://p5js.org/reference/p5/random/" },
+              { title: "mousePressed()", url: "https://p5js.org/reference/p5/mousePressed/" }
+            ],
             rubric: {
               spawning: "Click spawns multiple particles",
               physics: "Gravity affects particles",
@@ -1485,7 +1632,11 @@ function setup() {
               "Traverse the original array",
               "Push elements that match the condition"
             ],
-            vocabularyTerms: ["filter", "traversal", "conditional"]
+            vocabularyTerms: ["filter", "traversal", "conditional"],
+            resources: [
+              { title: "text()", url: "https://p5js.org/reference/p5/text/" },
+              { title: "textSize()", url: "https://p5js.org/reference/p5/textSize/" }
+            ]
           },
           {
             id: "w4d16-2",
@@ -1550,7 +1701,18 @@ function draw() {
               "Just add a condition before drawing",
               "Only draw if x > width/2"
             ],
-            vocabularyTerms: ["filter", "conditional", "traversal"]
+            vocabularyTerms: ["filter", "conditional", "traversal"],
+            resources: [
+              { title: "circle()", url: "https://p5js.org/reference/p5/circle/" },
+              { title: "line()", url: "https://p5js.org/reference/p5/line/" },
+              { title: "fill()", url: "https://p5js.org/reference/p5/fill/" },
+              { title: "stroke()", url: "https://p5js.org/reference/p5/stroke/" },
+              { title: "noStroke()", url: "https://p5js.org/reference/p5/noStroke/" },
+              { title: "text()", url: "https://p5js.org/reference/p5/text/" },
+              { title: "random()", url: "https://p5js.org/reference/p5/random/" },
+              { title: "width", url: "https://p5js.org/reference/p5/width/" },
+              { title: "height", url: "https://p5js.org/reference/p5/height/" }
+            ]
           }
         ],
         exitTicket: "What's the difference between filtering into a new array vs filtering during drawing?"
@@ -1598,7 +1760,11 @@ function setup() {
               "Add each element to total",
               "This is called 'reducing' to a single value"
             ],
-            vocabularyTerms: ["reduce", "accumulator", "sum"]
+            vocabularyTerms: ["reduce", "accumulator", "sum"],
+            resources: [
+              { title: "text()", url: "https://p5js.org/reference/p5/text/" },
+              { title: "textSize()", url: "https://p5js.org/reference/p5/textSize/" }
+            ]
           },
           {
             id: "w4d17-2",
@@ -1667,7 +1833,15 @@ function draw() {
               "Draw a bar proportional to energy",
               "Scale the bar width appropriately"
             ],
-            vocabularyTerms: ["reduce", "sum", "visualization"]
+            vocabularyTerms: ["reduce", "sum", "visualization"],
+            resources: [
+              { title: "rect()", url: "https://p5js.org/reference/p5/rect/" },
+              { title: "circle()", url: "https://p5js.org/reference/p5/circle/" },
+              { title: "fill()", url: "https://p5js.org/reference/p5/fill/" },
+              { title: "text()", url: "https://p5js.org/reference/p5/text/" },
+              { title: "floor()", url: "https://p5js.org/reference/p5/floor/" },
+              { title: "random()", url: "https://p5js.org/reference/p5/random/" }
+            ]
           }
         ],
         exitTicket: "What does 'reducing' an array mean?"
@@ -1716,7 +1890,12 @@ function draw() {
               "Inner loop controls columns",
               "x depends on col, y depends on row"
             ],
-            vocabularyTerms: ["nested-loop", "grid", "2d-array"]
+            vocabularyTerms: ["nested-loop", "grid", "2d-array"],
+            resources: [
+              { title: "rect()", url: "https://p5js.org/reference/p5/rect/" },
+              { title: "stroke()", url: "https://p5js.org/reference/p5/stroke/" },
+              { title: "noFill()", url: "https://p5js.org/reference/p5/noFill/" }
+            ]
           },
           {
             id: "w4d18-2",
@@ -1771,7 +1950,12 @@ function draw() {
               "Use this to choose between two colors",
               "% is the modulo (remainder) operator"
             ],
-            vocabularyTerms: ["nested-loop", "modulo", "pattern"]
+            vocabularyTerms: ["nested-loop", "modulo", "pattern"],
+            resources: [
+              { title: "rect()", url: "https://p5js.org/reference/p5/rect/" },
+              { title: "fill()", url: "https://p5js.org/reference/p5/fill/" },
+              { title: "noStroke()", url: "https://p5js.org/reference/p5/noStroke/" }
+            ]
           }
         ],
         exitTicket: "What does (row + col) % 2 calculate?"
@@ -1844,7 +2028,13 @@ function draw() {
               "grid[r][c] accesses row r, column c",
               "random() < 0.2 is true 20% of the time"
             ],
-            vocabularyTerms: ["2d-array", "grid", "random"]
+            vocabularyTerms: ["2d-array", "grid", "random"],
+            resources: [
+              { title: "rect()", url: "https://p5js.org/reference/p5/rect/" },
+              { title: "fill()", url: "https://p5js.org/reference/p5/fill/" },
+              { title: "stroke()", url: "https://p5js.org/reference/p5/stroke/" },
+              { title: "random()", url: "https://p5js.org/reference/p5/random/" }
+            ]
           },
           {
             id: "w4d19-2",
@@ -1939,7 +2129,15 @@ function keyPressed() {
               "Check if new position is not a wall",
               "Only then update player position"
             ],
-            vocabularyTerms: ["2d-array", "collision", "keyCode"]
+            vocabularyTerms: ["2d-array", "collision", "keyCode"],
+            resources: [
+              { title: "rect()", url: "https://p5js.org/reference/p5/rect/" },
+              { title: "fill()", url: "https://p5js.org/reference/p5/fill/" },
+              { title: "stroke()", url: "https://p5js.org/reference/p5/stroke/" },
+              { title: "keyPressed()", url: "https://p5js.org/reference/p5/keyPressed/" },
+              { title: "keyCode", url: "https://p5js.org/reference/p5/keyCode/" },
+              { title: "random()", url: "https://p5js.org/reference/p5/random/" }
+            ]
           }
         ],
         exitTicket: "How do you check if a grid cell is a wall before moving?"
@@ -2119,6 +2317,19 @@ function keyPressed() {
               "Change coin tiles to floor after collection"
             ],
             vocabularyTerms: ["2d-array", "game-loop", "collision", "state"],
+            resources: [
+              { title: "rect()", url: "https://p5js.org/reference/p5/rect/" },
+              { title: "circle()", url: "https://p5js.org/reference/p5/circle/" },
+              { title: "fill()", url: "https://p5js.org/reference/p5/fill/" },
+              { title: "stroke()", url: "https://p5js.org/reference/p5/stroke/" },
+              { title: "noStroke()", url: "https://p5js.org/reference/p5/noStroke/" },
+              { title: "text()", url: "https://p5js.org/reference/p5/text/" },
+              { title: "textSize()", url: "https://p5js.org/reference/p5/textSize/" },
+              { title: "textAlign()", url: "https://p5js.org/reference/p5/textAlign/" },
+              { title: "keyPressed()", url: "https://p5js.org/reference/p5/keyPressed/" },
+              { title: "keyCode", url: "https://p5js.org/reference/p5/keyCode/" },
+              { title: "random()", url: "https://p5js.org/reference/p5/random/" }
+            ],
             rubric: {
               grid: "10x10 grid displays correctly",
               tiles: "Different tile types visible (floor, wall, goal, coin)",

@@ -3941,6 +3941,260 @@ a:hover {
   color: #f44336;
 }
 
+/* Topic Lesson Styles (Pseudocode/Flowchart Detail View) */
+.topic-lesson {
+  padding: 1.5rem 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.topic-lesson .back-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  color: #ffc107;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.topic-lesson .back-btn:hover {
+  background: rgba(255, 193, 7, 0.1);
+  border-color: #ffc107;
+}
+
+.lesson-header {
+  margin-bottom: 2rem;
+}
+
+.lesson-header h1 {
+  color: #ffc107;
+  font-size: 1.75rem;
+  margin: 0 0 0.75rem 0;
+}
+
+.lesson-header p {
+  color: #b0b0b0;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Comparison Box - Pseudocode vs JavaScript */
+.comparison-box {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.comparison-side {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.comparison-side h3 {
+  padding: 0.75rem 1rem;
+  margin: 0;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.comparison-side.pseudocode h3 {
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+  border-bottom: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.comparison-side.javascript h3 {
+  background: rgba(0, 212, 255, 0.1);
+  color: #00d4ff;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.comparison-side .code-panel {
+  background: transparent;
+  border: none;
+  clip-path: none;
+}
+
+.comparison-side .code-panel pre {
+  padding: 1rem;
+  margin: 0;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  color: #e0e0e0;
+}
+
+.comparison-side.pseudocode .code-panel pre {
+  color: #ffc107;
+}
+
+.comparison-side.javascript .code-panel pre {
+  color: #00d4ff;
+}
+
+/* Examples List */
+.examples-list {
+  margin-bottom: 2rem;
+}
+
+.examples-list > h3 {
+  color: #ffc107;
+  font-size: 1.25rem;
+  margin: 0 0 1rem 0;
+}
+
+.example-item {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.example-item .code-panel {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  overflow: hidden;
+  border: none;
+  clip-path: none;
+}
+
+.example-item .code-panel-header {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: inherit;
+}
+
+.example-item .code-panel-header.given {
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+  border-bottom: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.example-item .code-panel-header.answer {
+  background: rgba(0, 212, 255, 0.1);
+  color: #00d4ff;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.example-item .code-panel pre {
+  padding: 0.75rem;
+  margin: 0;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  color: #e0e0e0;
+}
+
+/* Key Points */
+.key-points {
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.key-points h3 {
+  color: #4caf50;
+  font-size: 1.1rem;
+  margin: 0 0 0.75rem 0;
+}
+
+.key-points ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.key-points li {
+  color: #c0c0c0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+
+.key-points li:last-child {
+  margin-bottom: 0;
+}
+
+/* Related Exercises in Topic Lesson */
+.related-exercises {
+  margin-top: 2rem;
+}
+
+.related-exercises h3 {
+  color: #ffc107;
+  font-size: 1.25rem;
+  margin: 0 0 1rem 0;
+}
+
+.related-exercises .exercises-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.related-exercises .exercise-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.related-exercises .exercise-card:hover {
+  border-color: #ffc107;
+  background: rgba(255, 193, 7, 0.05);
+}
+
+.related-exercises .exercise-content h4 {
+  color: #fff;
+  font-size: 0.95rem;
+  margin: 0 0 0.25rem 0;
+  text-transform: capitalize;
+}
+
+.related-exercises .exercise-prompt {
+  color: #888;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* Responsive adjustments for Topic Lesson */
+@media (max-width: 768px) {
+  .comparison-box {
+    grid-template-columns: 1fr;
+  }
+
+  .example-item {
+    grid-template-columns: 1fr;
+  }
+
+  .topic-lesson {
+    padding: 1rem;
+  }
+}
+
 /* Flowchart Specific */
 .symbols-section {
   padding-top: 1rem;
@@ -5211,6 +5465,47 @@ a:hover {
   color: #ffc107;
   font-weight: 600;
   margin-right: 0.5rem;
+}
+
+/* Resources Section */
+.resources-section {
+  background: rgba(33, 150, 243, 0.05);
+  border: 1px solid rgba(33, 150, 243, 0.2);
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.resources-section h3 {
+  color: #2196f3;
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+}
+
+.resources-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.resource-link {
+  display: inline-block;
+  background: rgba(33, 150, 243, 0.1);
+  border: 1px solid rgba(33, 150, 243, 0.3);
+  color: #64b5f6;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-family: 'Fira Code', monospace;
+  transition: all 0.3s ease;
+}
+
+.resource-link:hover {
+  background: rgba(33, 150, 243, 0.2);
+  border-color: #2196f3;
+  color: #90caf9;
+  transform: translateY(-1px);
 }
 
 /* Solution Section */
