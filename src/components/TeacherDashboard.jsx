@@ -5,6 +5,7 @@ import { scenarios } from '../data/networkScenarios';
 import AssignmentManager from './teacher/AssignmentManager';
 import ActivityManager from './teacher/ActivityManager';
 import ModuleEditor from './teacher/ModuleEditor';
+import SubmissionViewer from './teacher/SubmissionViewer';
 import ThemeSwitcher, { useTheme } from './ThemeSwitcher';
 
 const TeacherDashboard = ({ classCode, onBack }) => {
@@ -155,6 +156,12 @@ const TeacherDashboard = ({ classCode, onBack }) => {
           Students
         </button>
         <button
+          className={`td-tab ${activeTab === 'submissions' ? 'active' : ''}`}
+          onClick={() => setActiveTab('submissions')}
+        >
+          Submissions
+        </button>
+        <button
           className={`td-tab ${activeTab === 'assignments' ? 'active' : ''}`}
           onClick={() => setActiveTab('assignments')}
         >
@@ -173,6 +180,12 @@ const TeacherDashboard = ({ classCode, onBack }) => {
           Modules
         </button>
       </div>
+
+      {activeTab === 'submissions' && (
+        <SubmissionViewer
+          classCode={classCode}
+        />
+      )}
 
       {activeTab === 'assignments' && (
         <AssignmentManager

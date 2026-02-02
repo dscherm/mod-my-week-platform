@@ -246,6 +246,122 @@ export const recordActivity = async (studentId, activity) => {
 };
 
 // ============================================
+// STUDENT SUBMISSION FUNCTIONS
+// ============================================
+
+// Save a student's final submission for an exercise
+export const saveStudentSubmission = async (studentId, exerciseId, submission) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    if (!data.students[studentId]) return;
+
+    if (!data.students[studentId].submissions) {
+      data.students[studentId].submissions = {};
+    }
+
+    data.students[studentId].submissions[exerciseId] = {
+      answer: submission.answer,
+      isCorrect: submission.isCorrect,
+      exerciseType: submission.exerciseType,
+      exerciseTitle: submission.exerciseTitle,
+      submittedAt: new Date().toISOString()
+    };
+
+    data.students[studentId].lastActivity = new Date().toISOString();
+    saveDemoData(data);
+    return;
+  }
+
+  if (!db) return;
+
+  const studentRef = doc(db, STUDENTS_COLLECTION, studentId);
+
+  // Update the submissions map in the student document
+  const updateData = {};
+  updateData[`submissions.${exerciseId}`] = {
+    answer: submission.answer,
+    isCorrect: submission.isCorrect,
+    exerciseType: submission.exerciseType,
+    exerciseTitle: submission.exerciseTitle,
+    submittedAt: serverTimestamp()
+  };
+  updateData.lastActivity = serverTimestamp();
+
+  await updateDoc(studentRef, updateData);
+};
+
+// Get all submissions for a student (for teacher view)
+export const getStudentSubmissions = async (studentId) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    if (!data.students[studentId]) return {};
+    return data.students[studentId].submissions || {};
+  }
+
+  if (!db) return {};
+
+  const studentRef = doc(db, STUDENTS_COLLECTION, studentId);
+  const studentDoc = await getDoc(studentRef);
+
+  if (studentDoc.exists()) {
+    return studentDoc.data().submissions || {};
+  }
+  return {};
+};
+
+// Get all submissions for a class (for teacher dashboard)
+export const getClassSubmissions = async (classCode) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    const classSubmissions = [];
+
+    Object.entries(data.students)
+      .filter(([_, student]) => student.classCode === classCode)
+      .forEach(([studentId, student]) => {
+        if (student.submissions) {
+          Object.entries(student.submissions).forEach(([exerciseId, submission]) => {
+            classSubmissions.push({
+              studentId,
+              studentName: student.name,
+              exerciseId,
+              ...submission
+            });
+          });
+        }
+      });
+
+    return classSubmissions;
+  }
+
+  if (!db) return [];
+
+  const studentsQuery = query(
+    collection(db, STUDENTS_COLLECTION),
+    where('classCode', '==', classCode)
+  );
+
+  const snapshot = await getDocs(studentsQuery);
+  const classSubmissions = [];
+
+  snapshot.docs.forEach(doc => {
+    const student = doc.data();
+    if (student.submissions) {
+      Object.entries(student.submissions).forEach(([exerciseId, submission]) => {
+        classSubmissions.push({
+          studentId: doc.id,
+          studentName: student.name,
+          exerciseId,
+          ...submission,
+          submittedAt: submission.submittedAt?.toDate?.() || null
+        });
+      });
+    }
+  });
+
+  return classSubmissions;
+};
+
+// ============================================
 // TEACHER/CLASS FUNCTIONS
 // ============================================
 
@@ -496,6 +612,7 @@ export const deleteAssignment = async (classCode, assignmentId) => {
 // Register a new teacher
 export const registerTeacher = async (name, email, password) => {
   const teacherId = email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  console.log('Registering teacher:', { teacherId, email, isDemoMode: isDemoMode(), dbAvailable: !!db });
 
   if (isDemoMode()) {
     const data = getDemoData();
@@ -513,33 +630,45 @@ export const registerTeacher = async (name, email, password) => {
       classes: []
     };
     saveDemoData(data);
+    console.log('Teacher registered in demo mode:', teacherId);
     return { id: teacherId, name, email: email.toLowerCase(), classes: [] };
   }
 
-  if (!db) return null;
-
-  const teacherRef = doc(db, TEACHERS_COLLECTION, teacherId);
-  const teacherDoc = await getDoc(teacherRef);
-
-  if (teacherDoc.exists()) {
-    throw new Error('An account with this email already exists');
+  if (!db) {
+    console.error('Firebase db is not initialized for teacher registration!');
+    throw new Error('Database not available. Please check Firebase configuration.');
   }
 
-  const newTeacher = {
-    name,
-    email: email.toLowerCase(),
-    password, // In production, use Firebase Auth instead
-    createdAt: serverTimestamp(),
-    classes: []
-  };
+  try {
+    const teacherRef = doc(db, TEACHERS_COLLECTION, teacherId);
+    const teacherDoc = await getDoc(teacherRef);
 
-  await setDoc(teacherRef, newTeacher);
-  return { id: teacherId, name, email: email.toLowerCase(), classes: [] };
+    if (teacherDoc.exists()) {
+      throw new Error('An account with this email already exists');
+    }
+
+    const newTeacher = {
+      name,
+      email: email.toLowerCase(),
+      password, // In production, use Firebase Auth instead
+      createdAt: serverTimestamp(),
+      classes: []
+    };
+
+    console.log('Creating teacher document in Firebase:', teacherId);
+    await setDoc(teacherRef, newTeacher);
+    console.log('Teacher registered successfully in Firebase');
+    return { id: teacherId, name, email: email.toLowerCase(), classes: [] };
+  } catch (error) {
+    console.error('Error registering teacher:', error);
+    throw error;
+  }
 };
 
 // Login teacher
 export const loginTeacher = async (email, password) => {
   const teacherId = email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  console.log('Teacher login attempt:', { teacherId, isDemoMode: isDemoMode(), dbAvailable: !!db });
 
   if (isDemoMode()) {
     const data = getDemoData();
@@ -553,24 +682,36 @@ export const loginTeacher = async (email, password) => {
       throw new Error('Incorrect password');
     }
 
+    console.log('Teacher logged in via demo mode:', teacherId);
     return { id: teacherId, name: teacher.name, email: teacher.email, classes: teacher.classes || [] };
   }
 
-  if (!db) return null;
-
-  const teacherRef = doc(db, TEACHERS_COLLECTION, teacherId);
-  const teacherDoc = await getDoc(teacherRef);
-
-  if (!teacherDoc.exists()) {
-    throw new Error('No account found with this email');
+  if (!db) {
+    console.error('Firebase db is not initialized for teacher login!');
+    throw new Error('Database not available. Please check Firebase configuration.');
   }
 
-  const teacher = teacherDoc.data();
-  if (teacher.password !== password) {
-    throw new Error('Incorrect password');
-  }
+  try {
+    const teacherRef = doc(db, TEACHERS_COLLECTION, teacherId);
+    console.log('Fetching teacher from Firebase:', teacherId);
+    const teacherDoc = await getDoc(teacherRef);
 
-  return { id: teacherId, name: teacher.name, email: teacher.email, classes: teacher.classes || [] };
+    if (!teacherDoc.exists()) {
+      console.log('Teacher not found in Firebase');
+      throw new Error('No account found with this email');
+    }
+
+    const teacher = teacherDoc.data();
+    if (teacher.password !== password) {
+      throw new Error('Incorrect password');
+    }
+
+    console.log('Teacher logged in successfully from Firebase. Classes:', teacher.classes);
+    return { id: teacherId, name: teacher.name, email: teacher.email, classes: teacher.classes || [] };
+  } catch (error) {
+    console.error('Error during teacher login:', error);
+    throw error;
+  }
 };
 
 // Get teacher's classes
@@ -606,6 +747,7 @@ export const getTeacherClasses = async (teacherId) => {
 // Create a class and link to teacher
 export const createClassForTeacher = async (teacherId, className) => {
   const classCode = generateClassCode();
+  console.log('Creating class:', { teacherId, className, classCode, isDemoMode: isDemoMode(), dbAvailable: !!db });
 
   if (isDemoMode()) {
     const data = getDemoData();
@@ -632,38 +774,53 @@ export const createClassForTeacher = async (teacherId, className) => {
     data.teachers[teacherId].classes.push(classCode);
 
     saveDemoData(data);
+    console.log('Class created in demo mode:', classCode);
     return data.classes[classCode];
   }
 
-  if (!db) return null;
-
-  // Create the class
-  const classRef = doc(db, CLASSES_COLLECTION, classCode);
-  const teacherRef = doc(db, TEACHERS_COLLECTION, teacherId);
-
-  const teacherDoc = await getDoc(teacherRef);
-  if (!teacherDoc.exists()) {
-    throw new Error('Teacher not found');
+  if (!db) {
+    console.error('Firebase db is not initialized!');
+    throw new Error('Database not available. Please check Firebase configuration.');
   }
 
-  const classData = {
-    name: className,
-    teacherId: teacherId,
-    teacher: teacherDoc.data().name,
-    classCode: classCode,
-    createdAt: serverTimestamp(),
-    isActive: true
-  };
+  try {
+    // Create the class
+    const classRef = doc(db, CLASSES_COLLECTION, classCode);
+    const teacherRef = doc(db, TEACHERS_COLLECTION, teacherId);
 
-  await setDoc(classRef, classData);
+    console.log('Fetching teacher document:', teacherId);
+    const teacherDoc = await getDoc(teacherRef);
+    if (!teacherDoc.exists()) {
+      console.error('Teacher not found in Firebase:', teacherId);
+      throw new Error('Teacher not found');
+    }
 
-  // Link class to teacher
-  const currentClasses = teacherDoc.data().classes || [];
-  await updateDoc(teacherRef, {
-    classes: [...currentClasses, classCode]
-  });
+    const classData = {
+      name: className,
+      teacherId: teacherId,
+      teacher: teacherDoc.data().name,
+      classCode: classCode,
+      createdAt: serverTimestamp(),
+      isActive: true
+    };
 
-  return { ...classData, classCode };
+    console.log('Creating class document in Firebase:', classCode);
+    await setDoc(classRef, classData);
+    console.log('Class document created successfully');
+
+    // Link class to teacher
+    const currentClasses = teacherDoc.data().classes || [];
+    console.log('Updating teacher classes array. Current classes:', currentClasses);
+    await updateDoc(teacherRef, {
+      classes: [...currentClasses, classCode]
+    });
+    console.log('Teacher document updated with new class');
+
+    return { ...classData, classCode };
+  } catch (error) {
+    console.error('Error creating class:', error);
+    throw error;
+  }
 };
 
 // Delete a class

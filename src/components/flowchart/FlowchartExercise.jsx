@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { flowchartExercises, flowchartExamples } from '../../data/flowcharts';
 import FlowchartViewer from './FlowchartViewer';
 
-function FlowchartExercise({ exerciseId, onComplete, onBack, isCompleted, onNextExercise, allExerciseIds = [] }) {
+function FlowchartExercise({ exerciseId, onComplete, onBack, isCompleted, onNextExercise, allExerciseIds = [], onSubmit }) {
   const exercise = flowchartExercises.find(ex => ex.id === exerciseId);
 
   const [userAnswer, setUserAnswer] = useState('');
@@ -129,6 +129,17 @@ function FlowchartExercise({ exerciseId, onComplete, onBack, isCompleted, onNext
     // Increment attempt count if wrong
     if (!correct) {
       setAttemptCount(prev => prev + 1);
+    }
+
+    // Save submission for teacher review
+    if (onSubmit) {
+      onSubmit({
+        exerciseId: exercise.id,
+        answer: userAnswer,
+        isCorrect: correct,
+        exerciseType: 'flowchart',
+        exerciseTitle: exercise.question?.substring(0, 50) || exercise.id
+      });
     }
 
     if (correct && !isCompleted) {

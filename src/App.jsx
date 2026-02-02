@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import Dashboard from './components/Dashboard';
 import UnifiedDashboard from './components/UnifiedDashboard';
@@ -24,7 +24,7 @@ import SymbolLesson from './components/flowchart/SymbolLesson';
 import FlowchartViewer from './components/flowchart/FlowchartViewer';
 import FlowchartBuilder from './components/flowchart/FlowchartBuilder';
 import FlowchartExercise from './components/flowchart/FlowchartExercise';
-import { saveStudentProgress, getStudentProgress, subscribeToAssignments, isFirebaseConfigured } from './services/firebaseService';
+import { saveStudentProgress, getStudentProgress, subscribeToAssignments, isFirebaseConfigured, saveStudentSubmission } from './services/firebaseService';
 
 function App() {
   // Initialize theme on load
@@ -45,6 +45,9 @@ function App() {
   const [completedScenarios, setCompletedScenarios] = useState([]);
   const [completedExercises, setCompletedExercises] = useState([]);
   const [totalPoints, setTotalPoints] = useState(0);
+
+  // Store unsubscribe function for assignment subscription cleanup
+  const assignmentUnsubscribeRef = useRef(null);
 
   // Assignments & arrays-loops state
   const [assignments, setAssignments] = useState([]);
@@ -87,6 +90,14 @@ function App() {
         console.error('Error loading teacher session:', e);
       }
     }
+
+    // Cleanup subscription on unmount
+    return () => {
+      if (assignmentUnsubscribeRef.current) {
+        assignmentUnsubscribeRef.current();
+        assignmentUnsubscribeRef.current = null;
+      }
+    };
   }, []);
 
   // Load user progress
@@ -106,11 +117,13 @@ function App() {
 
         // Subscribe to assignments for the user's class
         if (user.classCode) {
+          // Clear any existing assignments first to avoid showing stale data
+          setAssignments([]);
           const unsubscribe = subscribeToAssignments(user.classCode, (assignmentData) => {
             setAssignments(assignmentData);
           });
           // Store unsubscribe function for cleanup
-          return unsubscribe;
+          assignmentUnsubscribeRef.current = unsubscribe;
         }
       } catch (e) {
         console.error('Error loading Firebase progress:', e);
@@ -118,6 +131,14 @@ function App() {
       }
     } else {
       loadLocalProgress();
+      // Also load demo mode assignments
+      if (user.classCode) {
+        setAssignments([]);
+        const unsubscribe = subscribeToAssignments(user.classCode, (assignmentData) => {
+          setAssignments(assignmentData);
+        });
+        assignmentUnsubscribeRef.current = unsubscribe;
+      }
     }
   };
 
@@ -180,8 +201,13 @@ function App() {
 
   // Handle student login
   const handleLogin = (user) => {
+    // Clean up any existing assignment subscription before logging in new user
+    if (assignmentUnsubscribeRef.current) {
+      assignmentUnsubscribeRef.current();
+      assignmentUnsubscribeRef.current = null;
+    }
+
     setCurrentUser(user);
-    setIsTeacherMode(false);
     localStorage.setItem('cyberrange-session', JSON.stringify({ user }));
 
     // Load their progress
@@ -222,8 +248,13 @@ function App() {
 
   // Handle logout
   const handleLogout = () => {
+    // Clean up assignment subscription to prevent stale data
+    if (assignmentUnsubscribeRef.current) {
+      assignmentUnsubscribeRef.current();
+      assignmentUnsubscribeRef.current = null;
+    }
+
     setCurrentUser(null);
-    setIsTeacherMode(false);
     setTeacherClassCode(null);
     setCompletedChallenges([]);
     setCompletedScenarios([]);
@@ -361,6 +392,22 @@ function App() {
     if (!completedFlowcharts.includes(exerciseId)) {
       setCompletedFlowcharts([...completedFlowcharts, exerciseId]);
       setTotalPoints(totalPoints + points);
+    }
+  };
+
+  // Handle saving student submissions for teacher review
+  const handleSubmission = async (submission) => {
+    if (!currentUser || currentUser.id === 'demo') return;
+
+    try {
+      await saveStudentSubmission(currentUser.id, submission.exerciseId, {
+        answer: submission.answer,
+        isCorrect: submission.isCorrect,
+        exerciseType: submission.exerciseType,
+        exerciseTitle: submission.exerciseTitle
+      });
+    } catch (e) {
+      console.error('Error saving submission:', e);
     }
   };
 
@@ -521,6 +568,7 @@ function App() {
             onComplete={handleCompleteChallenge}
             onBack={handleBackFromChallenge}
             isCompleted={completedChallenges.includes(selectedChallenge)}
+            onSubmit={handleSubmission}
           />
         )}
 
@@ -541,6 +589,7 @@ function App() {
             onComplete={handleCompleteExercise}
             onBack={handleBackFromExercise}
             isCompleted={completedExercises.includes(selectedExercise)}
+            onSubmit={handleSubmission}
           />
         )}
 
@@ -580,6 +629,7 @@ function App() {
             onBack={handleBackFromPseudocodeExercise}
             isCompleted={completedPseudocode.includes(selectedPseudocodeExercise)}
             onNextExercise={handleSelectPseudocodeExercise}
+            onSubmit={handleSubmission}
           />
         )}
 
@@ -612,6 +662,7 @@ function App() {
             onBack={handleBackFromFlowchartExercise}
             isCompleted={completedFlowcharts.includes(selectedFlowchartExercise)}
             onNextExercise={handleSelectFlowchartExercise}
+            onSubmit={handleSubmission}
           />
         )}
 

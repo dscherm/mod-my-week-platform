@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { pseudocodeExercises, pseudocodeTopics } from '../../data/pseudocode';
 
-function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted, onNextExercise, allExerciseIds = [] }) {
+function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted, onNextExercise, allExerciseIds = [], onSubmit }) {
   const exercise = pseudocodeExercises.find(ex => ex.id === exerciseId);
   const topic = exercise ? pseudocodeTopics.find(t => t.id === exercise.topic) : null;
 
@@ -367,6 +367,20 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted, onNe
       setAttemptCount(prev => prev + 1);
     }
 
+    // Save submission for teacher review
+    if (onSubmit) {
+      const answerToSave = exercise.type === 'fill-blank' && exercise.blankAnswers
+        ? JSON.stringify(fillBlanks)
+        : userAnswer;
+      onSubmit({
+        exerciseId: exercise.id,
+        answer: answerToSave,
+        isCorrect: correct,
+        exerciseType: 'pseudocode',
+        exerciseTitle: exercise.prompt?.substring(0, 50) || exercise.id
+      });
+    }
+
     if (correct && !isCompleted) {
       onComplete(exercise.id, 10);
     }
@@ -666,62 +680,7 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted, onNe
         </div>
       )}
 
-      {showErrorHighlight && !isCorrect && (exercise.type === 'pseudocode-to-js' || exercise.type === 'js-to-pseudocode') && (
-        <div className="error-highlight-section">
-          <h4>Error Analysis</h4>
-          <div className="diff-legend">
-            <span className="legend-item"><span className="legend-color match"></span> Correct</span>
-            <span className="legend-item"><span className="legend-color different"></span> Needs fixing</span>
-            <span className="legend-item"><span className="legend-color missing"></span> Missing</span>
-            <span className="legend-item"><span className="legend-color extra"></span> Extra</span>
-          </div>
-          <div className="diff-container">
-            {generateDiff()?.map((line, idx) => {
-              const isPseudocode = exercise.type === 'js-to-pseudocode';
-              const issues = line.type === 'different'
-                ? findLineIssues(line.user, line.correct, isPseudocode)
-                : [];
-
-              return (
-                <div key={idx} className={`diff-line ${line.type}`}>
-                  <span className="diff-line-num">{line.line}</span>
-                  <div className="diff-content">
-                    {line.type === 'match' ? (
-                      <span className="diff-text match">{line.user}</span>
-                    ) : line.type === 'missing' ? (
-                      <span className="diff-text missing">+ {line.correct}</span>
-                    ) : line.type === 'extra' ? (
-                      <span className="diff-text extra">- {line.user}</span>
-                    ) : (
-                      <div className="diff-comparison">
-                        <div className="diff-yours">
-                          <span className="diff-label">Yours:</span>
-                          <span className="diff-text">
-                            {highlightDifferences(line.user, line.correct).map((ch, i) => (
-                              <span key={i} className={`char-${ch.type}`} title={ch.expected ? `Expected: ${ch.expected}` : ''}>{ch.char || '\u00A0'}</span>
-                            ))}
-                          </span>
-                        </div>
-                        <div className="diff-expected">
-                          <span className="diff-label">Expected:</span>
-                          <span className="diff-text correct">{line.correct}</span>
-                        </div>
-                        {issues.length > 0 && (
-                          <div className="diff-issues">
-                            {issues.map((issue, i) => (
-                              <span key={i} className="diff-issue">Hint: {issue}</span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {/* Error analysis section hidden - teachers can view student submissions in the dashboard */}
     </div>
   );
 }

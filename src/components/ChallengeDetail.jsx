@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { getChallengeById } from '../data/challenges';
 import { vocabulary } from '../data/vocabulary';
 
-const ChallengeDetail = ({ challengeId, onComplete, onBack, isCompleted }) => {
+const ChallengeDetail = ({ challengeId, onComplete, onBack, isCompleted, onSubmit }) => {
   const [userAnswer, setUserAnswer] = useState('');
   const [showHints, setShowHints] = useState(false);
   const [feedback, setFeedback] = useState(null);
@@ -25,6 +25,17 @@ const ChallengeDetail = ({ challengeId, onComplete, onBack, isCompleted }) => {
     const isCorrect = correctAnswers.some(ans =>
       normalizedAnswer === ans || normalizedAnswer.includes(ans)
     );
+
+    // Save submission for teacher review
+    if (onSubmit) {
+      onSubmit({
+        exerciseId: challengeId,
+        answer: userAnswer,
+        isCorrect,
+        exerciseType: 'challenge',
+        exerciseTitle: challenge.title
+      });
+    }
 
     if (isCorrect) {
       setFeedback({ type: 'success', message: 'Correct! Well done!' });

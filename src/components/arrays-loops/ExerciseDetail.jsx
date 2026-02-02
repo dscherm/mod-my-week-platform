@@ -41,7 +41,7 @@ const loadP5 = () => {
   });
 };
 
-function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted }) {
+function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit }) {
   const exercise = getExerciseById(exerciseId);
   const [code, setCode] = useState(exercise?.starterCode || '');
   const [showHints, setShowHints] = useState([]);
@@ -182,6 +182,16 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted }) {
 
   const handleComplete = () => {
     if (!isCompleted) {
+      // Save submission for teacher review
+      if (onSubmit) {
+        onSubmit({
+          exerciseId: exercise.id,
+          answer: code,
+          isCorrect: true, // Programming exercises are self-graded
+          exerciseType: 'programming',
+          exerciseTitle: exercise.title
+        });
+      }
       onComplete(exercise.id, exercise.points);
     }
   };
@@ -306,18 +316,7 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted }) {
         </div>
       </div>
 
-      <div className="solution-section">
-        {!showSolution ? (
-          <button className="solution-button" onClick={handleShowSolution}>
-            Show Solution (try on your own first!)
-          </button>
-        ) : (
-          <div className="solution-revealed">
-            <h3>Solution</h3>
-            <pre className="solution-code">{exercise.solutionCode}</pre>
-          </div>
-        )}
-      </div>
+      {/* Solution section hidden - teachers can view student submissions in the dashboard */}
 
       {exercise.rubric && (
         <div className="rubric-section">
