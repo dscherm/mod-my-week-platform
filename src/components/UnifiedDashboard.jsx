@@ -4,6 +4,7 @@ import { exercises, getWeekExercises } from '../data/exercises';
 import { contentTypes } from '../data/contentTypes';
 import { pseudocodeTopics, pseudocodeExercises } from '../data/pseudocode';
 import { flowchartExercises } from '../data/flowcharts';
+import { dataApisExercises, getDataApisWeekExercises } from '../data/data-apis-exercises';
 
 const UnifiedDashboard = ({
   studentName,
@@ -14,15 +15,18 @@ const UnifiedDashboard = ({
   completedExercises,
   completedPseudocode = [],
   completedFlowcharts = [],
+  completedDataApisExercises = [],
   onSelectCategory,
   onSelectNetworkMonitor,
   onSelectWeek,
-  onSelectAPCSP
+  onSelectAPCSP,
+  onSelectDataApisWeek
 }) => {
   // Check if entire modules are assigned
   const hasCyberModule = assignments.some(a => a.type === 'cyber-range');
   const hasProgrammingModule = assignments.some(a => a.type === 'arrays-loops');
   const hasAPCSPModule = assignments.some(a => a.type === 'ap-csp');
+  const hasDataApisModule = assignments.some(a => a.type === 'data-apis');
 
   // Calculate cyber-range progress
   const getCyberCategoryProgress = (categoryId) => {
@@ -70,10 +74,22 @@ const UnifiedDashboard = ({
     }
   };
 
+  // Calculate Data & APIs progress
+  const getDataApisWeekProgress = (weekKey) => {
+    const weekExercises = getDataApisWeekExercises(weekKey);
+    const completed = weekExercises.filter(e => completedDataApisExercises.includes(e.id)).length;
+    return {
+      completed,
+      total: weekExercises.length,
+      percentage: weekExercises.length > 0 ? (completed / weekExercises.length) * 100 : 0
+    };
+  };
+
   // Get total stats
   const totalChallengesCompleted = completedChallenges.length + completedScenarios.length;
   const totalExercisesCompleted = completedExercises.length;
   const totalAPCSPCompleted = completedPseudocode.length + completedFlowcharts.length;
+  const totalDataApisCompleted = completedDataApisExercises.length;
 
   const cyberCategories = [
     { id: 'cryptography', name: 'Cryptography', icon: '[ CRYPTO ]', description: 'Encryption, ciphers, and secure communication' },
@@ -89,7 +105,7 @@ const UnifiedDashboard = ({
     { id: 'flowcharts', name: 'Flowcharts', icon: '[ FLOW ]', description: 'Read, interpret, and build flowcharts' }
   ];
 
-  const hasAssignments = hasCyberModule || hasProgrammingModule || hasAPCSPModule;
+  const hasAssignments = hasCyberModule || hasProgrammingModule || hasAPCSPModule || hasDataApisModule;
 
   return (
     <div className="unified-dashboard">
@@ -114,6 +130,10 @@ const UnifiedDashboard = ({
         <div className="stat-card apcsp">
           <span className="stat-value">{totalAPCSPCompleted}</span>
           <span className="stat-label">AP CSP Exercises</span>
+        </div>
+        <div className="stat-card data-apis">
+          <span className="stat-value">{totalDataApisCompleted}</span>
+          <span className="stat-label">Data & APIs</span>
         </div>
       </div>
 
@@ -221,6 +241,42 @@ const UnifiedDashboard = ({
                       <div className="category-progress">
                         <div
                           className="category-progress-bar apcsp"
+                          style={{ width: `${progress.percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {hasDataApisModule && (
+            <section className="content-section data-apis-section">
+              <h2 className="section-title data-apis">
+                <span className="section-icon">{contentTypes['data-apis'].icon}</span>
+                Data & APIs
+              </h2>
+
+              <div className="categories">
+                {Object.entries(dataApisExercises).map(([weekKey, week]) => {
+                  const progress = getDataApisWeekProgress(weekKey);
+                  const weekNum = weekKey.replace('week', '');
+                  return (
+                    <div
+                      key={weekKey}
+                      className="category-card data-apis"
+                      onClick={() => onSelectDataApisWeek(weekKey)}
+                    >
+                      <div className="category-icon">[ WEEK {weekNum} ]</div>
+                      <h3>{week.title}</h3>
+                      <p className="category-description">{week.bigIdea}</p>
+                      <p className="category-progress-text">
+                        {progress.completed} / {progress.total} completed
+                      </p>
+                      <div className="category-progress">
+                        <div
+                          className="category-progress-bar data-apis"
                           style={{ width: `${progress.percentage}%` }}
                         />
                       </div>

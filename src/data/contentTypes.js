@@ -101,6 +101,39 @@ export const contentTypes = {
         exerciseCount: 20
       }
     ]
+  },
+  'data-apis': {
+    id: 'data-apis',
+    name: 'Data & APIs',
+    description: 'Fetch data from APIs, visualize with maps & charts, build servers',
+    color: '#4ecdc4',
+    icon: '🌐',
+    units: [
+      {
+        id: 'week1',
+        name: 'Week 1: Fetching Data',
+        description: 'JSON, fetch(), async/await, and error handling',
+        exerciseCount: 13
+      },
+      {
+        id: 'week2',
+        name: 'Week 2: Visualization',
+        description: 'Auto-updating data, Leaflet maps, and Chart.js',
+        exerciseCount: 10
+      },
+      {
+        id: 'week3',
+        name: 'Week 3: Server-Side',
+        description: 'Node.js, Express, REST APIs, and databases',
+        exerciseCount: 9
+      },
+      {
+        id: 'week4',
+        name: 'Week 4: Deployment',
+        description: 'Environment variables, API proxies, and deployment',
+        exerciseCount: 9
+      }
+    ]
   }
 };
 

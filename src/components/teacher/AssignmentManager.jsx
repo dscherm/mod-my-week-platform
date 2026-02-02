@@ -176,6 +176,43 @@ const AssignmentManager = ({ classCode, assignments, onAssignmentCreated }) => {
             )}
           </div>
         </div>
+
+        {/* Data & APIs Module */}
+        <div className={`am-module-card data-apis ${isModuleAssigned('data-apis') ? 'assigned' : ''}`}>
+          <div className="am-module-icon">{contentTypes['data-apis'].icon}</div>
+          <div className="am-module-info">
+            <h4>{contentTypes['data-apis'].name}</h4>
+            <p>{contentTypes['data-apis'].description}</p>
+            <span className="am-module-count">
+              {contentTypes['data-apis'].units.length} weeks
+            </span>
+          </div>
+          <div className="am-module-action">
+            {isModuleAssigned('data-apis') ? (
+              <div className="am-assigned-info">
+                <span className="am-assigned-badge">Assigned</span>
+                <button
+                  className="am-remove-btn"
+                  onClick={() => {
+                    const assignment = assignments.find(a => a.type === 'data-apis');
+                    if (assignment) handleDelete(assignment.id);
+                  }}
+                  disabled={deleting}
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <button
+                className="am-btn data-apis"
+                onClick={() => handleAssignModule('data-apis')}
+                disabled={creating === 'data-apis'}
+              >
+                {creating === 'data-apis' ? 'Assigning...' : 'Assign Module'}
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {assignments.length > 0 && (
