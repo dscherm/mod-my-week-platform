@@ -7243,8 +7243,134 @@ a:hover {
 
 /* Theme-specific text colors for better contrast */
 [data-theme="60s"] .category-description,
-[data-theme="60s"] .stat-label {
-  color: #495057;
+[data-theme="60s"] .stat-label,
+[data-theme="60s"] .category-progress-text,
+[data-theme="60s"] .stat-value,
+[data-theme="60s"] .category-icon,
+[data-theme="60s"] p,
+[data-theme="60s"] span,
+[data-theme="60s"] .welcome-section h1,
+[data-theme="60s"] .section-title,
+[data-theme="60s"] .category-card h3,
+[data-theme="60s"] .no-assignments p,
+[data-theme="60s"] .no-assignments h2 {
+  color: #212529;
+}
+
+[data-theme="60s"] .category-icon {
+  color: #023047;
+  text-shadow: none;
+}
+
+[data-theme="60s"] .stat-value {
+  color: #023047;
+  text-shadow: none;
+}
+
+[data-theme="60s"] .section-title {
+  color: #023047 !important;
+  text-shadow: none !important;
+}
+
+[data-theme="60s"] .section-icon {
+  color: #ff6b35;
+}
+
+[data-theme="60s"] .category-progress-bar {
+  background: #00b4d8;
+}
+
+[data-theme="60s"] .no-assignments {
+  background: #fff;
+  border: 2px dashed #00b4d8;
+}
+
+[data-theme="60s"] .no-assignments-icon {
+  color: #00b4d8;
+  text-shadow: none;
+}
+
+/* 60s theme - force all light grays to dark for readability */
+[data-theme="60s"] * {
+  --text-light: #212529;
+}
+
+[data-theme="60s"] .challenge-meta,
+[data-theme="60s"] .challenge-points,
+[data-theme="60s"] .hint-text,
+[data-theme="60s"] .progress-text,
+[data-theme="60s"] .timer,
+[data-theme="60s"] .feedback,
+[data-theme="60s"] .instructions,
+[data-theme="60s"] .description,
+[data-theme="60s"] .subtitle,
+[data-theme="60s"] .meta,
+[data-theme="60s"] .info,
+[data-theme="60s"] .label,
+[data-theme="60s"] .count,
+[data-theme="60s"] .status,
+[data-theme="60s"] small,
+[data-theme="60s"] .text-muted,
+[data-theme="60s"] .text-secondary,
+[data-theme="60s"] .text-light {
+  color: #495057 !important;
+}
+
+[data-theme="60s"] .category-card p,
+[data-theme="60s"] .stat-card p,
+[data-theme="60s"] .card p,
+[data-theme="60s"] .panel p,
+[data-theme="60s"] .box p,
+[data-theme="60s"] .content p,
+[data-theme="60s"] li,
+[data-theme="60s"] td,
+[data-theme="60s"] th,
+[data-theme="60s"] label,
+[data-theme="60s"] input::placeholder {
+  color: #343a40 !important;
+}
+
+[data-theme="60s"] input,
+[data-theme="60s"] textarea,
+[data-theme="60s"] select {
+  color: #212529 !important;
+  background: #fff !important;
+  border-color: #adb5bd !important;
+}
+
+[data-theme="60s"] .am-subtitle,
+[data-theme="60s"] .am-module-count,
+[data-theme="60s"] .am-date,
+[data-theme="60s"] .week-description,
+[data-theme="60s"] .exercise-description,
+[data-theme="60s"] .challenge-description {
+  color: #495057 !important;
+}
+
+/* 60s theme - Activity/category card titles with shadow and outline for clarity */
+[data-theme="60s"] .category-card h3,
+[data-theme="60s"] .card h3,
+[data-theme="60s"] .activity-title,
+[data-theme="60s"] .challenge-title,
+[data-theme="60s"] .exercise-title,
+[data-theme="60s"] .week-title {
+  color: #023047 !important;
+  text-shadow:
+    1px 1px 0 #fff,
+    -1px -1px 0 #fff,
+    1px -1px 0 #fff,
+    -1px 1px 0 #fff,
+    2px 2px 4px rgba(0, 0, 0, 0.3) !important;
+  -webkit-text-stroke: 0.5px #023047;
+  paint-order: stroke fill;
+}
+
+[data-theme="60s"] .category-icon {
+  color: #ff6b35 !important;
+  text-shadow:
+    1px 1px 0 #fff,
+    -1px -1px 0 #fff,
+    2px 2px 4px rgba(0, 0, 0, 0.2) !important;
 }
 
 [data-theme="70s"] .category-description,
