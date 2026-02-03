@@ -213,6 +213,43 @@ const AssignmentManager = ({ classCode, assignments, onAssignmentCreated }) => {
             )}
           </div>
         </div>
+
+        {/* Objects & Images Module */}
+        <div className={`am-module-card objects-images ${isModuleAssigned('objects-images') ? 'assigned' : ''}`}>
+          <div className="am-module-icon">{contentTypes['objects-images'].icon}</div>
+          <div className="am-module-info">
+            <h4>{contentTypes['objects-images'].name}</h4>
+            <p>{contentTypes['objects-images'].description}</p>
+            <span className="am-module-count">
+              {contentTypes['objects-images'].units.length} weeks
+            </span>
+          </div>
+          <div className="am-module-action">
+            {isModuleAssigned('objects-images') ? (
+              <div className="am-assigned-info">
+                <span className="am-assigned-badge">Assigned</span>
+                <button
+                  className="am-remove-btn"
+                  onClick={() => {
+                    const assignment = assignments.find(a => a.type === 'objects-images');
+                    if (assignment) handleDelete(assignment.id);
+                  }}
+                  disabled={deleting}
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <button
+                className="am-btn objects-images"
+                onClick={() => handleAssignModule('objects-images')}
+                disabled={creating === 'objects-images'}
+              >
+                {creating === 'objects-images' ? 'Assigning...' : 'Assign Module'}
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {assignments.length > 0 && (

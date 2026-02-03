@@ -3162,6 +3162,16 @@ a:hover {
   background: rgba(78, 205, 196, 0.05);
 }
 
+.am-module-card.objects-images {
+  border-color: rgba(255, 159, 67, 0.3);
+}
+
+.am-module-card.objects-images:hover,
+.am-module-card.objects-images.assigned {
+  border-color: #ff9f43;
+  background: rgba(255, 159, 67, 0.05);
+}
+
 .am-module-icon {
   font-size: 2rem;
   margin-bottom: 0.5rem;
@@ -3219,6 +3229,11 @@ a:hover {
 
 .am-btn.data-apis {
   background: linear-gradient(135deg, #4ecdc4, #26a69a);
+  color: #0a0a0f;
+}
+
+.am-btn.objects-images {
+  background: linear-gradient(135deg, #ff9f43, #f7931e);
   color: #0a0a0f;
 }
 
