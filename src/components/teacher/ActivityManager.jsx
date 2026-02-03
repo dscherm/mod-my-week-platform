@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { contentTypes } from '../../data/contentTypes';
 import { challenges } from '../../data/challenges';
 import { exercises } from '../../data/exercises';
+import { dataApisExercises } from '../../data/data-apis-exercises';
+import { objectsImagesExercises } from '../../data/objects-images-exercises';
 
 const ActivityManager = ({ classCode }) => {
   const [selectedModule, setSelectedModule] = useState(null);
@@ -15,6 +17,40 @@ const ActivityManager = ({ classCode }) => {
       return challenges[unitId] || [];
     } else if (moduleType === 'arrays-loops') {
       const weekData = exercises[unitId];
+      if (!weekData || !weekData.days) return [];
+
+      const allExercises = [];
+      weekData.days.forEach(day => {
+        if (day.exercises) {
+          day.exercises.forEach(ex => {
+            allExercises.push({
+              ...ex,
+              dayTitle: day.title,
+              dayNumber: day.day
+            });
+          });
+        }
+      });
+      return allExercises;
+    } else if (moduleType === 'data-apis') {
+      const weekData = dataApisExercises[unitId];
+      if (!weekData || !weekData.days) return [];
+
+      const allExercises = [];
+      weekData.days.forEach(day => {
+        if (day.exercises) {
+          day.exercises.forEach(ex => {
+            allExercises.push({
+              ...ex,
+              dayTitle: day.title,
+              dayNumber: day.day
+            });
+          });
+        }
+      });
+      return allExercises;
+    } else if (moduleType === 'objects-images') {
+      const weekData = objectsImagesExercises[unitId];
       if (!weekData || !weekData.days) return [];
 
       const allExercises = [];
