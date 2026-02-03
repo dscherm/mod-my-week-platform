@@ -7,6 +7,7 @@ const ChallengeDetail = ({ challengeId, onComplete, onBack, isCompleted, onSubmi
   const [showHints, setShowHints] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [showExplanation, setShowExplanation] = useState(isCompleted);
+  const [showLearnSection, setShowLearnSection] = useState(false);
   const [selectedVocab, setSelectedVocab] = useState(null);
 
   const challenge = getChallengeById(challengeId);
@@ -77,6 +78,46 @@ const ChallengeDetail = ({ challengeId, onComplete, onBack, isCompleted, onSubmi
           {challenge.description}
         </p>
       </div>
+
+      {/* Learn Dropdown Section */}
+      {challenge.learn && (
+        <div className="explanation-section">
+          <button
+            className={`explanation-toggle ${showLearnSection ? 'open' : ''}`}
+            onClick={() => setShowLearnSection(!showLearnSection)}
+          >
+            <span className="toggle-icon">{showLearnSection ? '▼' : '▶'}</span>
+            <span className="toggle-text">📚 Learn: {challenge.learn.title}</span>
+          </button>
+
+          {showLearnSection && (
+            <div className="explanation-content">
+              <div className="concept-section">
+                <h4>Concept</h4>
+                <pre className="concept-text">{challenge.learn.concept}</pre>
+              </div>
+
+              {challenge.learn.example && (
+                <div className="example-section">
+                  <h4>Example</h4>
+                  <pre className="example-code"><code>{challenge.learn.example}</code></pre>
+                </div>
+              )}
+
+              {challenge.learn.keyPoints && challenge.learn.keyPoints.length > 0 && (
+                <div className="key-points-section">
+                  <h4>Key Points</h4>
+                  <ul>
+                    {challenge.learn.keyPoints.map((point, index) => (
+                      <li key={index}>{point}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {challenge.vocabularyTerms && challenge.vocabularyTerms.length > 0 && (
         <div className="vocabulary-section">

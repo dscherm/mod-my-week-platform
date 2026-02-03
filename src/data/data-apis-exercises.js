@@ -18,6 +18,37 @@ export const dataApiExercises = {
             difficulty: "Easy",
             points: 10,
             description: "View raw JSON data from a public API in the console",
+            explanation: {
+              title: "What is an API?",
+              concept: `API stands for "Application Programming Interface". Think of it as a waiter in a restaurant:
+- You (the client) make a request
+- The API delivers your request to the kitchen (server)
+- The API brings back the response (data)
+
+APIs let programs talk to each other. When you fetch data from a weather service, you're using their API.
+
+Most APIs return data in JSON format - a way to structure data that JavaScript can easily understand.`,
+              example: `// Basic fetch pattern
+fetch('https://api.example.com/data')
+  .then(response => response.json())  // Convert to JSON
+  .then(data => {
+    console.log(data);  // Use the data
+  });
+
+// JSON looks like this:
+{
+  "name": "ISS",
+  "latitude": 51.5,
+  "longitude": -0.1,
+  "speed": 27600
+}`,
+              keyPoints: [
+                "APIs are how programs share data over the internet",
+                "fetch() is JavaScript's way to request data from APIs",
+                "JSON (JavaScript Object Notation) is the common data format",
+                ".then() handles the asynchronous response"
+              ]
+            },
             prompt: "Use fetch() to get data from the ISS location API and log it to the console. The API URL is: https://api.wheretheiss.at/v1/satellites/25544",
             starterCode: `// This exercise runs in the browser console
 // We'll use p5.js to display results

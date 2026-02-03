@@ -17,6 +17,31 @@ export const exercises = {
             difficulty: "Easy",
             points: 10,
             description: "Create an array of 5 color names and display them",
+            explanation: {
+              title: "What is an Array?",
+              concept: `An array is a collection of values stored together under one name. Think of it like a row of boxes, each with a number (index) starting at 0.
+
+Instead of creating separate variables:
+let color1 = "red";
+let color2 = "blue";
+let color3 = "green";
+
+You can use one array:
+let colors = ["red", "blue", "green"];`,
+              example: `// Creating an array of numbers
+let scores = [95, 87, 72, 88, 91];
+
+// Accessing elements by index
+console.log(scores[0]); // 95 (first element)
+console.log(scores[2]); // 72 (third element)
+console.log(scores[4]); // 91 (fifth element)`,
+              keyPoints: [
+                "Arrays hold multiple values in a single variable",
+                "Elements are accessed using index numbers",
+                "Indexes start at 0, not 1",
+                "Use square brackets [] to create arrays and access elements"
+              ]
+            },
             prompt: "Create an array called `palette` with 5 colors. Use `palette[0]` to set the background color.",
             starterCode: `function setup() {
   createCanvas(800, 500);
@@ -165,6 +190,29 @@ function mousePressed() {
             difficulty: "Easy",
             points: 10,
             description: "Use push() to add mouse positions to an array",
+            explanation: {
+              title: "Adding Elements with push()",
+              concept: `Arrays can grow! The push() method adds a new element to the end of an array.
+
+Before push: ["a", "b", "c"]
+After push("d"): ["a", "b", "c", "d"]
+
+This is perfect for when you don't know ahead of time how many items you'll have - like tracking mouse clicks!`,
+              example: `let fruits = ["apple", "banana"];
+console.log(fruits); // ["apple", "banana"]
+
+fruits.push("orange");
+console.log(fruits); // ["apple", "banana", "orange"]
+
+fruits.push("grape");
+console.log(fruits); // ["apple", "banana", "orange", "grape"]`,
+              keyPoints: [
+                "push() adds to the END of an array",
+                "The array grows by one each time you push",
+                "You can push any value: numbers, strings, objects",
+                "push() returns the new length of the array"
+              ]
+            },
             prompt: "Click anywhere to add that X position to an array. Draw circles at all saved positions.",
             starterCode: `let xs = [];
 
@@ -284,6 +332,30 @@ function keyPressed() {
             difficulty: "Medium",
             points: 15,
             description: "Store both x and y coordinates in parallel arrays",
+            explanation: {
+              title: "Parallel Arrays",
+              concept: `Parallel arrays are multiple arrays that work together. The same index in each array refers to the same "thing".
+
+For a point, you need BOTH x AND y. We use two arrays:
+- xs[0] and ys[0] = coordinates of point 0
+- xs[1] and ys[1] = coordinates of point 1
+- And so on...
+
+The key rule: keep them the same length!`,
+              example: `// Parallel arrays for student data
+let names = ["Alice", "Bob", "Carol"];
+let scores = [95, 87, 92];
+let grades = ["A", "B", "A"];
+
+// names[1], scores[1], and grades[1] all refer to Bob
+console.log(names[1] + " got " + scores[1]); // "Bob got 87"`,
+              keyPoints: [
+                "Parallel arrays store related data at matching indexes",
+                "Index i in one array corresponds to index i in another",
+                "When you push to one, push to all of them",
+                "When you pop from one, pop from all of them"
+              ]
+            },
             prompt: "Click to place dots. Store x positions in one array and y positions in another.",
             starterCode: `let xs = [];
 let ys = [];
@@ -458,6 +530,40 @@ function mousePressed() {
             points: 50,
             isProject: true,
             description: "Create an interactive dot collector with undo and clear features",
+            explanation: {
+              title: "Combining Array Operations",
+              concept: `This project combines everything from Week 1:
+1. Parallel arrays - store x, y, and color together
+2. push() - add new dots when clicking
+3. pop() - remove last dot for undo
+4. Resetting arrays - set to [] to clear all
+
+The key insight: parallel arrays must always stay synchronized!`,
+              example: `// Always modify parallel arrays together
+function addDot() {
+  xs.push(mouseX);
+  ys.push(mouseY);
+  colors.push(randomColor());
+}
+
+function undoLastDot() {
+  xs.pop();
+  ys.pop();
+  colors.pop();
+}
+
+function clearAll() {
+  xs = [];
+  ys = [];
+  colors = [];
+}`,
+              keyPoints: [
+                "Keep parallel arrays synchronized",
+                "push() to all arrays together when adding",
+                "pop() from all arrays together when removing",
+                "Set arrays to [] to clear them completely"
+              ]
+            },
             prompt: "Build a sketch where:\n- Click to place colored dots\n- Press 'U' to undo last dot\n- Press 'C' to clear all dots\n- Each dot has a random color",
             starterCode: `let xs = [];
 let ys = [];
@@ -562,6 +668,35 @@ function keyPressed() {
             difficulty: "Easy",
             points: 10,
             description: "Draw 10 circles in a row using a for-loop",
+            explanation: {
+              title: "The For Loop",
+              concept: `A for-loop repeats code a specific number of times. It has three parts:
+1. Initialization: let i = 0 (start at 0)
+2. Condition: i < 10 (keep going while true)
+3. Update: i++ (add 1 after each loop)
+
+for (let i = 0; i < 10; i++) {
+  // This code runs 10 times
+  // i goes: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+}`,
+              example: `// Print numbers 1 to 5
+for (let i = 1; i <= 5; i++) {
+  console.log(i);
+}
+// Output: 1, 2, 3, 4, 5
+
+// Draw 5 circles at different x positions
+for (let i = 0; i < 5; i++) {
+  let x = 50 + i * 100; // x = 50, 150, 250, 350, 450
+  circle(x, 200, 40);
+}`,
+              keyPoints: [
+                "i is the loop variable (you can name it anything)",
+                "i++ is shorthand for i = i + 1",
+                "The loop stops when the condition becomes false",
+                "Use i to calculate different values each time"
+              ]
+            },
             prompt: "Use a for-loop to draw 10 circles evenly spaced across the canvas.",
             starterCode: `function setup() {
   createCanvas(800, 500);
@@ -836,6 +971,35 @@ function draw() {
             difficulty: "Easy",
             points: 10,
             description: "Roll dice until you get a 6",
+            explanation: {
+              title: "The While Loop",
+              concept: `A while-loop repeats as long as a condition is true. You don't need to know how many times it will run!
+
+while (condition) {
+  // Keep doing this...
+}
+
+Use while when:
+- You don't know how many times to loop
+- You're waiting for something to happen
+- You want to keep going until a condition changes`,
+              example: `// Keep rolling until you get a 6
+let roll = 0;
+let attempts = 0;
+
+while (roll != 6) {
+  roll = floor(random(1, 7));
+  attempts++;
+}
+
+console.log("Got 6 after " + attempts + " rolls!");`,
+              keyPoints: [
+                "while loops run an unknown number of times",
+                "The condition is checked BEFORE each iteration",
+                "Make sure something changes to avoid infinite loops!",
+                "Use for-loops when you know the count, while-loops when you don't"
+              ]
+            },
             prompt: "Use a while-loop to count how many rolls it takes to get a 6.",
             starterCode: `function setup() {
   createCanvas(800, 500);
@@ -1071,6 +1235,37 @@ function keyPressed() {
             difficulty: "Easy",
             points: 10,
             description: "Traverse an array to draw all stored points",
+            explanation: {
+              title: "Array Traversal",
+              concept: `Traversal means visiting every element in an array, one by one. The pattern is simple:
+
+for (let i = 0; i < array.length; i++) {
+  // Do something with array[i]
+}
+
+This is incredibly useful for:
+- Drawing all items
+- Finding specific values
+- Calculating totals
+- Updating all elements`,
+              example: `let temperatures = [72, 68, 75, 80, 77];
+
+// Traverse to print all temperatures
+for (let i = 0; i < temperatures.length; i++) {
+  console.log("Day " + i + ": " + temperatures[i] + "°F");
+}
+
+// Output:
+// Day 0: 72°F
+// Day 1: 68°F
+// ... and so on`,
+              keyPoints: [
+                "Use array.length in the condition (never hardcode the size)",
+                "i goes from 0 to length - 1",
+                "array[i] accesses each element in order",
+                "Traversal is the foundation of many array operations"
+              ]
+            },
             prompt: "Click to add points. Use a loop to draw a circle at every saved position.",
             starterCode: `let xs = [];
 let ys = [];
@@ -1478,6 +1673,35 @@ function draw() {
             points: 50,
             isProject: true,
             description: "Create an interactive particle system",
+            explanation: {
+              title: "Particle Systems and Element Removal",
+              concept: `A particle system manages many objects that are born, live, and die:
+1. Spawn: push() new particles with position, velocity, life
+2. Update: move particles, apply gravity, decrease life
+3. Remove: splice() dead particles from arrays
+
+IMPORTANT: When removing elements, loop BACKWARDS!
+Why? Removing shifts all later elements down, messing up indexes.`,
+              example: `// WRONG - skips elements when removing
+for (let i = 0; i < arr.length; i++) {
+  if (shouldRemove(arr[i])) {
+    arr.splice(i, 1); // Later elements shift!
+  }
+}
+
+// CORRECT - loop backwards
+for (let i = arr.length - 1; i >= 0; i--) {
+  if (shouldRemove(arr[i])) {
+    arr.splice(i, 1); // Safe - earlier elements unaffected
+  }
+}`,
+              keyPoints: [
+                "Loop BACKWARDS when removing elements with splice()",
+                "splice(i, 1) removes 1 element at index i",
+                "Gravity: add a constant to vy each frame",
+                "Life decreases over time, remove when <= 0"
+              ]
+            },
             prompt: "Build a particle fountain:\n- Click to spawn burst of particles\n- Particles have gravity\n- Particles shrink over time\n- Remove particles when too small",
             starterCode: `let xs = [];
 let ys = [];
@@ -1575,6 +1799,474 @@ function mousePressed() {
               physics: "Gravity affects particles",
               lifecycle: "Particles shrink and are removed",
               visuals: "Particles look good (fade, color, etc.)"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  pixelWeek: {
+    title: "Pixel Array Project",
+    bigIdea: "The canvas is just an array of pixels. Traverse it to create stunning visual effects.",
+    isCulminating: true,
+    prerequisiteWeeks: ["week1", "week2", "week3"],
+    days: [
+      {
+        day: "P1",
+        title: "Understanding the Pixel Array",
+        objective: "Learn how pixels are stored in a 1D array and access individual pixel colors",
+        exercises: [
+          {
+            id: "pw-p1-1",
+            title: "Meet the Pixels",
+            difficulty: "Medium",
+            points: 15,
+            description: "Load and explore the pixel array to understand its structure",
+            explanation: {
+              title: "The Pixel Array Structure",
+              concept: `In p5.js, every pixel on your canvas is stored in a giant 1D array called pixels[]. Each pixel needs FOUR values (Red, Green, Blue, Alpha), so a single pixel takes up 4 slots in the array!
+
+For a pixel at position (x, y), the formula to find its starting index is:
+index = (x + y * width) * 4
+
+Then:
+- pixels[index + 0] = Red (0-255)
+- pixels[index + 1] = Green (0-255)
+- pixels[index + 2] = Blue (0-255)
+- pixels[index + 3] = Alpha (0-255)
+
+IMPORTANT: You must call loadPixels() before reading and updatePixels() after writing!`,
+              example: `// Check if a pixel is "bright"
+function setup() {
+  createCanvas(400, 400);
+  background(100, 200, 150);
+  loadPixels();
+  let x = 200, y = 200;
+  let index = (x + y * width) * 4;
+  let brightness = (pixels[index] + pixels[index+1] + pixels[index+2]) / 3;
+  console.log(brightness > 127 ? "Bright!" : "Dark!");
+}`,
+              keyPoints: [
+                "Each pixel takes 4 slots in the array (R, G, B, A)",
+                "Index formula: (x + y * width) * 4",
+                "Must call loadPixels() before reading pixels",
+                "Must call updatePixels() after modifying pixels"
+              ]
+            },
+            prompt: "Load the pixel array and display the RGBA values of a specific pixel. Click anywhere to see that pixel's color values.",
+            starterCode: `function setup() {
+  createCanvas(400, 400);
+  fill(255, 0, 0); rect(0, 0, 200, 200);
+  fill(0, 255, 0); rect(200, 0, 200, 200);
+  fill(0, 0, 255); rect(0, 200, 200, 200);
+  fill(255, 255, 0); rect(200, 200, 200, 200);
+}
+
+function draw() {}
+
+function mousePressed() {
+  // Load the pixel array
+  // Calculate the index: (x + y * width) * 4
+  // Get R, G, B, A values and display them
+  console.log("Click position: " + mouseX + ", " + mouseY);
+}`,
+            solutionCode: `function setup() {
+  createCanvas(400, 400);
+  fill(255, 0, 0); rect(0, 0, 200, 200);
+  fill(0, 255, 0); rect(200, 0, 200, 200);
+  fill(0, 0, 255); rect(0, 200, 200, 200);
+  fill(255, 255, 0); rect(200, 200, 200, 200);
+  textSize(14);
+}
+
+function draw() {}
+
+function mousePressed() {
+  loadPixels();
+  let x = floor(mouseX), y = floor(mouseY);
+  if (x >= 0 && x < width && y >= 0 && y < height) {
+    let index = (x + y * width) * 4;
+    let r = pixels[index], g = pixels[index+1], b = pixels[index+2], a = pixels[index+3];
+    console.log("R:" + r + " G:" + g + " B:" + b + " A:" + a);
+    fill(0); rect(10, 10, 200, 60);
+    fill(255); text("Pixel at (" + x + ", " + y + ")", 20, 30);
+    text("R:" + r + " G:" + g + " B:" + b, 20, 50);
+    fill(r, g, b); rect(20, 55, 30, 15);
+  }
+}`,
+            hints: ["loadPixels() must be called first", "Use floor() for mouse position", "Index formula: (x + y * width) * 4"],
+            vocabularyTerms: ["pixels", "loadPixels", "index"]
+          },
+          {
+            id: "pw-p1-2",
+            title: "Paint a Single Pixel",
+            difficulty: "Medium",
+            points: 15,
+            description: "Modify individual pixels by writing to the pixel array",
+            prompt: "Create a simple pixel painter. Click or drag to paint red pixels.",
+            starterCode: `function setup() {
+  createCanvas(400, 400);
+  background(0);
+  pixelDensity(1);
+}
+
+function mousePressed() {
+  // Load pixels, calculate index, set to red, update pixels
+}
+
+function mouseDragged() { mousePressed(); }`,
+            solutionCode: `function setup() {
+  createCanvas(400, 400);
+  background(0);
+  pixelDensity(1);
+}
+
+function mousePressed() {
+  loadPixels();
+  let x = floor(mouseX), y = floor(mouseY);
+  if (x >= 0 && x < width && y >= 0 && y < height) {
+    let index = (x + y * width) * 4;
+    pixels[index] = 255; pixels[index+1] = 0; pixels[index+2] = 0; pixels[index+3] = 255;
+    updatePixels();
+  }
+}
+
+function mouseDragged() { mousePressed(); }`,
+            hints: ["Use pixelDensity(1)", "Set all four RGBA values", "Call updatePixels() after"],
+            vocabularyTerms: ["pixels", "updatePixels"]
+          }
+        ],
+        exitTicket: "What is the formula for the pixel array index at position (x, y)?"
+      },
+      {
+        day: "P2",
+        title: "Traversing All Pixels",
+        objective: "Use nested loops to process every pixel",
+        exercises: [
+          {
+            id: "pw-p2-1",
+            title: "Fill the Canvas",
+            difficulty: "Medium",
+            points: 20,
+            description: "Use nested loops to set every pixel to cyan",
+            prompt: "Use nested for-loops to fill the canvas with cyan by setting pixels directly.",
+            starterCode: `function setup() {
+  createCanvas(400, 400);
+  pixelDensity(1);
+  loadPixels();
+  // Nested loops: outer for y, inner for x
+  // Set each pixel to cyan (R=0, G=255, B=255)
+  updatePixels();
+}`,
+            solutionCode: `function setup() {
+  createCanvas(400, 400);
+  pixelDensity(1);
+  loadPixels();
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let index = (x + y * width) * 4;
+      pixels[index] = 0; pixels[index+1] = 255; pixels[index+2] = 255; pixels[index+3] = 255;
+    }
+  }
+  updatePixels();
+}`,
+            hints: ["Outer loop for y, inner for x", "Calculate index inside inner loop"],
+            vocabularyTerms: ["nested-loop", "traversal"]
+          },
+          {
+            id: "pw-p2-2",
+            title: "Horizontal Gradient",
+            difficulty: "Medium",
+            points: 20,
+            description: "Create a gradient from black to white",
+            prompt: "Create a horizontal gradient using map() to convert x position to brightness.",
+            starterCode: `function setup() {
+  createCanvas(400, 400);
+  pixelDensity(1);
+  loadPixels();
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let index = (x + y * width) * 4;
+      // Use map(x, 0, width, 0, 255) for brightness
+      pixels[index + 3] = 255;
+    }
+  }
+  updatePixels();
+}`,
+            solutionCode: `function setup() {
+  createCanvas(400, 400);
+  pixelDensity(1);
+  loadPixels();
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let index = (x + y * width) * 4;
+      let b = map(x, 0, width, 0, 255);
+      pixels[index] = b; pixels[index+1] = b; pixels[index+2] = b; pixels[index+3] = 255;
+    }
+  }
+  updatePixels();
+}`,
+            hints: ["map(x, 0, width, 0, 255)", "Set R, G, B to same value for grayscale"],
+            vocabularyTerms: ["map", "gradient"]
+          }
+        ],
+        exitTicket: "Why do we need nested loops to traverse all pixels?"
+      },
+      {
+        day: "P3",
+        title: "Dynamic Effects",
+        objective: "Create animated and interactive pixel effects",
+        exercises: [
+          {
+            id: "pw-p3-1",
+            title: "Mouse Glow",
+            difficulty: "Hard",
+            points: 30,
+            description: "Create a glow effect that follows the mouse",
+            prompt: "Make pixels brighter when close to the mouse using dist() and map().",
+            starterCode: `function setup() {
+  createCanvas(400, 400);
+  pixelDensity(1);
+}
+
+function draw() {
+  loadPixels();
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let index = (x + y * width) * 4;
+      // Calculate distance from pixel to mouse
+      // Map distance to brightness (close=bright, far=dark)
+      pixels[index + 3] = 255;
+    }
+  }
+  updatePixels();
+}`,
+            solutionCode: `function setup() {
+  createCanvas(400, 400);
+  pixelDensity(1);
+}
+
+function draw() {
+  loadPixels();
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let index = (x + y * width) * 4;
+      let d = dist(x, y, mouseX, mouseY);
+      let b = map(d, 0, 150, 255, 0);
+      b = constrain(b, 0, 255);
+      pixels[index] = b; pixels[index+1] = b*0.7; pixels[index+2] = b*0.2; pixels[index+3] = 255;
+    }
+  }
+  updatePixels();
+}`,
+            hints: ["dist(x, y, mouseX, mouseY)", "Use constrain() to keep values valid"],
+            vocabularyTerms: ["dist", "constrain"]
+          }
+        ],
+        exitTicket: "How do you create a distance-based glow effect?"
+      },
+      {
+        day: "P4",
+        title: "Image Processing",
+        objective: "Apply filters to transform images",
+        exercises: [
+          {
+            id: "pw-p4-1",
+            title: "Invert Colors",
+            difficulty: "Medium",
+            points: 20,
+            description: "Create a negative image by inverting colors",
+            prompt: "Invert colors by subtracting each RGB value from 255.",
+            starterCode: `function setup() {
+  createCanvas(400, 400);
+  pixelDensity(1);
+  background(50, 100, 200);
+  fill(255, 0, 0); circle(100, 100, 100);
+  fill(0, 255, 0); circle(200, 200, 100);
+
+  loadPixels();
+  for (let i = 0; i < pixels.length; i += 4) {
+    // Invert: 255 - value
+  }
+  updatePixels();
+}`,
+            solutionCode: `function setup() {
+  createCanvas(400, 400);
+  pixelDensity(1);
+  background(50, 100, 200);
+  fill(255, 0, 0); circle(100, 100, 100);
+  fill(0, 255, 0); circle(200, 200, 100);
+
+  loadPixels();
+  for (let i = 0; i < pixels.length; i += 4) {
+    pixels[i] = 255 - pixels[i];
+    pixels[i+1] = 255 - pixels[i+1];
+    pixels[i+2] = 255 - pixels[i+2];
+  }
+  updatePixels();
+}`,
+            hints: ["Loop by 4s", "newValue = 255 - oldValue"],
+            vocabularyTerms: ["invert", "filter"]
+          },
+          {
+            id: "pw-p4-2",
+            title: "Grayscale",
+            difficulty: "Medium",
+            points: 20,
+            description: "Convert to grayscale by averaging RGB",
+            prompt: "Convert each pixel to grayscale by averaging R, G, B values.",
+            starterCode: `function setup() {
+  createCanvas(400, 400);
+  pixelDensity(1);
+  background(100, 150, 255);
+  fill('red'); circle(100, 100, 80);
+  fill('green'); circle(200, 150, 80);
+  fill('blue'); circle(300, 100, 80);
+
+  loadPixels();
+  for (let i = 0; i < pixels.length; i += 4) {
+    // gray = (R + G + B) / 3
+  }
+  updatePixels();
+}`,
+            solutionCode: `function setup() {
+  createCanvas(400, 400);
+  pixelDensity(1);
+  background(100, 150, 255);
+  fill('red'); circle(100, 100, 80);
+  fill('green'); circle(200, 150, 80);
+  fill('blue'); circle(300, 100, 80);
+
+  loadPixels();
+  for (let i = 0; i < pixels.length; i += 4) {
+    let gray = (pixels[i] + pixels[i+1] + pixels[i+2]) / 3;
+    pixels[i] = gray; pixels[i+1] = gray; pixels[i+2] = gray;
+  }
+  updatePixels();
+}`,
+            hints: ["Average = (R + G + B) / 3", "Set all channels to same value"],
+            vocabularyTerms: ["grayscale", "brightness"]
+          }
+        ],
+        exitTicket: "How do you convert color to grayscale?"
+      },
+      {
+        day: "P5",
+        title: "Culminating Project",
+        objective: "Build a pixel art editor",
+        exercises: [
+          {
+            id: "pw-p5-project",
+            title: "Pixel Art Creator",
+            difficulty: "Hard",
+            points: 75,
+            isProject: true,
+            description: "Build an interactive pixel art editor with tools and effects",
+            prompt: "Create a pixel art editor:\n- Click/drag to paint\n- R/G/B keys change color\n- 1=invert, 2=grayscale\n- C=clear",
+            starterCode: `let currentColor;
+
+function setup() {
+  createCanvas(400, 400);
+  pixelDensity(1);
+  background(255);
+  currentColor = color(0);
+  showUI();
+}
+
+function showUI() {
+  fill(50); rect(0, 360, width, 40);
+  fill(255); text("R/G/B=color | 1=invert 2=gray | C=clear", 10, 385);
+  fill(currentColor); rect(360, 365, 30, 30);
+}
+
+function mouseDragged() {
+  if (mouseY < 360) {
+    // Paint pixels
+  }
+}
+
+function keyPressed() {
+  if (key == 'r') currentColor = color(255, 0, 0);
+  if (key == 'c') background(255);
+  showUI();
+}`,
+            solutionCode: `let currentColor;
+let brushSize = 5;
+
+function setup() {
+  createCanvas(400, 400);
+  pixelDensity(1);
+  background(255);
+  currentColor = color(0);
+  showUI();
+}
+
+function showUI() {
+  fill(50); rect(0, 360, width, 40);
+  fill(255); textSize(11);
+  text("R/G/B/K=color | 1=invert 2=gray | C=clear", 10, 385);
+  fill(currentColor); stroke(255); rect(360, 365, 30, 30); noStroke();
+}
+
+function paintAt(px, py) {
+  if (py >= 360) return;
+  loadPixels();
+  let r = red(currentColor), g = green(currentColor), b = blue(currentColor);
+  for (let dy = -brushSize; dy <= brushSize; dy++) {
+    for (let dx = -brushSize; dx <= brushSize; dx++) {
+      let x = px + dx, y = py + dy;
+      if (x >= 0 && x < width && y >= 0 && y < 360) {
+        let i = (x + y * width) * 4;
+        pixels[i] = r; pixels[i+1] = g; pixels[i+2] = b; pixels[i+3] = 255;
+      }
+    }
+  }
+  updatePixels();
+}
+
+function mouseDragged() { paintAt(floor(mouseX), floor(mouseY)); }
+function mousePressed() { if (mouseY < 360) paintAt(floor(mouseX), floor(mouseY)); }
+
+function keyPressed() {
+  if (key == 'r') currentColor = color(255, 0, 0);
+  if (key == 'g') currentColor = color(0, 255, 0);
+  if (key == 'b') currentColor = color(0, 0, 255);
+  if (key == 'k') currentColor = color(0);
+  if (key == '1') applyInvert();
+  if (key == '2') applyGray();
+  if (key == 'c') background(255);
+  showUI();
+}
+
+function applyInvert() {
+  loadPixels();
+  for (let y = 0; y < 360; y++) {
+    for (let x = 0; x < width; x++) {
+      let i = (x + y * width) * 4;
+      pixels[i] = 255-pixels[i]; pixels[i+1] = 255-pixels[i+1]; pixels[i+2] = 255-pixels[i+2];
+    }
+  }
+  updatePixels();
+}
+
+function applyGray() {
+  loadPixels();
+  for (let y = 0; y < 360; y++) {
+    for (let x = 0; x < width; x++) {
+      let i = (x + y * width) * 4;
+      let g = (pixels[i] + pixels[i+1] + pixels[i+2]) / 3;
+      pixels[i] = g; pixels[i+1] = g; pixels[i+2] = g;
+    }
+  }
+  updatePixels();
+}`,
+            hints: ["Use nested loops for brush", "Stop at y=360 for UI area"],
+            vocabularyTerms: ["pixels", "traversal", "interactive"],
+            rubric: {
+              painting: "Can draw by clicking/dragging",
+              colors: "Multiple colors via keyboard",
+              effects: "Invert and grayscale work",
+              clear: "C clears the canvas"
             }
           }
         ]
@@ -1857,6 +2549,34 @@ function draw() {
             difficulty: "Medium",
             points: 15,
             description: "Use nested loops to draw a grid of squares",
+            explanation: {
+              title: "Nested Loops and Grids",
+              concept: `To draw a grid, you need TWO loops - one nested inside the other:
+- Outer loop: controls ROWS (vertical position)
+- Inner loop: controls COLUMNS (horizontal position)
+
+for (let row = 0; row < 5; row++) {
+  for (let col = 0; col < 5; col++) {
+    // This runs 25 times (5 rows × 5 columns)
+    // row goes: 0,0,0,0,0, 1,1,1,1,1, 2,2,2,2,2...
+    // col goes: 0,1,2,3,4, 0,1,2,3,4, 0,1,2,3,4...
+  }
+}`,
+              example: `// Draw a 3x3 grid of 50px squares
+for (let row = 0; row < 3; row++) {
+  for (let col = 0; col < 3; col++) {
+    let x = col * 50;  // 0, 50, 100
+    let y = row * 50;  // 0, 50, 100
+    rect(x, y, 50, 50);
+  }
+}`,
+              keyPoints: [
+                "Outer loop controls rows (y direction)",
+                "Inner loop controls columns (x direction)",
+                "x position depends on col, y position depends on row",
+                "Total iterations = rows × columns"
+              ]
+            },
             prompt: "Draw a 10x10 grid of squares using nested for-loops.",
             starterCode: `function setup() {
   createCanvas(500, 500);
@@ -2155,6 +2875,47 @@ function keyPressed() {
             isProject: true,
             isCapstone: true,
             description: "Create a complete grid-based game",
+            explanation: {
+              title: "2D Arrays for Game Maps",
+              concept: `A 2D array is an array of arrays - perfect for grids!
+
+grid[row][col] accesses a specific cell
+Different values represent different tile types:
+- 0 = floor (can walk)
+- 1 = wall (blocked)
+- 2 = goal
+- 3 = coin
+
+To check before moving:
+1. Calculate new position
+2. Check bounds (is it inside the grid?)
+3. Check collision (is it a wall?)
+4. Only then update player position`,
+              example: `// Create a 2D array
+let grid = [];
+for (let r = 0; r < 10; r++) {
+  grid[r] = [];  // Create each row
+  for (let c = 0; c < 10; c++) {
+    grid[r][c] = 0;  // Fill with floors
+  }
+}
+
+// Place a wall
+grid[3][5] = 1;
+
+// Check before moving
+if (grid[newRow][newCol] != 1) {
+  // Not a wall, can move!
+  playerRow = newRow;
+  playerCol = newCol;
+}`,
+              keyPoints: [
+                "2D arrays: grid[row][col] for row, column access",
+                "Use numbers to represent different tile types",
+                "Always check bounds before accessing grid cells",
+                "Check the destination BEFORE moving the player"
+              ]
+            },
             prompt: "Build a Grid Adventure Game:\n- 2D array map (0=floor, 1=wall, 2=goal, 3=coin)\n- Player moves with arrow keys\n- Collect coins for points\n- Reach the goal to win\n- Display score and instructions",
             starterCode: `let grid = [];
 let playerR = 0;

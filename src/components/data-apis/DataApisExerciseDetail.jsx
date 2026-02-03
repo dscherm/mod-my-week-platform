@@ -42,6 +42,7 @@ function DataApisExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, o
   const [activeTab, setActiveTab] = useState('client'); // 'client' or 'server'
   const [showHints, setShowHints] = useState([]);
   const [showSolution, setShowSolution] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [output, setOutput] = useState('');
   const [selectedTerm, setSelectedTerm] = useState(null);
@@ -56,6 +57,7 @@ function DataApisExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, o
       setServerCode(exercise.serverCode || '');
       setShowHints([]);
       setShowSolution(false);
+      setShowExplanation(false);
       setOutput('');
       setActiveTab(exercise.requiresNode ? 'server' : 'client');
     }
@@ -304,6 +306,46 @@ Your server code is ready in the "Server" tab.
         <h1>{exercise.title}</h1>
         <p className="exercise-description-large">{exercise.description}</p>
       </div>
+
+      {/* Explanation Dropdown */}
+      {exercise.explanation && (
+        <div className="explanation-section">
+          <button
+            className={`explanation-toggle ${showExplanation ? 'open' : ''}`}
+            onClick={() => setShowExplanation(!showExplanation)}
+          >
+            <span className="toggle-icon">{showExplanation ? '▼' : '▶'}</span>
+            <span className="toggle-text">📚 Learn: {exercise.explanation.title}</span>
+          </button>
+
+          {showExplanation && (
+            <div className="explanation-content">
+              <div className="concept-section">
+                <h4>Concept</h4>
+                <pre className="concept-text">{exercise.explanation.concept}</pre>
+              </div>
+
+              {exercise.explanation.example && (
+                <div className="example-section">
+                  <h4>Example (Different from this exercise!)</h4>
+                  <pre className="example-code"><code>{exercise.explanation.example}</code></pre>
+                </div>
+              )}
+
+              {exercise.explanation.keyPoints && exercise.explanation.keyPoints.length > 0 && (
+                <div className="key-points-section">
+                  <h4>Key Points</h4>
+                  <ul>
+                    {exercise.explanation.keyPoints.map((point, index) => (
+                      <li key={index}>{point}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {exercise.vocabularyTerms && exercise.vocabularyTerms.length > 0 && (
         <div className="vocab-tags">
