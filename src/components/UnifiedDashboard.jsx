@@ -5,6 +5,7 @@ import { contentTypes } from '../data/contentTypes';
 import { pseudocodeTopics, pseudocodeExercises } from '../data/pseudocode';
 import { flowchartExercises } from '../data/flowcharts';
 import { dataApisExercises, getDataApisWeekExercises } from '../data/data-apis-exercises';
+import { objectsImagesExercises, getObjectsImagesWeekExercises } from '../data/objects-images-exercises';
 
 const UnifiedDashboard = ({
   studentName,
@@ -16,17 +17,20 @@ const UnifiedDashboard = ({
   completedPseudocode = [],
   completedFlowcharts = [],
   completedDataApisExercises = [],
+  completedObjectsImagesExercises = [],
   onSelectCategory,
   onSelectNetworkMonitor,
   onSelectWeek,
   onSelectAPCSP,
-  onSelectDataApisWeek
+  onSelectDataApisWeek,
+  onSelectObjectsImagesWeek
 }) => {
   // Check if entire modules are assigned
   const hasCyberModule = assignments.some(a => a.type === 'cyber-range');
   const hasProgrammingModule = assignments.some(a => a.type === 'arrays-loops');
   const hasAPCSPModule = assignments.some(a => a.type === 'ap-csp');
   const hasDataApisModule = assignments.some(a => a.type === 'data-apis');
+  const hasObjectsImagesModule = assignments.some(a => a.type === 'objects-images');
 
   // Calculate cyber-range progress
   const getCyberCategoryProgress = (categoryId) => {
@@ -85,11 +89,23 @@ const UnifiedDashboard = ({
     };
   };
 
+  // Calculate Objects & Images progress
+  const getObjectsImagesWeekProgress = (weekKey) => {
+    const weekExercises = getObjectsImagesWeekExercises(weekKey);
+    const completed = weekExercises.filter(e => completedObjectsImagesExercises.includes(e.id)).length;
+    return {
+      completed,
+      total: weekExercises.length,
+      percentage: weekExercises.length > 0 ? (completed / weekExercises.length) * 100 : 0
+    };
+  };
+
   // Get total stats
   const totalChallengesCompleted = completedChallenges.length + completedScenarios.length;
   const totalExercisesCompleted = completedExercises.length;
   const totalAPCSPCompleted = completedPseudocode.length + completedFlowcharts.length;
   const totalDataApisCompleted = completedDataApisExercises.length;
+  const totalObjectsImagesCompleted = completedObjectsImagesExercises.length;
 
   const cyberCategories = [
     { id: 'cryptography', name: 'Cryptography', icon: '[ CRYPTO ]', description: 'Encryption, ciphers, and secure communication' },
@@ -105,7 +121,7 @@ const UnifiedDashboard = ({
     { id: 'flowcharts', name: 'Flowcharts', icon: '[ FLOW ]', description: 'Read, interpret, and build flowcharts' }
   ];
 
-  const hasAssignments = hasCyberModule || hasProgrammingModule || hasAPCSPModule || hasDataApisModule;
+  const hasAssignments = hasCyberModule || hasProgrammingModule || hasAPCSPModule || hasDataApisModule || hasObjectsImagesModule;
 
   return (
     <div className="unified-dashboard">
@@ -134,6 +150,10 @@ const UnifiedDashboard = ({
         <div className="stat-card data-apis">
           <span className="stat-value">{totalDataApisCompleted}</span>
           <span className="stat-label">Data & APIs</span>
+        </div>
+        <div className="stat-card objects-images">
+          <span className="stat-value">{totalObjectsImagesCompleted}</span>
+          <span className="stat-label">Objects & Images</span>
         </div>
       </div>
 
@@ -277,6 +297,42 @@ const UnifiedDashboard = ({
                       <div className="category-progress">
                         <div
                           className="category-progress-bar data-apis"
+                          style={{ width: `${progress.percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {hasObjectsImagesModule && (
+            <section className="content-section objects-images-section">
+              <h2 className="section-title objects-images">
+                <span className="section-icon">{contentTypes['objects-images'].icon}</span>
+                Objects & Images
+              </h2>
+
+              <div className="categories">
+                {Object.entries(objectsImagesExercises).map(([weekKey, week]) => {
+                  const progress = getObjectsImagesWeekProgress(weekKey);
+                  const weekNum = weekKey.replace('week', '');
+                  return (
+                    <div
+                      key={weekKey}
+                      className="category-card objects-images"
+                      onClick={() => onSelectObjectsImagesWeek(weekKey)}
+                    >
+                      <div className="category-icon">[ WEEK {weekNum} ]</div>
+                      <h3>{week.title}</h3>
+                      <p className="category-description">{week.bigIdea}</p>
+                      <p className="category-progress-text">
+                        {progress.completed} / {progress.total} completed
+                      </p>
+                      <div className="category-progress">
+                        <div
+                          className="category-progress-bar objects-images"
                           style={{ width: `${progress.percentage}%` }}
                         />
                       </div>

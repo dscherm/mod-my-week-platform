@@ -134,6 +134,27 @@ export const contentTypes = {
         exerciseCount: 9
       }
     ]
+  },
+  'objects-images': {
+    id: 'objects-images',
+    name: 'Objects & Images',
+    description: 'Object-oriented programming, arrays of objects, interaction, and image sprites with p5.js',
+    color: '#ff9f43',
+    icon: '🎨',
+    units: [
+      {
+        id: 'week1',
+        name: 'Week 1: Arrays of Objects & Interaction',
+        description: 'Classes, arrays of objects, mouse interaction, and removal',
+        exerciseCount: 10
+      },
+      {
+        id: 'week2',
+        name: 'Week 2: Object Communication & Images',
+        description: 'Collision detection, nested loops, and image sprites',
+        exerciseCount: 8
+      }
+    ]
   }
 };
 

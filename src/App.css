@@ -8950,3 +8950,246 @@ a:hover {
 .exit-ticket strong {
   color: #ffc107;
 }
+
+/* ============================================
+   Objects & Images Module Styles
+   ============================================ */
+
+/* Dashboard - Objects & Images Section */
+.content-section.objects-images-section {
+  border-left: 3px solid #ff9f43;
+  padding-left: 1rem;
+  margin-top: 2rem;
+}
+
+.section-title.objects-images {
+  color: #ff9f43;
+}
+
+.stat-card.objects-images {
+  border-color: #ff9f43;
+}
+
+.stat-card.objects-images:hover {
+  box-shadow: 0 0 30px rgba(255, 159, 67, 0.3);
+}
+
+.stat-card.objects-images .stat-value {
+  color: #ff9f43;
+  text-shadow: 0 0 10px rgba(255, 159, 67, 0.5);
+}
+
+.category-card.objects-images {
+  border-color: rgba(255, 159, 67, 0.5);
+}
+
+.category-card.objects-images:hover {
+  border-color: #ff9f43;
+  box-shadow: 0 0 30px rgba(255, 159, 67, 0.4), inset 0 0 30px rgba(255, 159, 67, 0.1);
+}
+
+.category-card.objects-images h3 {
+  color: #ff9f43;
+}
+
+.category-progress-bar.objects-images {
+  background: linear-gradient(90deg, #ff9f43, #f7931e);
+  box-shadow: 0 0 10px rgba(255, 159, 67, 0.5);
+}
+
+/* Objects & Images Week View */
+.objects-images-week {
+  padding: 1rem;
+}
+
+.objects-images-week .week-header-large h1 {
+  color: #ff9f43;
+}
+
+.objects-images-week .learning-objectives {
+  background: rgba(255, 159, 67, 0.1);
+  border: 1px solid rgba(255, 159, 67, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.objects-images-week .day-header h2 {
+  color: #ff9f43;
+  border-bottom: 2px solid rgba(255, 159, 67, 0.3);
+  padding-bottom: 0.5rem;
+}
+
+.objects-images-week .exercise-card {
+  border-color: rgba(255, 159, 67, 0.3);
+  transition: all 0.3s ease;
+}
+
+.objects-images-week .exercise-card:hover {
+  border-color: #ff9f43;
+  box-shadow: 0 0 20px rgba(255, 159, 67, 0.3);
+}
+
+.objects-images-week .exercise-card.completed {
+  border-color: #4caf50;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.objects-images-week .capstone-card {
+  border-color: rgba(255, 107, 107, 0.5);
+  background: rgba(255, 107, 107, 0.05);
+}
+
+/* Objects & Images Exercise Detail */
+.objects-images-exercise {
+  padding: 1rem;
+}
+
+.objects-images-exercise .exercise-header-detail h1 {
+  color: #ff9f43;
+}
+
+.objects-images-exercise .prompt-box {
+  background: rgba(255, 159, 67, 0.1);
+  border: 1px solid rgba(255, 159, 67, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.objects-images-exercise .prompt-box h3 {
+  color: #ff9f43;
+  margin-bottom: 0.5rem;
+}
+
+.objects-images-exercise .prompt-box pre {
+  white-space: pre-wrap;
+  color: #e0e0e0;
+  font-family: 'Share Tech Mono', monospace;
+  margin: 0;
+}
+
+/* Explanation Section Dropdown */
+.explanation-section {
+  margin: 1rem 0;
+}
+
+.explanation-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255, 159, 67, 0.1);
+  border: 1px solid rgba(255, 159, 67, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  color: #ff9f43;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 1rem;
+  text-align: left;
+}
+
+.explanation-toggle:hover {
+  background: rgba(255, 159, 67, 0.2);
+  border-color: #ff9f43;
+}
+
+.explanation-toggle.open {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom: none;
+}
+
+.toggle-icon {
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+.toggle-text {
+  flex: 1;
+  font-weight: bold;
+}
+
+.explanation-content {
+  background: rgba(255, 159, 67, 0.05);
+  border: 1px solid rgba(255, 159, 67, 0.3);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 1.5rem;
+}
+
+.concept-section {
+  margin-bottom: 1.5rem;
+}
+
+.concept-section h4 {
+  color: #ff9f43;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.concept-text {
+  white-space: pre-wrap;
+  color: #e0e0e0;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 1rem;
+  border-radius: 6px;
+  margin: 0;
+}
+
+.example-section {
+  margin-bottom: 1.5rem;
+}
+
+.example-section h4 {
+  color: #4ecdc4;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.example-code {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(78, 205, 196, 0.3);
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 0;
+}
+
+.example-code code {
+  color: #e0e0e0;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.key-points-section h4 {
+  color: #ff9f43;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.key-points-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.key-points-section li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: #e0e0e0;
+}
+
+.key-points-section li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #4caf50;
+}

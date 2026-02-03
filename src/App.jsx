@@ -27,6 +27,8 @@ import FlowchartExercise from './components/flowchart/FlowchartExercise';
 import DataApisWeekView from './components/data-apis/DataApisWeekView';
 import DataApisExerciseDetail from './components/data-apis/DataApisExerciseDetail';
 import DataApisVocabularyPage from './components/data-apis/DataApisVocabularyPage';
+import ObjectsImagesWeekView from './components/objects-images/ObjectsImagesWeekView';
+import ObjectsImagesExerciseDetail from './components/objects-images/ObjectsImagesExerciseDetail';
 import { saveStudentProgress, getStudentProgress, subscribeToAssignments, isFirebaseConfigured, saveStudentSubmission } from './services/firebaseService';
 
 function App() {
@@ -69,6 +71,11 @@ function App() {
   const [completedDataApisExercises, setCompletedDataApisExercises] = useState([]);
   const [selectedDataApisWeek, setSelectedDataApisWeek] = useState(null);
   const [selectedDataApisExercise, setSelectedDataApisExercise] = useState(null);
+
+  // Objects & Images state
+  const [completedObjectsImagesExercises, setCompletedObjectsImagesExercises] = useState([]);
+  const [selectedObjectsImagesWeek, setSelectedObjectsImagesWeek] = useState(null);
+  const [selectedObjectsImagesExercise, setSelectedObjectsImagesExercise] = useState(null);
 
   // Check for existing session
   useEffect(() => {
@@ -120,6 +127,7 @@ function App() {
           setCompletedPseudocode(progress.completedPseudocode || []);
           setCompletedFlowcharts(progress.completedFlowcharts || []);
           setCompletedDataApisExercises(progress.completedDataApisExercises || []);
+          setCompletedObjectsImagesExercises(progress.completedObjectsImagesExercises || []);
           setExitTicketResponses(progress.exitTicketResponses || {});
           setTotalPoints(progress.totalPoints || 0);
         }
@@ -163,6 +171,7 @@ function App() {
         setCompletedPseudocode(data.completedPseudocode || []);
         setCompletedFlowcharts(data.completedFlowcharts || []);
         setCompletedDataApisExercises(data.completedDataApisExercises || []);
+        setCompletedObjectsImagesExercises(data.completedObjectsImagesExercises || []);
         setExitTicketResponses(data.exitTicketResponses || {});
         setTotalPoints(data.points || 0);
       } catch (e) {
@@ -172,7 +181,7 @@ function App() {
   };
 
   // Save progress (to Firebase and localStorage)
-  const saveProgress = useCallback(async (challenges, scenarios, exercises, pseudocode, flowcharts, dataApis, exitTickets, points) => {
+  const saveProgress = useCallback(async (challenges, scenarios, exercises, pseudocode, flowcharts, dataApis, objectsImages, exitTickets, points) => {
     // Always save to localStorage as backup
     localStorage.setItem('cyberrange-progress', JSON.stringify({
       completed: challenges,
@@ -181,6 +190,7 @@ function App() {
       completedPseudocode: pseudocode,
       completedFlowcharts: flowcharts,
       completedDataApisExercises: dataApis,
+      completedObjectsImagesExercises: objectsImages,
       exitTicketResponses: exitTickets,
       points: points
     }));
@@ -195,6 +205,7 @@ function App() {
           completedPseudocode: pseudocode,
           completedFlowcharts: flowcharts,
           completedDataApisExercises: dataApis,
+          completedObjectsImagesExercises: objectsImages,
           exitTicketResponses: exitTickets,
           totalPoints: points
         });
@@ -207,9 +218,9 @@ function App() {
   // Save progress when it changes
   useEffect(() => {
     if (currentUser) {
-      saveProgress(completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, completedDataApisExercises, exitTicketResponses, totalPoints);
+      saveProgress(completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, completedDataApisExercises, completedObjectsImagesExercises, exitTicketResponses, totalPoints);
     }
-  }, [completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, completedDataApisExercises, exitTicketResponses, totalPoints, currentUser, saveProgress]);
+  }, [completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, completedDataApisExercises, completedObjectsImagesExercises, exitTicketResponses, totalPoints, currentUser, saveProgress]);
 
   // Handle student login
   const handleLogin = (user) => {
@@ -274,6 +285,7 @@ function App() {
     setCompletedPseudocode([]);
     setCompletedFlowcharts([]);
     setCompletedDataApisExercises([]);
+    setCompletedObjectsImagesExercises([]);
     setExitTicketResponses({});
     setAssignments([]);
     setTotalPoints(0);
@@ -285,6 +297,8 @@ function App() {
     setSelectedFlowchartExercise(null);
     setSelectedDataApisWeek(null);
     setSelectedDataApisExercise(null);
+    setSelectedObjectsImagesWeek(null);
+    setSelectedObjectsImagesExercise(null);
     localStorage.removeItem('cyberrange-session');
   };
 
@@ -331,6 +345,7 @@ function App() {
       setCompletedPseudocode([]);
       setCompletedFlowcharts([]);
       setCompletedDataApisExercises([]);
+      setCompletedObjectsImagesExercises([]);
       setExitTicketResponses({});
       setTotalPoints(0);
       localStorage.removeItem('cyberrange-progress');
@@ -478,6 +493,34 @@ function App() {
     setCurrentView('dashboard');
   };
 
+  // Handlers for Objects & Images
+  const handleSelectObjectsImagesWeek = (weekKey) => {
+    setSelectedObjectsImagesWeek(weekKey);
+    setCurrentView('objects-images-week');
+  };
+
+  const handleSelectObjectsImagesExercise = (exerciseId) => {
+    setSelectedObjectsImagesExercise(exerciseId);
+    setCurrentView('objects-images-exercise');
+  };
+
+  const handleCompleteObjectsImagesExercise = (exerciseId, points) => {
+    if (!completedObjectsImagesExercises.includes(exerciseId)) {
+      setCompletedObjectsImagesExercises([...completedObjectsImagesExercises, exerciseId]);
+      setTotalPoints(totalPoints + points);
+    }
+  };
+
+  const handleBackFromObjectsImagesExercise = () => {
+    setSelectedObjectsImagesExercise(null);
+    setCurrentView('objects-images-week');
+  };
+
+  const handleBackFromObjectsImagesWeek = () => {
+    setSelectedObjectsImagesWeek(null);
+    setCurrentView('dashboard');
+  };
+
   // Show teacher login
   if (showTeacherLogin) {
     return (
@@ -585,11 +628,13 @@ function App() {
             completedPseudocode={completedPseudocode}
             completedFlowcharts={completedFlowcharts}
             completedDataApisExercises={completedDataApisExercises}
+            completedObjectsImagesExercises={completedObjectsImagesExercises}
             onSelectCategory={handleSelectCategory}
             onSelectNetworkMonitor={() => setCurrentView('network-monitor')}
             onSelectWeek={handleSelectWeek}
             onSelectAPCSP={handleSelectAPCSP}
             onSelectDataApisWeek={handleSelectDataApisWeek}
+            onSelectObjectsImagesWeek={handleSelectObjectsImagesWeek}
           />
         )}
 
@@ -737,6 +782,25 @@ function App() {
 
         {currentView === 'data-apis-vocabulary' && (
           <DataApisVocabularyPage onBack={handleBackToDashboard} />
+        )}
+
+        {currentView === 'objects-images-week' && selectedObjectsImagesWeek && (
+          <ObjectsImagesWeekView
+            weekKey={selectedObjectsImagesWeek}
+            onSelectExercise={handleSelectObjectsImagesExercise}
+            onBack={handleBackFromObjectsImagesWeek}
+            completedExercises={completedObjectsImagesExercises}
+          />
+        )}
+
+        {currentView === 'objects-images-exercise' && selectedObjectsImagesExercise && (
+          <ObjectsImagesExerciseDetail
+            exerciseId={selectedObjectsImagesExercise}
+            onComplete={handleCompleteObjectsImagesExercise}
+            onBack={handleBackFromObjectsImagesExercise}
+            isCompleted={completedObjectsImagesExercises.includes(selectedObjectsImagesExercise)}
+            onSubmit={handleSubmission}
+          />
         )}
       </main>
 

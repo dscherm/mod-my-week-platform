@@ -127,6 +127,7 @@ export const loginStudent = async (studentName, classCode) => {
         completedPseudocode: [],
         completedFlowcharts: [],
         completedDataApisExercises: [],
+        completedObjectsImagesExercises: [],
         totalPoints: 0,
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString(),
@@ -163,6 +164,7 @@ export const loginStudent = async (studentName, classCode) => {
       completedPseudocode: [],
       completedFlowcharts: [],
       completedDataApisExercises: [],
+      completedObjectsImagesExercises: [],
       totalPoints: 0,
       createdAt: serverTimestamp(),
       lastLogin: serverTimestamp(),
@@ -186,6 +188,7 @@ export const saveStudentProgress = async (studentId, progress) => {
         completedPseudocode: progress.completedPseudocode || [],
         completedFlowcharts: progress.completedFlowcharts || [],
         completedDataApisExercises: progress.completedDataApisExercises || [],
+        completedObjectsImagesExercises: progress.completedObjectsImagesExercises || [],
         totalPoints: progress.totalPoints || 0,
         lastActivity: new Date().toISOString()
       };
@@ -206,6 +209,7 @@ export const saveStudentProgress = async (studentId, progress) => {
     completedPseudocode: progress.completedPseudocode || [],
     completedFlowcharts: progress.completedFlowcharts || [],
     completedDataApisExercises: progress.completedDataApisExercises || [],
+    completedObjectsImagesExercises: progress.completedObjectsImagesExercises || [],
     totalPoints: progress.totalPoints || 0,
     lastActivity: serverTimestamp()
   });
