@@ -79,6 +79,36 @@ function draw() {
             difficulty: "Easy",
             points: 10,
             description: "Access different positions in an array",
+            explanation: {
+              title: "Accessing Array Elements by Index",
+              concept: `Every element in an array has a position number called an INDEX. The key rules:
+- First element: index 0 (not 1!)
+- Last element: index array.length - 1
+- Middle element: index Math.floor(array.length / 2)
+
+Why length - 1 for the last element?
+An array with 5 items has indexes 0, 1, 2, 3, 4
+The length is 5, but the last index is 4!`,
+              example: `let fruits = ["apple", "banana", "cherry", "date", "elderberry"];
+// Length is 5
+
+// First element
+console.log(fruits[0]); // "apple"
+
+// Last element
+console.log(fruits[fruits.length - 1]); // "elderberry"
+// fruits.length - 1 = 5 - 1 = 4
+
+// Middle element
+let middleIndex = Math.floor(fruits.length / 2); // 2
+console.log(fruits[middleIndex]); // "cherry"`,
+              keyPoints: [
+                "Indexes start at 0, not 1",
+                "The last index is always length - 1",
+                "Use Math.floor() to get a whole number for the middle",
+                "array.length gives the total count of elements"
+              ]
+            },
             prompt: "Given an array of words, display the first word, last word, and middle word on screen.",
             starterCode: `let words = ["loop", "array", "pixel", "code", "mouse"];
 
@@ -124,6 +154,34 @@ function draw() {
             difficulty: "Easy",
             points: 15,
             description: "Pick and display a random element from an array",
+            explanation: {
+              title: "Picking Random Array Elements",
+              concept: `To pick a random element from an array, you need a random INDEX (not a random value).
+
+The pattern:
+1. Generate a random number from 0 to length
+2. Round it DOWN to get a valid index
+3. Use that index to access the array
+
+Why floor()? Because random() gives decimals like 2.7, but indexes must be whole numbers like 2.`,
+              example: `let animals = ["cat", "dog", "bird", "fish"];
+
+// random(4) gives something like 2.73
+// floor(2.73) gives 2
+// animals[2] gives "bird"
+
+let randomIndex = floor(random(animals.length));
+let randomAnimal = animals[randomIndex];
+
+// Or in one line:
+let pick = animals[floor(random(animals.length))];`,
+              keyPoints: [
+                "random(n) gives a decimal from 0 up to (but not including) n",
+                "floor() rounds DOWN to the nearest integer",
+                "This pattern works for any array size",
+                "Never use random() directly as an index - always floor() it!"
+              ]
+            },
             prompt: "Display a random word from the array. Click to show a new random word.",
             starterCode: `let words = ["loop", "array", "pixel", "code", "mouse"];
 let currentWord = "";
@@ -263,6 +321,37 @@ function mousePressed() {
             difficulty: "Easy",
             points: 15,
             description: "Use pop() to remove the last item",
+            explanation: {
+              title: "Removing Elements with pop()",
+              concept: `The pop() method removes the LAST element from an array - like an "undo" button!
+
+Before pop: ["a", "b", "c", "d"]
+After pop:  ["a", "b", "c"]
+
+pop() is the opposite of push():
+- push() adds to the end
+- pop() removes from the end
+
+This makes arrays perfect for undo features!`,
+              example: `let actions = ["draw", "color", "resize", "move"];
+
+// Remove the last action (undo)
+let removed = actions.pop();
+console.log(removed);  // "move"
+console.log(actions);  // ["draw", "color", "resize"]
+
+// Pop again
+actions.pop();
+console.log(actions);  // ["draw", "color"]
+
+// Pop returns the removed item (useful sometimes!)`,
+              keyPoints: [
+                "pop() removes the LAST element from an array",
+                "The array shrinks by one each time",
+                "pop() returns the removed element",
+                "Calling pop() on an empty array returns undefined"
+              ]
+            },
             prompt: "Click to add dots. Press 'U' to undo (remove) the last dot.",
             starterCode: `let xs = [];
 
@@ -408,6 +497,42 @@ function mousePressed() {
             difficulty: "Medium",
             points: 20,
             description: "Add random sizes to each dot",
+            explanation: {
+              title: "Scaling Up: More Parallel Arrays",
+              concept: `You can have ANY number of parallel arrays! Each array stores one property:
+- xs[] stores x positions
+- ys[] stores y positions
+- sizes[] stores sizes
+- colors[] stores colors
+- ...and so on!
+
+The golden rule: THE SAME INDEX refers to the same object across ALL arrays.
+
+xs[3], ys[3], sizes[3], colors[3] = all properties of item #3`,
+              example: `let xs = [];
+let ys = [];
+let sizes = [];
+let colors = [];
+
+function addCircle(x, y) {
+  xs.push(x);
+  ys.push(y);
+  sizes.push(random(10, 50));
+  colors.push(color(random(255), random(255), random(255)));
+}
+
+// Draw all circles
+for (let i = 0; i < xs.length; i++) {
+  fill(colors[i]);
+  circle(xs[i], ys[i], sizes[i]);
+}`,
+              keyPoints: [
+                "Add one element to EACH array when creating an object",
+                "Remove from ALL arrays when deleting (keep them synchronized!)",
+                "Loop using one array's length - they should all be equal",
+                "Later you'll learn about objects - a cleaner way to group data"
+              ]
+            },
             prompt: "Extend the previous exercise: also store a random size for each dot.",
             starterCode: `let xs = [];
 let ys = [];
@@ -470,6 +595,37 @@ function mousePressed() {
             difficulty: "Easy",
             points: 10,
             description: "Click to pick a random background color from a palette",
+            explanation: {
+              title: "Random Selection from Arrays",
+              concept: `Arrays are perfect for storing options you want to choose from randomly!
+
+Instead of writing complex if/else chains:
+if (choice == 1) color = "red";
+else if (choice == 2) color = "blue";
+...
+
+Just pick randomly from an array:
+let color = colors[floor(random(colors.length))];
+
+This works for colors, words, sounds, images - anything!`,
+              example: `// Array of options
+let greetings = ["Hello!", "Hi there!", "Hey!", "Howdy!"];
+
+// Pick a random greeting
+function getRandomGreeting() {
+  let index = floor(random(greetings.length));
+  return greetings[index];
+}
+
+// Use it
+console.log(getRandomGreeting()); // Random greeting each time!`,
+              keyPoints: [
+                "Store your options in an array",
+                "Use floor(random(array.length)) to get a random index",
+                "This pattern scales to any number of options",
+                "Easy to add/remove options - just change the array!"
+              ]
+            },
             prompt: "Each click should pick a new random color from your palette array.",
             starterCode: `let colors = ["red", "orange", "yellow", "green", "blue"];
 let currentColor;
@@ -735,6 +891,38 @@ function draw() {
             difficulty: "Medium",
             points: 15,
             description: "Calculate spacing to fit any number of circles",
+            explanation: {
+              title: "Dynamic Spacing with Math",
+              concept: `Hardcoding spacing values (like 50, 100, etc.) breaks when you change the count. Instead, CALCULATE the spacing based on the canvas size and number of items.
+
+The formula: spacing = width / (n + 1)
+Position of item i: spacing * (i + 1)
+
+Why n + 1? Because we need n items plus margins on both sides!
+
+|  •  •  •  •  |  ← 4 items need 5 gaps`,
+              example: `let n = 6; // Try changing this!
+
+function draw() {
+  background(240);
+  let spacing = width / (n + 1);
+
+  for (let i = 0; i < n; i++) {
+    let x = spacing * (i + 1);
+    circle(x, height/2, 30);
+  }
+}
+
+// With n=6 and width=700:
+// spacing = 700/7 = 100
+// Circles at: 100, 200, 300, 400, 500, 600`,
+              keyPoints: [
+                "Calculate spacing from canvas size, don't hardcode it",
+                "spacing = totalSize / (count + 1) for even distribution",
+                "Position = spacing * (index + 1)",
+                "This pattern adapts automatically when n changes"
+              ]
+            },
             prompt: "Draw n circles that are always evenly spaced, regardless of the value of n.",
             starterCode: `let n = 8;
 
@@ -787,6 +975,36 @@ function draw() {
             difficulty: "Medium",
             points: 15,
             description: "Draw a staircase pattern using a loop",
+            explanation: {
+              title: "Using Loop Variables for Position",
+              concept: `The loop variable i isn't just a counter - it's a tool for creating patterns!
+
+For a staircase:
+- X position INCREASES with i (moving right)
+- Y position DECREASES with i (moving up)
+
+Each iteration draws at a different spot:
+i=0: bottom-left
+i=1: one step right and up
+i=2: another step right and up
+...`,
+              example: `// Staircase going UP and RIGHT
+for (let i = 0; i < 10; i++) {
+  let x = 50 + i * 60;    // Move right: 50, 110, 170, ...
+  let y = 400 - i * 35;   // Move up: 400, 365, 330, ...
+  rect(x, y, 50, 30);
+}
+
+// The pattern:
+// x increases → moves RIGHT
+// y decreases → moves UP (remember: y=0 is TOP!)`,
+              keyPoints: [
+                "Use i to calculate both x and y positions",
+                "i * stepSize creates evenly spaced steps",
+                "Subtracting from y moves things UP",
+                "Adding to x moves things RIGHT"
+              ]
+            },
             prompt: "Draw rectangles that form a staircase going up from left to right.",
             starterCode: `function setup() {
   createCanvas(800, 500);
@@ -823,6 +1041,37 @@ function draw() {
             difficulty: "Medium",
             points: 15,
             description: "Draw circles that grow in size",
+            explanation: {
+              title: "Loop Variables for Size",
+              concept: `Loop variables can control ANY property - not just position! You can make size, color, opacity, or anything else change with each iteration.
+
+For growing circles:
+size = baseSize + i * increment
+
+i=0: size = 20 + 0*15 = 20
+i=1: size = 20 + 1*15 = 35
+i=2: size = 20 + 2*15 = 50
+...`,
+              example: `// Concentric circles (same center, growing size)
+noFill();
+for (let i = 0; i < 8; i++) {
+  let size = 30 + i * 25;
+  circle(width/2, height/2, size);
+}
+
+// Or circles in a row, each bigger
+for (let i = 0; i < 8; i++) {
+  let x = 50 + i * 80;
+  let size = 20 + i * 10;
+  circle(x, height/2, size);
+}`,
+              keyPoints: [
+                "size = baseSize + i * increment creates growth",
+                "noFill() lets you see overlapping circles",
+                "Combine position AND size changes for cool effects",
+                "The loop variable i can affect multiple properties at once"
+              ]
+            },
             prompt: "Draw 8 circles where each one is larger than the last.",
             starterCode: `function setup() {
   createCanvas(800, 500);
@@ -871,6 +1120,40 @@ function draw() {
             difficulty: "Easy",
             points: 10,
             description: "Animate a circle moving across the screen",
+            explanation: {
+              title: "Animation: The draw() Loop",
+              concept: `Here's the secret: draw() IS a loop! It runs about 60 times per second automatically.
+
+To animate:
+1. Store position in a variable OUTSIDE draw()
+2. Draw the object at that position
+3. Change the position slightly
+4. Repeat (draw() handles this!)
+
+Each frame shows the object in a slightly different spot = animation!`,
+              example: `let x = 0; // Position variable (outside draw)
+
+function setup() {
+  createCanvas(800, 500);
+}
+
+function draw() {
+  background(240);     // Clear previous frame
+  circle(x, 250, 40);  // Draw at current position
+  x = x + 3;           // Move for next frame
+
+  // Wrap around when off screen
+  if (x > width) {
+    x = 0;
+  }
+}`,
+              keyPoints: [
+                "draw() runs ~60 times per second automatically",
+                "Store position in a global variable (outside functions)",
+                "Change the position each frame to create movement",
+                "Use if-statements to wrap around or bounce"
+              ]
+            },
             prompt: "Make a circle move from left to right, resetting when it goes off screen.",
             starterCode: `let x = 0;
 
@@ -915,6 +1198,43 @@ function draw() {
             difficulty: "Medium",
             points: 20,
             description: "Animate multiple circles at different speeds",
+            explanation: {
+              title: "Arrays for Animation",
+              concept: `To animate MULTIPLE objects, use arrays to store each object's position and properties.
+
+Pattern:
+- xs[] stores x positions
+- speeds[] stores how fast each moves
+- Loop through them to update and draw ALL
+
+Each object has its own entry in the arrays, so they can move independently!`,
+              example: `let xs = [0, 0, 0];        // Starting positions
+let speeds = [2, 4, 6];    // Different speeds
+
+function draw() {
+  background(240);
+
+  for (let i = 0; i < xs.length; i++) {
+    // Draw this circle
+    let y = 100 + i * 100;  // Different y for each
+    circle(xs[i], y, 30);
+
+    // Move this circle
+    xs[i] += speeds[i];
+
+    // Wrap around
+    if (xs[i] > width) {
+      xs[i] = 0;
+    }
+  }
+}`,
+              keyPoints: [
+                "Use arrays to track multiple objects' states",
+                "Each object can have its own speed, color, size, etc.",
+                "Loop through arrays to update and draw all objects",
+                "This is the foundation of particle systems and games!"
+              ]
+            },
             prompt: "Create 5 circles at different y positions, each moving at a different speed.",
             starterCode: `let xs = [0, 0, 0, 0, 0];
 let speeds = [1, 2, 3, 4, 5];
@@ -1045,6 +1365,38 @@ console.log("Got 6 after " + attempts + " rolls!");`,
             difficulty: "Medium",
             points: 15,
             description: "Place random dots until you have 100",
+            explanation: {
+              title: "Counting with While Loops",
+              concept: `While loops are great when you want to do something a certain number of times but prefer the "keep going until..." mindset.
+
+while (count < target) {
+  // Do something
+  count++;
+}
+
+This keeps going UNTIL count reaches the target. Don't forget to increment count, or you'll have an infinite loop!`,
+              example: `let count = 0;
+
+while (count < 50) {
+  // Place a random dot
+  let x = random(width);
+  let y = random(height);
+  point(x, y);
+
+  count++;  // IMPORTANT: don't forget this!
+}
+
+// After the loop, count is 50 and we have 50 dots
+
+// You COULD use a for-loop instead, but while
+// makes the "keep going until full" idea clearer.`,
+              keyPoints: [
+                "while (count < n) runs exactly n times (if you count++)",
+                "Initialize count before the loop",
+                "Increment count INSIDE the loop",
+                "Forgetting count++ causes an infinite loop!"
+              ]
+            },
             prompt: "Use a while-loop to place 100 random dots on the canvas.",
             starterCode: `function setup() {
   createCanvas(800, 500);
@@ -1095,6 +1447,56 @@ console.log("Got 6 after " + attempts + " rolls!");`,
             points: 50,
             isProject: true,
             description: "Create a tool that generates different loop-based patterns",
+            explanation: {
+              title: "Building Interactive Tools",
+              concept: `This project combines loops with user interaction to create a tool, not just a sketch.
+
+Key concepts:
+1. MODE variable - tracks which pattern to show
+2. PARAMETERS - values that can change (count, spacing, colors)
+3. KEY HANDLING - switch modes and randomize
+
+The pattern:
+if (mode == 1) { drawPattern1(); }
+if (mode == 2) { drawPattern2(); }
+...`,
+              example: `let mode = 1;
+let count = 10;
+let spacing = 30;
+
+function draw() {
+  background(30);
+
+  if (mode == 1) {
+    // Circles in a row
+    for (let i = 0; i < count; i++) {
+      circle(50 + i * spacing, height/2, 20);
+    }
+  }
+
+  if (mode == 2) {
+    // Concentric circles
+    for (let i = 0; i < count; i++) {
+      circle(width/2, height/2, i * spacing);
+    }
+  }
+}
+
+function keyPressed() {
+  if (key == '1') mode = 1;
+  if (key == '2') mode = 2;
+  if (key == 'r') {
+    count = floor(random(5, 20));
+    spacing = floor(random(20, 50));
+  }
+}`,
+              keyPoints: [
+                "Use a mode variable to track which pattern to show",
+                "Parameters let users customize without changing code",
+                "keyPressed() handles user input",
+                "Each pattern should use loops creatively"
+              ]
+            },
             prompt: "Build a sketch where:\n- Press 1-5 to show different patterns\n- Each pattern uses loops creatively\n- Press 'R' to randomize parameters",
             starterCode: `let mode = 1;
 let param1 = 20;
@@ -1327,6 +1729,39 @@ function mousePressed() {
             difficulty: "Medium",
             points: 15,
             description: "Calculate the average of array values",
+            explanation: {
+              title: "The Accumulator Pattern",
+              concept: `To calculate a sum (and then average), use the ACCUMULATOR pattern:
+1. Start with a variable set to 0
+2. Traverse the array
+3. Add each element to the accumulator
+4. After the loop, you have the total!
+
+Average = sum / count
+
+This pattern works for adding, counting, or combining values.`,
+              example: `let grades = [85, 92, 78, 90, 88];
+
+// Accumulator pattern for sum
+let sum = 0;  // Start at 0
+for (let i = 0; i < grades.length; i++) {
+  sum += grades[i];  // Add each element
+}
+// sum is now 433
+
+// Calculate average
+let average = sum / grades.length;
+// average is 86.6
+
+// Display nicely
+console.log(average.toFixed(1)); // "86.6"`,
+              keyPoints: [
+                "Initialize the accumulator to 0 before the loop",
+                "Use += to add each element to the accumulator",
+                "Divide by array.length for the average",
+                "toFixed(n) rounds to n decimal places"
+              ]
+            },
             prompt: "Given an array of scores, calculate and display the average.",
             starterCode: `let scores = [85, 92, 78, 95, 88, 72, 90];
 
@@ -1374,6 +1809,41 @@ function setup() {
             difficulty: "Medium",
             points: 20,
             description: "Find the smallest and largest values",
+            explanation: {
+              title: "Finding Minimum and Maximum",
+              concept: `To find min/max, compare each element against the current best:
+
+1. Initialize min and max to the FIRST element
+2. Traverse the array
+3. If current element < min, update min
+4. If current element > max, update max
+
+Why start with first element (not 0)?
+- If all values are negative, 0 would be wrong for max
+- The first element is guaranteed to be in the array!`,
+              example: `let temps = [-5, 12, 8, -2, 15, 3];
+
+let min = temps[0];  // Start with first: -5
+let max = temps[0];  // Start with first: -5
+
+for (let i = 0; i < temps.length; i++) {
+  if (temps[i] < min) {
+    min = temps[i];  // Found smaller value
+  }
+  if (temps[i] > max) {
+    max = temps[i];  // Found larger value
+  }
+}
+
+console.log("Min: " + min);  // -5
+console.log("Max: " + max);  // 15`,
+              keyPoints: [
+                "Initialize min/max with the first element, not 0",
+                "Use < for finding minimum, > for finding maximum",
+                "Update only when you find a better value",
+                "This pattern finds extremes in any collection"
+              ]
+            },
             prompt: "Traverse the array to find both minimum and maximum values.",
             starterCode: `let nums = [34, 67, 12, 89, 45, 23, 78];
 
@@ -1435,6 +1905,40 @@ function setup() {
             difficulty: "Medium",
             points: 20,
             description: "Find and highlight the point closest to the mouse",
+            explanation: {
+              title: "Finding the Closest Element",
+              concept: `Finding the "closest" element combines min-finding with distance calculation.
+
+Pattern:
+1. Start with closestDist = Infinity (infinitely far)
+2. Traverse and calculate distance to each element
+3. If distance < closestDist, update closestDist AND save the index
+4. After loop, you know WHICH element is closest
+
+Use Infinity as starting distance so any real distance will be smaller.`,
+              example: `let xs = [100, 200, 300, 400];
+let ys = [150, 250, 100, 300];
+
+let closestIndex = -1;
+let closestDist = Infinity;
+
+for (let i = 0; i < xs.length; i++) {
+  let d = dist(mouseX, mouseY, xs[i], ys[i]);
+  if (d < closestDist) {
+    closestDist = d;
+    closestIndex = i;
+  }
+}
+
+// closestIndex now points to the nearest point
+// Use it to highlight that point differently`,
+              keyPoints: [
+                "dist(x1, y1, x2, y2) calculates distance between two points",
+                "Infinity is larger than any number - perfect for initializing 'closest'",
+                "Track both the distance AND the index",
+                "Two loops: one to find closest, one to draw (with highlighting)"
+              ]
+            },
             prompt: "Traverse all points to find which one is closest to the mouse, and highlight it.",
             starterCode: `let xs = [];
 let ys = [];
@@ -1522,6 +2026,42 @@ function draw() {
             difficulty: "Medium",
             points: 15,
             description: "Add velocity to make all points move",
+            explanation: {
+              title: "Velocity: Position + Change",
+              concept: `Velocity is the CHANGE in position each frame. To animate smoothly:
+
+position = position + velocity
+
+Or with arrays:
+xs[i] = xs[i] + vx[i]  (or xs[i] += vx[i])
+
+Store velocity as parallel arrays (vx for x-velocity, vy for y-velocity).
+Positive velocity = move right/down
+Negative velocity = move left/up`,
+              example: `let xs = [100, 200, 300];
+let ys = [100, 200, 300];
+let vx = [2, -1, 3];    // x velocities
+let vy = [1, 2, -1];    // y velocities
+
+function draw() {
+  background(240);
+
+  for (let i = 0; i < xs.length; i++) {
+    // Update position
+    xs[i] += vx[i];
+    ys[i] += vy[i];
+
+    // Draw
+    circle(xs[i], ys[i], 20);
+  }
+}`,
+              keyPoints: [
+                "Velocity is how much position changes each frame",
+                "Use += to update: position += velocity",
+                "vx and vy are parallel arrays to xs and ys",
+                "Positive = right/down, negative = left/up"
+              ]
+            },
             prompt: "Each point has a velocity. Update all positions each frame.",
             starterCode: `let xs = [];
 let ys = [];
@@ -1586,6 +2126,40 @@ function draw() {
             difficulty: "Medium",
             points: 20,
             description: "Make points bounce when they hit edges",
+            explanation: {
+              title: "Bouncing: Reversing Velocity",
+              concept: `To make objects bounce, reverse their velocity when they hit a wall.
+
+Hitting left/right wall? Reverse x-velocity: vx = vx * -1
+Hitting top/bottom wall? Reverse y-velocity: vy = vy * -1
+
+Check each direction separately:
+- x < 0 or x > width → reverse vx
+- y < 0 or y > height → reverse vy`,
+              example: `for (let i = 0; i < xs.length; i++) {
+  // Update position
+  xs[i] += vx[i];
+  ys[i] += vy[i];
+
+  // Bounce off left/right walls
+  if (xs[i] < 0 || xs[i] > width) {
+    vx[i] *= -1;  // Reverse x direction
+  }
+
+  // Bounce off top/bottom walls
+  if (ys[i] < 0 || ys[i] > height) {
+    vy[i] *= -1;  // Reverse y direction
+  }
+
+  circle(xs[i], ys[i], 20);
+}`,
+              keyPoints: [
+                "Multiply velocity by -1 to reverse direction",
+                "*= -1 is shorthand for variable = variable * -1",
+                "Check x and y bounds separately",
+                "|| means OR - true if either condition is true"
+              ]
+            },
             prompt: "Extend the moving points: reverse velocity when hitting walls.",
             starterCode: `let xs = [];
 let ys = [];
@@ -2288,6 +2862,35 @@ function applyGray() {
             difficulty: "Medium",
             points: 15,
             description: "Create a new array with only values above 50",
+            explanation: {
+              title: "Filtering: Keep What Matches",
+              concept: `Filtering creates a NEW array containing only elements that pass a test.
+
+Pattern:
+1. Create an empty result array
+2. Traverse the original array
+3. If element passes the test, push it to result
+4. The result array has only matching elements
+
+This is different from traversal: you're building a new, smaller array.`,
+              example: `let scores = [45, 82, 67, 91, 38, 73];
+let passing = [];  // New array for passing scores
+
+for (let i = 0; i < scores.length; i++) {
+  if (scores[i] >= 70) {  // The test/condition
+    passing.push(scores[i]);  // Keep it!
+  }
+}
+
+// passing is now [82, 91, 73]
+// scores is unchanged: [45, 82, 67, 91, 38, 73]`,
+              keyPoints: [
+                "Filtering creates a NEW array, doesn't modify the original",
+                "Only elements that pass the condition are included",
+                "The result array can be any size (including empty!)",
+                "Common pattern: create empty array → traverse → conditionally push"
+              ]
+            },
             prompt: "Given an array of numbers, create a new array containing only values greater than 50.",
             starterCode: `let nums = [10, 40, 70, 20, 90, 55, 30, 85];
 
@@ -2336,6 +2939,39 @@ function setup() {
             difficulty: "Medium",
             points: 20,
             description: "Draw only particles on the right side",
+            explanation: {
+              title: "Filtering During Drawing",
+              concept: `Sometimes you don't need a new array - you can filter WHILE drawing!
+
+Instead of creating a filtered array:
+- Traverse all elements
+- Check the condition
+- Only DRAW elements that pass
+
+This is simpler when you just want to show/hide things temporarily.`,
+              example: `let xs = [50, 200, 350, 500, 650];
+let ys = [100, 200, 150, 250, 300];
+
+function draw() {
+  background(240);
+  line(width/2, 0, width/2, height); // Divider
+
+  for (let i = 0; i < xs.length; i++) {
+    // Only draw dots on the right side
+    if (xs[i] > width / 2) {
+      circle(xs[i], ys[i], 20);
+    }
+  }
+}
+// xs[0]=50 and xs[1]=200 are NOT drawn (left side)
+// xs[2]=350, xs[3]=500, xs[4]=650 ARE drawn (right side)`,
+              keyPoints: [
+                "Filter during draw: add if-statement before drawing",
+                "The array stays unchanged - you just skip some elements",
+                "Useful for toggleable visibility or dynamic filters",
+                "No new array needed - just conditional drawing"
+              ]
+            },
             prompt: "Only draw particles whose x position is greater than width/2.",
             starterCode: `let xs = [];
 let ys = [];
@@ -2420,6 +3056,39 @@ function draw() {
             difficulty: "Easy",
             points: 10,
             description: "Sum all values to get a total",
+            explanation: {
+              title: "Reducing: Many Values → One Value",
+              concept: `Reducing (also called "folding") combines all array elements into a SINGLE result.
+
+Common reductions:
+- Sum: add all values → one total
+- Product: multiply all values → one result
+- Count: count matching elements → one number
+- Concatenation: combine strings → one string
+
+Pattern: start with initial value, update it for each element.`,
+              example: `let prices = [10, 25, 15, 30];
+
+// Reduce to sum (total)
+let total = 0;
+for (let i = 0; i < prices.length; i++) {
+  total += prices[i];
+}
+// total = 80
+
+// Reduce to product
+let product = 1;  // Start at 1 for multiplication!
+for (let i = 0; i < prices.length; i++) {
+  product *= prices[i];
+}
+// product = 112500`,
+              keyPoints: [
+                "Start with an appropriate initial value (0 for sum, 1 for product)",
+                "Update the accumulator with each element",
+                "After the loop, you have ONE value",
+                "Reduction turns an array into a single result"
+              ]
+            },
             prompt: "Calculate the total score from an array of point values.",
             starterCode: `let points = [10, 25, 15, 30, 20, 5];
 
@@ -2464,6 +3133,42 @@ function setup() {
             difficulty: "Medium",
             points: 20,
             description: "Sum particle sizes to show total 'energy'",
+            explanation: {
+              title: "Visualizing Reduced Values",
+              concept: `Reducing is useful for creating summary visualizations like meters, bars, and gauges.
+
+Pattern:
+1. Reduce array to get a single value (e.g., total energy)
+2. Draw a visual representation (bar, text, gauge)
+3. Update every frame as values change
+
+The bar width can be proportional to the total value.`,
+              example: `let sizes = [20, 35, 15, 40];
+
+function draw() {
+  background(240);
+
+  // Reduce: sum all sizes
+  let totalEnergy = 0;
+  for (let i = 0; i < sizes.length; i++) {
+    totalEnergy += sizes[i];
+  }
+  // totalEnergy = 110
+
+  // Visualize as a bar
+  fill(100);
+  rect(50, 20, 200, 20);  // Background bar
+  fill(0, 200, 100);
+  rect(50, 20, totalEnergy, 20);  // Fill based on total
+  text("Energy: " + totalEnergy, 260, 35);
+}`,
+              keyPoints: [
+                "Reduce first to get the summary value",
+                "Use that value to control visual properties (width, height, color)",
+                "Recalculate each frame if values can change",
+                "Scale the visualization to fit your UI"
+              ]
+            },
             prompt: "Create particles with random sizes. Show total 'energy' (sum of all sizes) as a bar.",
             starterCode: `let sizes = [];
 
@@ -2623,6 +3328,39 @@ function draw() {
             difficulty: "Medium",
             points: 20,
             description: "Color the grid like a checkerboard",
+            explanation: {
+              title: "The Modulo Pattern for Alternation",
+              concept: `To alternate colors in a grid, use the modulo operator (%).
+
+The trick: (row + col) % 2 alternates between 0 and 1!
+
+Row 0: 0+0=0, 0+1=1, 0+2=0, 0+3=1... (starts white)
+Row 1: 1+0=1, 1+1=0, 1+2=1, 1+3=0... (starts black)
+Row 2: 2+0=0, 2+1=1, 2+2=0, 2+3=1... (starts white)
+
+This creates the checkerboard pattern automatically!`,
+              example: `for (let row = 0; row < 8; row++) {
+  for (let col = 0; col < 8; col++) {
+    let x = col * 50;
+    let y = row * 50;
+
+    // Modulo magic!
+    if ((row + col) % 2 == 0) {
+      fill(255);  // White
+    } else {
+      fill(0);    // Black
+    }
+
+    rect(x, y, 50, 50);
+  }
+}`,
+              keyPoints: [
+                "% is modulo - gives the remainder after division",
+                "x % 2 is 0 for even numbers, 1 for odd numbers",
+                "(row + col) % 2 creates a checkerboard pattern",
+                "Use this pattern for any alternating grid effect"
+              ]
+            },
             prompt: "Make alternating squares black and white like a checkerboard.",
             starterCode: `function setup() {
   createCanvas(500, 500);
@@ -2691,6 +3429,42 @@ function draw() {
             difficulty: "Medium",
             points: 20,
             description: "Create a 2D array where some cells are walls",
+            explanation: {
+              title: "2D Arrays: Arrays of Arrays",
+              concept: `A 2D array is an array where each element is ANOTHER array. This creates a grid!
+
+Accessing: grid[row][col]
+- First index: which row (which inner array)
+- Second index: which column (which element in that array)
+
+Creating a 2D array:
+1. Create the outer array
+2. For each row, create an inner array
+3. Fill each cell with a value`,
+              example: `let grid = [];
+
+// Create a 3x3 grid
+for (let r = 0; r < 3; r++) {
+  grid[r] = [];  // Create row r
+  for (let c = 0; c < 3; c++) {
+    grid[r][c] = 0;  // Set cell to 0
+  }
+}
+
+// Grid looks like:
+// [[0, 0, 0],
+//  [0, 0, 0],
+//  [0, 0, 0]]
+
+// Access: grid[1][2] = middle row, right column
+grid[1][2] = 1;  // Put a wall there`,
+              keyPoints: [
+                "grid[r] = [] creates a new row (inner array)",
+                "grid[r][c] accesses row r, column c",
+                "Build with nested loops: outer for rows, inner for columns",
+                "Values can represent anything: 0=floor, 1=wall, 2=goal, etc."
+              ]
+            },
             prompt: "Create a 2D array grid where 0=floor and 1=wall. Draw walls as black squares.",
             starterCode: `let grid = [];
 
@@ -2762,6 +3536,48 @@ function draw() {
             difficulty: "Hard",
             points: 25,
             description: "Add a player that moves on the grid",
+            explanation: {
+              title: "Grid-Based Movement and Collision",
+              concept: `For grid-based games, the player's position is stored as (row, col) - not pixels!
+
+Movement pattern:
+1. Calculate the NEW position based on key pressed
+2. Check if new position is valid (in bounds AND not a wall)
+3. Only move if valid
+
+This is called "collision detection" - checking BEFORE moving.`,
+              example: `let playerR = 0;
+let playerC = 0;
+
+function keyPressed() {
+  let newR = playerR;
+  let newC = playerC;
+
+  // Calculate new position
+  if (keyCode == UP_ARROW) newR--;
+  if (keyCode == DOWN_ARROW) newR++;
+  if (keyCode == LEFT_ARROW) newC--;
+  if (keyCode == RIGHT_ARROW) newC++;
+
+  // Check bounds
+  if (newR < 0 || newR >= 10) return;
+  if (newC < 0 || newC >= 10) return;
+
+  // Check for wall
+  if (grid[newR][newC] == 1) return;
+
+  // All clear - move!
+  playerR = newR;
+  playerC = newC;
+}`,
+              keyPoints: [
+                "Store player position as grid coordinates (row, col), not pixels",
+                "Calculate new position BEFORE moving",
+                "Check bounds: is the new position inside the grid?",
+                "Check collision: is the new position a wall?",
+                "Only update position if all checks pass"
+              ]
+            },
             prompt: "Add arrow key movement. The player cannot move into walls.",
             starterCode: `let grid = [];
 let playerR = 0;

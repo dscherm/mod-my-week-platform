@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getExerciseById } from '../data/exercises';
+import { getExerciseById } from '../../data/exercises';
 import { vocabulary } from '../data/vocabulary';
 
 // Helper to ensure p5.js is loaded

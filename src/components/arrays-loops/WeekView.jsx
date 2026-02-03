@@ -1,10 +1,11 @@
 import React from 'react';
-import { exercises } from '../data/exercises';
+import { exercises } from '../../data/exercises';
 import { learningObjectives } from '../data/vocabulary';
 
 function WeekView({ weekKey, onSelectExercise, onBack, completedExercises }) {
   const week = exercises[weekKey];
-  const weekNum = weekKey.replace('week', '');
+  const isPixelWeek = weekKey === 'pixelWeek';
+  const weekNum = isPixelWeek ? '★' : weekKey.replace('week', '');
   const objectives = learningObjectives[weekKey] || [];
 
   const getDifficultyClass = (difficulty) => {
@@ -18,7 +19,12 @@ function WeekView({ weekKey, onSelectExercise, onBack, completedExercises }) {
       </button>
 
       <div className="week-header-large">
-        <h1>Week {weekNum}: {week.title}</h1>
+        <h1>{isPixelWeek ? `${week.title}` : `Week ${weekNum}: ${week.title}`}</h1>
+        {isPixelWeek && (
+          <div className="culminating-badge" style={{ marginBottom: '1rem', display: 'inline-block' }}>
+            🎯 Culminating Project (Combines Weeks 1-3)
+          </div>
+        )}
         <p className="big-idea">{week.bigIdea}</p>
       </div>
 
