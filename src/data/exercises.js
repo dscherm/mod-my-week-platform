@@ -1767,7 +1767,9 @@ console.log(average.toFixed(1)); // "86.6"`,
 
 function setup() {
   createCanvas(800, 500);
+  background(240);
   textSize(24);
+  fill(0);
 
   let sum = 0;
   // Calculate sum by traversing
@@ -1781,7 +1783,9 @@ function setup() {
 
 function setup() {
   createCanvas(800, 500);
+  background(240);
   textSize(24);
+  fill(0);
 
   let sum = 0;
   for (let i = 0; i < scores.length; i++) {
@@ -1849,7 +1853,9 @@ console.log("Max: " + max);  // 15`,
 
 function setup() {
   createCanvas(800, 500);
+  background(240);
   textSize(24);
+  fill(0);
 
   let minVal = nums[0];
   let maxVal = nums[0];
@@ -1863,7 +1869,9 @@ function setup() {
 
 function setup() {
   createCanvas(800, 500);
+  background(240);
   textSize(24);
+  fill(0);
 
   let minVal = nums[0];
   let maxVal = nums[0];

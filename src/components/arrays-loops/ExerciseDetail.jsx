@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getExerciseById } from '../../data/exercises';
-import { vocabulary } from '../data/vocabulary';
+import { vocabulary } from '../../data/vocabulary';
 
 // Helper to ensure p5.js is loaded
 const loadP5 = () => {
@@ -161,9 +161,6 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit 
       p5InstanceRef.current = null;
     }
     setIsRunning(false);
-    if (canvasRef.current) {
-      canvasRef.current.innerHTML = '<div class="canvas-placeholder">Click "Run Code" to see your sketch</div>';
-    }
   };
 
   const resetCode = () => {
@@ -316,21 +313,26 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit 
 
         <div className="canvas-section">
           <h3>Output</h3>
-          <div ref={canvasRef} className="canvas-container">
-            {p5Error ? (
-              <div className="error-message">
-                Failed to load p5.js: {p5Error}
-                <button
-                  onClick={() => { setP5Error(null); loadP5().then(() => setP5Ready(true)).catch(e => setP5Error(e.message)); }}
-                  style={{ marginTop: '10px', display: 'block' }}
-                >
-                  Retry
-                </button>
+          <div className="canvas-wrapper" style={{ position: 'relative', minHeight: '300px' }}>
+            <div ref={canvasRef} className="canvas-container" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}></div>
+            {!isRunning && (
+              <div className="canvas-overlay" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', borderRadius: '8px' }}>
+                {p5Error ? (
+                  <div className="error-message">
+                    Failed to load p5.js: {p5Error}
+                    <button
+                      onClick={() => { setP5Error(null); loadP5().then(() => setP5Ready(true)).catch(e => setP5Error(e.message)); }}
+                      style={{ marginTop: '10px', display: 'block' }}
+                    >
+                      Retry
+                    </button>
+                  </div>
+                ) : !p5Ready ? (
+                  <div className="canvas-placeholder">Loading p5.js...</div>
+                ) : (
+                  <div className="canvas-placeholder">Click "Run Code" to see your sketch</div>
+                )}
               </div>
-            ) : !p5Ready ? (
-              <div className="canvas-placeholder">Loading p5.js...</div>
-            ) : (
-              <div className="canvas-placeholder">Click "Run Code" to see your sketch</div>
             )}
           </div>
         </div>
