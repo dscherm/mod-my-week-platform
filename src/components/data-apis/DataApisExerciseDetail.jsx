@@ -47,8 +47,11 @@ function DataApisExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, o
   const [output, setOutput] = useState('');
   const [selectedTerm, setSelectedTerm] = useState(null);
   const [scriptsLoaded, setScriptsLoaded] = useState(false);
+  const [consoleOutput, setConsoleOutput] = useState([]);
+  const [showConsole, setShowConsole] = useState(true);
   const outputRef = useRef(null);
   const iframeRef = useRef(null);
+  const consoleRef = useRef(null);
 
   // Initialize code from exercise
   useEffect(() => {
@@ -60,8 +63,31 @@ function DataApisExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, o
       setShowExplanation(false);
       setOutput('');
       setActiveTab(exercise.requiresNode ? 'server' : 'client');
+      setConsoleOutput([]);
     }
   }, [exerciseId, exercise]);
+
+  // Listen for console messages from iframe
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.data && event.data.type === 'console') {
+        setConsoleOutput(prev => [...prev, {
+          type: event.data.logType,
+          message: event.data.message,
+          timestamp: Date.now()
+        }]);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  // Auto-scroll console
+  useEffect(() => {
+    if (consoleRef.current) {
+      consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
+    }
+  }, [consoleOutput]);
 
   // Load required scripts based on exercise
   useEffect(() => {
@@ -106,6 +132,7 @@ function DataApisExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, o
   const runCode = () => {
     setIsRunning(true);
     setOutput('');
+    setConsoleOutput([]);
 
     if (exercise.requiresNode) {
       // For Node.js exercises, show instructions
@@ -150,19 +177,17 @@ Your server code is ready in the "Server" tab.
     const includeChartjs = exercise.libraries?.includes('chartjs');
     const includeP5 = !includeLeaflet && !includeChartjs;
 
-    let scripts = '';
     let styles = '';
-
-    if (includeP5) {
-      scripts += '<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>';
-    }
     if (includeLeaflet) {
       styles += '<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />';
-      scripts += '<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>';
     }
-    if (includeChartjs) {
-      scripts += '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>';
-    }
+
+    // Build library loading configuration
+    const libConfig = JSON.stringify({
+      p5: includeP5,
+      leaflet: includeLeaflet,
+      chartjs: includeChartjs
+    });
 
     return `
 <!DOCTYPE html>
@@ -173,108 +198,93 @@ Your server code is ready in the "Server" tab.
     body { margin: 0; padding: 10px; font-family: Arial, sans-serif; background: #1a1a2e; color: white; }
     #map { height: 300px; width: 100%; }
     canvas { display: block; }
-    #console-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 10px;
-      padding: 5px 10px;
-      background: #0d0d1a;
-      border: 1px solid #333;
-      border-bottom: none;
-      border-radius: 4px 4px 0 0;
-      font-size: 11px;
-      color: #00d4ff;
-    }
-    #console-header span { font-weight: bold; }
-    #clear-console { background: #333; border: none; color: #888; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 10px; }
-    #clear-console:hover { background: #444; color: #fff; }
-    #console-output {
-      background: #0d0d1a;
-      border: 1px solid #333;
-      border-radius: 0 0 4px 4px;
-      padding: 10px;
-      margin-top: 0;
-      font-family: 'Fira Code', 'Courier New', monospace;
-      font-size: 12px;
-      max-height: 150px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-    }
-    .log-entry { color: #4ecdc4; margin: 2px 0; }
-    .warn-entry { color: #ffc107; margin: 2px 0; }
-    .error-entry { color: #ff6b6b; margin: 2px 0; }
-    .info-entry { color: #00d4ff; margin: 2px 0; }
   </style>
   ${styles}
-  ${scripts}
 </head>
 <body>
   <div id="app"></div>
   <div id="map"></div>
   <canvas id="myChart"></canvas>
-  <div id="console-header">
-    <span>> Console</span>
-    <button id="clear-console" onclick="document.getElementById('console-output').innerHTML=''">Clear</button>
-  </div>
-  <div id="console-output"></div>
   <script>
-    // Console output display
-    const consoleDiv = document.getElementById('console-output');
+    // Send console output to parent
+    function sendToParent(msg, type) {
+      window.parent.postMessage({ type: 'console', logType: type, message: msg }, '*');
+    }
+
     const originalLog = console.log;
     const originalError = console.error;
     const originalWarn = console.warn;
     const originalInfo = console.info;
 
-    function addToConsole(msg, type) {
-      const entry = document.createElement('div');
-      entry.className = type + '-entry';
-      const prefix = type === 'error' ? '✖ ' : type === 'warn' ? '⚠ ' : type === 'info' ? 'ℹ ' : '› ';
-      entry.textContent = prefix + msg;
-      consoleDiv.appendChild(entry);
-      consoleDiv.scrollTop = consoleDiv.scrollHeight;
-    }
-
     console.log = function(...args) {
       const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
-      addToConsole(msg, 'log');
+      sendToParent(msg, 'log');
       originalLog.apply(console, args);
     };
 
     console.error = function(...args) {
       const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
-      addToConsole(msg, 'error');
+      sendToParent(msg, 'error');
       originalError.apply(console, args);
     };
 
     console.warn = function(...args) {
       const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
-      addToConsole(msg, 'warn');
+      sendToParent(msg, 'warn');
       originalWarn.apply(console, args);
     };
 
     console.info = function(...args) {
       const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
-      addToConsole(msg, 'info');
+      sendToParent(msg, 'info');
       originalInfo.apply(console, args);
     };
 
     // Catch runtime errors
     window.onerror = function(msg, url, lineNo, columnNo, error) {
-      addToConsole('Error: ' + msg + ' (line ' + lineNo + ')', 'error');
+      sendToParent('Error: ' + msg + ' (line ' + lineNo + ')', 'error');
       return true;
     };
 
     // Handle unhandled promise rejections (for fetch errors)
     window.addEventListener('unhandledrejection', function(event) {
-      addToConsole('Promise Error: ' + event.reason, 'error');
+      sendToParent('Promise Error: ' + event.reason, 'error');
     });
 
-    try {
-      ${userCode}
-    } catch(e) {
-      addToConsole('Error: ' + e.message, 'error');
+    // Dynamic library loader
+    const libConfig = ${libConfig};
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error('Failed to load ' + src));
+        document.head.appendChild(script);
+      });
     }
+
+    async function loadLibrariesAndRun() {
+      try {
+        // Load libraries dynamically only if not already present
+        if (libConfig.p5 && typeof p5 === 'undefined') {
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js');
+        }
+        if (libConfig.leaflet && typeof L === 'undefined') {
+          await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+        }
+        if (libConfig.chartjs && typeof Chart === 'undefined') {
+          await loadScript('https://cdn.jsdelivr.net/npm/chart.js');
+        }
+
+        // Run user code
+        ${userCode}
+      } catch(e) {
+        sendToParent('Error: ' + e.message, 'error');
+      }
+    }
+
+    loadLibrariesAndRun();
   </script>
 </body>
 </html>
@@ -331,6 +341,52 @@ Your server code is ready in the "Server" tab.
     navigator.clipboard.writeText(text).then(() => {
       alert('Code copied to clipboard!');
     });
+  };
+
+  // Auto-close brackets, parentheses, and quotes
+  const handleEditorKeyDown = (e, isServerCode = false) => {
+    const pairs = {
+      '(': ')',
+      '[': ']',
+      '{': '}',
+      '"': '"',
+      "'": "'",
+      '`': '`'
+    };
+
+    const currentCode = isServerCode ? serverCode : code;
+    const setCurrentCode = isServerCode ? setServerCode : setCode;
+
+    const openChar = e.key;
+    if (pairs[openChar]) {
+      e.preventDefault();
+      const textarea = e.target;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = currentCode.substring(start, end);
+      const closeChar = pairs[openChar];
+
+      const newCode = currentCode.substring(0, start) + openChar + selectedText + closeChar + currentCode.substring(end);
+      setCurrentCode(newCode);
+
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 1 + selectedText.length;
+      }, 0);
+    }
+
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const textarea = e.target;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+
+      const newCode = currentCode.substring(0, start) + '  ' + currentCode.substring(end);
+      setCurrentCode(newCode);
+
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 2;
+      }, 0);
+    }
   };
 
   return (
@@ -466,6 +522,7 @@ Your server code is ready in the "Server" tab.
             className="code-editor"
             value={activeTab === 'server' ? serverCode : code}
             onChange={(e) => activeTab === 'server' ? setServerCode(e.target.value) : setCode(e.target.value)}
+            onKeyDown={(e) => handleEditorKeyDown(e, activeTab === 'server')}
             spellCheck={false}
           />
         </div>
@@ -487,6 +544,46 @@ Your server code is ready in the "Server" tab.
             </div>
           )}
         </div>
+      </div>
+
+      {/* Console Output Panel */}
+      <div className="console-section">
+        <div className="console-header">
+          <h3>Console</h3>
+          <div className="console-actions">
+            <button
+              onClick={() => setConsoleOutput([])}
+              className="console-clear-btn"
+              title="Clear console"
+            >
+              Clear
+            </button>
+            <button
+              onClick={() => setShowConsole(!showConsole)}
+              className="console-toggle-btn"
+            >
+              {showConsole ? '▼ Hide' : '▶ Show'}
+            </button>
+          </div>
+        </div>
+        {showConsole && (
+          <div className="console-output" ref={consoleRef}>
+            {consoleOutput.length === 0 ? (
+              <div className="console-placeholder">
+                Console output will appear here when you use console.log() in your code
+              </div>
+            ) : (
+              consoleOutput.map((entry, index) => (
+                <div key={index} className={`console-entry console-${entry.type}`}>
+                  <span className="console-prefix">
+                    {entry.type === 'error' ? '✖' : entry.type === 'warn' ? '⚠' : '›'}
+                  </span>
+                  <span className="console-message">{entry.message}</span>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       <div className="hints-section">

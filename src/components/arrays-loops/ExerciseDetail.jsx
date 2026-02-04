@@ -336,6 +336,52 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit 
     return `difficulty difficulty-${difficulty.toLowerCase()}`;
   };
 
+  // Auto-close brackets, parentheses, and quotes
+  const handleEditorKeyDown = (e) => {
+    const pairs = {
+      '(': ')',
+      '[': ']',
+      '{': '}',
+      '"': '"',
+      "'": "'",
+      '`': '`'
+    };
+
+    const openChar = e.key;
+    if (pairs[openChar]) {
+      e.preventDefault();
+      const textarea = e.target;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = code.substring(start, end);
+      const closeChar = pairs[openChar];
+
+      // Wrap selected text or just insert pair
+      const newCode = code.substring(0, start) + openChar + selectedText + closeChar + code.substring(end);
+      setCode(newCode);
+
+      // Position cursor between the pair (or after selected text)
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 1 + selectedText.length;
+      }, 0);
+    }
+
+    // Handle Tab key for indentation
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const textarea = e.target;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+
+      const newCode = code.substring(0, start) + '  ' + code.substring(end);
+      setCode(newCode);
+
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 2;
+      }, 0);
+    }
+  };
+
   return (
     <div className="exercise-detail">
       <button className="back-button" onClick={onBack}>← Back to Week</button>
@@ -444,6 +490,7 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit 
             className="code-editor"
             value={code}
             onChange={(e) => setCode(e.target.value)}
+            onKeyDown={handleEditorKeyDown}
             spellCheck={false}
           />
         </div>

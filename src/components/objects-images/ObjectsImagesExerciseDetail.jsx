@@ -8,7 +8,10 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
   const [showSolution, setShowSolution] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const [consoleOutput, setConsoleOutput] = useState([]);
+  const [showConsole, setShowConsole] = useState(true);
   const iframeRef = useRef(null);
+  const consoleRef = useRef(null);
 
   // Initialize code from exercise
   useEffect(() => {
@@ -17,8 +20,31 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
       setShowHints([]);
       setShowSolution(false);
       setShowExplanation(false);
+      setConsoleOutput([]);
     }
   }, [exerciseId, exercise]);
+
+  // Listen for console messages from iframe
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.data && event.data.type === 'console') {
+        setConsoleOutput(prev => [...prev, {
+          type: event.data.logType,
+          message: event.data.message,
+          timestamp: Date.now()
+        }]);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  // Auto-scroll console
+  useEffect(() => {
+    if (consoleRef.current) {
+      consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
+    }
+  }, [consoleOutput]);
 
   if (!exercise) {
     return (
@@ -31,6 +57,7 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
 
   const runCode = () => {
     setIsRunning(true);
+    setConsoleOutput([]);
 
     try {
       const htmlContent = generateHTMLPreview(code);
@@ -44,6 +71,7 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
       }
     } catch (err) {
       console.error('Error running code:', err);
+      setConsoleOutput(prev => [...prev, { type: 'error', message: err.message, timestamp: Date.now() }]);
     }
   };
 
@@ -56,106 +84,80 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
   <style>
     body { margin: 0; padding: 10px; font-family: Arial, sans-serif; background: #1a1a2e; color: white; overflow: hidden; }
     canvas { display: block; }
-    #console-output {
-      background: #0d0d1a;
-      border: 1px solid #333;
-      border-radius: 4px;
-      padding: 10px;
-      margin-top: 10px;
-      font-family: 'Fira Code', 'Courier New', monospace;
-      font-size: 12px;
-      max-height: 120px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-    }
-    #console-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 10px;
-      padding: 5px 10px;
-      background: #0d0d1a;
-      border: 1px solid #333;
-      border-bottom: none;
-      border-radius: 4px 4px 0 0;
-      font-size: 11px;
-      color: #00d4ff;
-    }
-    #console-header span { font-weight: bold; }
-    #clear-console { background: #333; border: none; color: #888; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 10px; }
-    #clear-console:hover { background: #444; color: #fff; }
-    #console-output { border-radius: 0 0 4px 4px; margin-top: 0; }
-    .log-entry { color: #00ff88; margin: 2px 0; }
-    .warn-entry { color: #ffc107; margin: 2px 0; }
-    .error-entry { color: #ff6b6b; margin: 2px 0; }
-    .info-entry { color: #00d4ff; margin: 2px 0; }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
 </head>
 <body>
   <div id="app"></div>
-  <div id="console-header">
-    <span>> Console</span>
-    <button id="clear-console" onclick="document.getElementById('console-output').innerHTML=''">Clear</button>
-  </div>
-  <div id="console-output"></div>
   <script>
-    // Console output display
-    const consoleDiv = document.getElementById('console-output');
+    // Dynamically load p5.js only if not already present
+    function loadP5AndRun() {
+      if (typeof p5 !== 'undefined') {
+        runUserCode();
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js';
+      script.onload = runUserCode;
+      script.onerror = () => sendToParent('Failed to load p5.js', 'error');
+      document.head.appendChild(script);
+    }
+
+    function runUserCode() {
+      try {
+        ${userCode}
+      } catch(e) {
+        sendToParent('Error: ' + e.message, 'error');
+      }
+    }
+  </script>
+  <script>
+    // Send console output to parent
+    function sendToParent(msg, type) {
+      window.parent.postMessage({ type: 'console', logType: type, message: msg }, '*');
+    }
+
     const originalLog = console.log;
     const originalError = console.error;
     const originalWarn = console.warn;
     const originalInfo = console.info;
 
-    function addToConsole(msg, type) {
-      const entry = document.createElement('div');
-      entry.className = type + '-entry';
-      const prefix = type === 'error' ? '✖ ' : type === 'warn' ? '⚠ ' : type === 'info' ? 'ℹ ' : '› ';
-      entry.textContent = prefix + msg;
-      consoleDiv.appendChild(entry);
-      consoleDiv.scrollTop = consoleDiv.scrollHeight;
-    }
-
     console.log = function(...args) {
       const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
-      addToConsole(msg, 'log');
+      sendToParent(msg, 'log');
       originalLog.apply(console, args);
     };
 
     console.error = function(...args) {
       const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
-      addToConsole(msg, 'error');
+      sendToParent(msg, 'error');
       originalError.apply(console, args);
     };
 
     console.warn = function(...args) {
       const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
-      addToConsole(msg, 'warn');
+      sendToParent(msg, 'warn');
       originalWarn.apply(console, args);
     };
 
     console.info = function(...args) {
       const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
-      addToConsole(msg, 'info');
+      sendToParent(msg, 'info');
       originalInfo.apply(console, args);
     };
 
     // Catch runtime errors
     window.onerror = function(msg, url, lineNo, columnNo, error) {
-      addToConsole('Error: ' + msg + ' (line ' + lineNo + ')', 'error');
+      sendToParent('Error: ' + msg + ' (line ' + lineNo + ')', 'error');
       return true;
     };
 
     // Catch unhandled promise rejections
     window.addEventListener('unhandledrejection', function(event) {
-      addToConsole('Promise Error: ' + event.reason, 'error');
+      sendToParent('Promise Error: ' + event.reason, 'error');
     });
 
-    try {
-      ${userCode}
-    } catch(e) {
-      addToConsole('Error: ' + e.message, 'error');
-    }
+    // Load p5.js and run user code
+    loadP5AndRun();
   </script>
 </body>
 </html>
@@ -211,6 +213,49 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
     navigator.clipboard.writeText(text).then(() => {
       alert('Code copied to clipboard!');
     });
+  };
+
+  // Auto-close brackets, parentheses, and quotes
+  const handleEditorKeyDown = (e) => {
+    const pairs = {
+      '(': ')',
+      '[': ']',
+      '{': '}',
+      '"': '"',
+      "'": "'",
+      '`': '`'
+    };
+
+    const openChar = e.key;
+    if (pairs[openChar]) {
+      e.preventDefault();
+      const textarea = e.target;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = code.substring(start, end);
+      const closeChar = pairs[openChar];
+
+      const newCode = code.substring(0, start) + openChar + selectedText + closeChar + code.substring(end);
+      setCode(newCode);
+
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 1 + selectedText.length;
+      }, 0);
+    }
+
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const textarea = e.target;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+
+      const newCode = code.substring(0, start) + '  ' + code.substring(end);
+      setCode(newCode);
+
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 2;
+      }, 0);
+    }
   };
 
   return (
@@ -298,6 +343,7 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
             className="code-editor"
             value={code}
             onChange={(e) => setCode(e.target.value)}
+            onKeyDown={handleEditorKeyDown}
             spellCheck={false}
           />
         </div>
@@ -313,6 +359,46 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
             />
           </div>
         </div>
+      </div>
+
+      {/* Console Output Panel */}
+      <div className="console-section">
+        <div className="console-header">
+          <h3>Console</h3>
+          <div className="console-actions">
+            <button
+              onClick={() => setConsoleOutput([])}
+              className="console-clear-btn"
+              title="Clear console"
+            >
+              Clear
+            </button>
+            <button
+              onClick={() => setShowConsole(!showConsole)}
+              className="console-toggle-btn"
+            >
+              {showConsole ? '▼ Hide' : '▶ Show'}
+            </button>
+          </div>
+        </div>
+        {showConsole && (
+          <div className="console-output" ref={consoleRef}>
+            {consoleOutput.length === 0 ? (
+              <div className="console-placeholder">
+                Console output will appear here when you use console.log() in your code
+              </div>
+            ) : (
+              consoleOutput.map((entry, index) => (
+                <div key={index} className={`console-entry console-${entry.type}`}>
+                  <span className="console-prefix">
+                    {entry.type === 'error' ? '✖' : entry.type === 'warn' ? '⚠' : '›'}
+                  </span>
+                  <span className="console-message">{entry.message}</span>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       <div className="hints-section">
