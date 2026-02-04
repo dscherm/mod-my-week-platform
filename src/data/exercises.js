@@ -271,41 +271,46 @@ console.log(fruits); // ["apple", "banana", "orange", "grape"]`,
                 "push() returns the new length of the array"
               ]
             },
-            prompt: "Click anywhere to add that X position to an array. Draw circles at all saved positions.",
+            prompt: "Click anywhere to add that X position to an array and draw a circle there. Circles accumulate on screen.",
             starterCode: `let xs = [];
+let count = 0;
 
 function setup() {
   createCanvas(800, 500);
+  background(240);
 }
 
 function draw() {
-  background(240);
-  // Draw circles at each saved x position
+  // We don't clear background - circles accumulate!
 }
 
 function mousePressed() {
   // Add mouseX to the array
+  // Draw a circle at that position
+  // Increase count
 }`,
             solutionCode: `let xs = [];
+let count = 0;
 
 function setup() {
   createCanvas(800, 500);
+  background(240);
 }
 
 function draw() {
-  background(240);
-  for (let i = 0; i < xs.length; i++) {
-    circle(xs[i], height / 2, 20);
-  }
+  // We don't clear background - circles accumulate!
 }
 
 function mousePressed() {
   xs.push(mouseX);
+  circle(xs[count], height / 2, 20);
+  count++;
 }`,
             hints: [
               "push() adds to the end of an array",
-              "Use a for loop to go through all elements",
-              "xs.length tells you how many items"
+              "Use a global count variable starting at 0 to track the current index",
+              "After pushing, draw the circle using xs[count], then increase count",
+              "xs.length tells you how many items are stored"
             ],
             vocabularyTerms: ["push", "array", "length"],
             resources: [
@@ -352,53 +357,80 @@ console.log(actions);  // ["draw", "color"]
                 "Calling pop() on an empty array returns undefined"
               ]
             },
-            prompt: "Click to add dots. Press 'U' to undo (remove) the last dot.",
+            prompt: "Click to add X positions to an array. Press 'U' to undo (pop the last item). Display array length and last value on screen.",
             starterCode: `let xs = [];
+let count = 0;
 
 function setup() {
   createCanvas(800, 500);
+  background(240);
+  textSize(20);
 }
 
 function draw() {
-  background(240);
-  for (let i = 0; i < xs.length; i++) {
-    circle(xs[i], height / 2, 20);
-  }
+  // Show current array info at top
+  fill(240);
+  noStroke();
+  rect(0, 0, 400, 60);
+  fill(0);
+  text("Array length: " + xs.length, 20, 30);
+  text("Last value: " + xs[xs.length - 1], 20, 50);
 }
 
 function mousePressed() {
   xs.push(mouseX);
+  fill(0, 100, 255);
+  circle(xs[count], height / 2, 20);
+  count++;
 }
 
 function keyPressed() {
-  // If key is 'U', remove last item
+  // If key is 'U', remove last item with pop()
+  // Then redraw canvas to show the change
 }`,
             solutionCode: `let xs = [];
+let count = 0;
 
 function setup() {
   createCanvas(800, 500);
+  background(240);
+  textSize(20);
 }
 
 function draw() {
-  background(240);
-  for (let i = 0; i < xs.length; i++) {
-    circle(xs[i], height / 2, 20);
-  }
+  // Show current array info at top
+  fill(240);
+  noStroke();
+  rect(0, 0, 400, 60);
+  fill(0);
+  text("Array length: " + xs.length, 20, 30);
+  text("Last value: " + xs[xs.length - 1], 20, 50);
 }
 
 function mousePressed() {
   xs.push(mouseX);
+  fill(0, 100, 255);
+  circle(xs[count], height / 2, 20);
+  count++;
 }
 
 function keyPressed() {
   if (key == 'U' || key == 'u') {
     xs.pop();
+    count--;
+    // Redraw - clear and redraw remaining circles
+    background(240);
+    for (let i = 0; i < count; i++) {
+      fill(0, 100, 255);
+      circle(xs[i], height / 2, 20);
+    }
   }
 }`,
             hints: [
-              "pop() removes the last element",
-              "Check which key was pressed with key == 'U'",
-              "pop() returns the removed item (but you don't need to use it)"
+              "pop() removes the LAST element from the array",
+              "Check which key was pressed with: if (key == 'U')",
+              "After popping, decrease count by 1 with count--",
+              "Watch the array length change in the display when you press U"
             ],
             vocabularyTerms: ["pop", "push", "keyPressed"],
             resources: [

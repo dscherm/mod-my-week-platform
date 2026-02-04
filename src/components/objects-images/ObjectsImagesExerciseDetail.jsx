@@ -59,57 +59,102 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
     #console-output {
       background: #0d0d1a;
       border: 1px solid #333;
+      border-radius: 4px;
       padding: 10px;
       margin-top: 10px;
-      font-family: monospace;
+      font-family: 'Fira Code', 'Courier New', monospace;
       font-size: 12px;
-      max-height: 100px;
+      max-height: 120px;
       overflow-y: auto;
       white-space: pre-wrap;
     }
+    #console-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      padding: 5px 10px;
+      background: #0d0d1a;
+      border: 1px solid #333;
+      border-bottom: none;
+      border-radius: 4px 4px 0 0;
+      font-size: 11px;
+      color: #00d4ff;
+    }
+    #console-header span { font-weight: bold; }
+    #clear-console { background: #333; border: none; color: #888; padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 10px; }
+    #clear-console:hover { background: #444; color: #fff; }
+    #console-output { border-radius: 0 0 4px 4px; margin-top: 0; }
     .log-entry { color: #00ff88; margin: 2px 0; }
+    .warn-entry { color: #ffc107; margin: 2px 0; }
     .error-entry { color: #ff6b6b; margin: 2px 0; }
+    .info-entry { color: #00d4ff; margin: 2px 0; }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
 </head>
 <body>
   <div id="app"></div>
+  <div id="console-header">
+    <span>> Console</span>
+    <button id="clear-console" onclick="document.getElementById('console-output').innerHTML=''">Clear</button>
+  </div>
   <div id="console-output"></div>
   <script>
     // Console output display
     const consoleDiv = document.getElementById('console-output');
     const originalLog = console.log;
     const originalError = console.error;
+    const originalWarn = console.warn;
+    const originalInfo = console.info;
 
-    function addToConsole(msg, isError) {
+    function addToConsole(msg, type) {
       const entry = document.createElement('div');
-      entry.className = isError ? 'error-entry' : 'log-entry';
-      entry.textContent = (isError ? 'ERROR: ' : '> ') + msg;
+      entry.className = type + '-entry';
+      const prefix = type === 'error' ? '✖ ' : type === 'warn' ? '⚠ ' : type === 'info' ? 'ℹ ' : '› ';
+      entry.textContent = prefix + msg;
       consoleDiv.appendChild(entry);
       consoleDiv.scrollTop = consoleDiv.scrollHeight;
     }
 
     console.log = function(...args) {
       const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
-      addToConsole(msg, false);
+      addToConsole(msg, 'log');
       originalLog.apply(console, args);
     };
 
     console.error = function(...args) {
       const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
-      addToConsole(msg, true);
+      addToConsole(msg, 'error');
       originalError.apply(console, args);
     };
 
-    window.onerror = function(msg, url, lineNo, columnNo, error) {
-      console.error(msg + ' (line ' + lineNo + ')');
-      return false;
+    console.warn = function(...args) {
+      const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
+      addToConsole(msg, 'warn');
+      originalWarn.apply(console, args);
     };
+
+    console.info = function(...args) {
+      const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
+      addToConsole(msg, 'info');
+      originalInfo.apply(console, args);
+    };
+
+    // Catch runtime errors
+    window.onerror = function(msg, url, lineNo, columnNo, error) {
+      addToConsole('Error: ' + msg + ' (line ' + lineNo + ')', 'error');
+      return true;
+    };
+
+    // Catch unhandled promise rejections
+    window.addEventListener('unhandledrejection', function(event) {
+      addToConsole('Promise Error: ' + event.reason, 'error');
+    });
 
     try {
       ${userCode}
     } catch(e) {
-      console.error(e.message);
+      addToConsole('Error: ' + e.message, 'error');
     }
   </script>
 </body>

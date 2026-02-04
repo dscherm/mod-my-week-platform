@@ -177,15 +177,109 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit 
         }
       };
 
-      // Create a new p5 instance
+      // Helper to add error to console
+      const addError = (message) => {
+        setConsoleOutput(prev => [...prev, { type: 'error', message, timestamp: Date.now() }]);
+      };
+
+      // Create a new p5 instance with error handling
       const sketch = (p) => {
         // Execute the user's code in p5 context with custom console
-        const userCode = new Function('p', 'console', `
-          with (p) {
-            ${transformedCode}
-          }
-        `);
-        userCode(p, customConsole);
+        try {
+          const userCode = new Function('p', 'console', `
+            with (p) {
+              ${transformedCode}
+            }
+          `);
+          userCode(p, customConsole);
+        } catch (err) {
+          addError(`Syntax Error: ${err.message}`);
+          return;
+        }
+
+        // Wrap p5 lifecycle functions to catch runtime errors
+        const originalSetup = p.setup;
+        const originalDraw = p.draw;
+        const originalMousePressed = p.mousePressed;
+        const originalMouseReleased = p.mouseReleased;
+        const originalMouseClicked = p.mouseClicked;
+        const originalKeyPressed = p.keyPressed;
+        const originalKeyReleased = p.keyReleased;
+
+        if (originalSetup) {
+          p.setup = function() {
+            try {
+              originalSetup.call(this);
+            } catch (err) {
+              addError(`Error in setup(): ${err.message}`);
+            }
+          };
+        }
+
+        if (originalDraw) {
+          let drawErrorShown = false;
+          p.draw = function() {
+            try {
+              originalDraw.call(this);
+            } catch (err) {
+              if (!drawErrorShown) {
+                addError(`Error in draw(): ${err.message}`);
+                drawErrorShown = true;
+                p.noLoop(); // Stop the draw loop on error
+              }
+            }
+          };
+        }
+
+        if (originalMousePressed) {
+          p.mousePressed = function() {
+            try {
+              originalMousePressed.call(this);
+            } catch (err) {
+              addError(`Error in mousePressed(): ${err.message}`);
+            }
+          };
+        }
+
+        if (originalMouseReleased) {
+          p.mouseReleased = function() {
+            try {
+              originalMouseReleased.call(this);
+            } catch (err) {
+              addError(`Error in mouseReleased(): ${err.message}`);
+            }
+          };
+        }
+
+        if (originalMouseClicked) {
+          p.mouseClicked = function() {
+            try {
+              originalMouseClicked.call(this);
+            } catch (err) {
+              addError(`Error in mouseClicked(): ${err.message}`);
+            }
+          };
+        }
+
+        if (originalKeyPressed) {
+          p.keyPressed = function() {
+            try {
+              originalKeyPressed.call(this);
+            } catch (err) {
+              addError(`Error in keyPressed(): ${err.message}`);
+            }
+          };
+        }
+
+        if (originalKeyReleased) {
+          p.keyReleased = function() {
+            try {
+              originalKeyReleased.call(this);
+            } catch (err) {
+              addError(`Error in keyReleased(): ${err.message}`);
+            }
+          };
+        }
       };
 
       p5InstanceRef.current = new window.p5(sketch, canvasRef.current);
