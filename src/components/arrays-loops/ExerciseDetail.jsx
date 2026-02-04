@@ -51,8 +51,11 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit 
   const [selectedTerm, setSelectedTerm] = useState(null);
   const [p5Ready, setP5Ready] = useState(false);
   const [p5Error, setP5Error] = useState(null);
+  const [consoleOutput, setConsoleOutput] = useState([]);
+  const [showConsole, setShowConsole] = useState(true);
   const canvasRef = useRef(null);
   const p5InstanceRef = useRef(null);
+  const consoleRef = useRef(null);
 
   // Load p5.js on component mount
   useEffect(() => {
@@ -85,6 +88,13 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit 
     };
   }, []);
 
+  // Auto-scroll console to bottom when new output is added
+  useEffect(() => {
+    if (consoleRef.current) {
+      consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
+    }
+  }, [consoleOutput]);
+
   if (!exercise) {
     return (
       <div className="exercise-detail">
@@ -105,6 +115,9 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit 
     if (canvasRef.current) {
       canvasRef.current.innerHTML = '';
     }
+
+    // Clear console output
+    setConsoleOutput([]);
 
     setIsRunning(true);
 
@@ -135,20 +148,50 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit 
         transformedCode = transformedCode.replace(regex, `p.${fn} = function(`);
       });
 
+      // Create a custom console that captures output
+      const customConsole = {
+        log: (...args) => {
+          const message = args.map(arg => {
+            if (typeof arg === 'object') {
+              try {
+                return JSON.stringify(arg, null, 2);
+              } catch {
+                return String(arg);
+              }
+            }
+            return String(arg);
+          }).join(' ');
+          setConsoleOutput(prev => [...prev, { type: 'log', message, timestamp: Date.now() }]);
+        },
+        error: (...args) => {
+          const message = args.map(arg => String(arg)).join(' ');
+          setConsoleOutput(prev => [...prev, { type: 'error', message, timestamp: Date.now() }]);
+        },
+        warn: (...args) => {
+          const message = args.map(arg => String(arg)).join(' ');
+          setConsoleOutput(prev => [...prev, { type: 'warn', message, timestamp: Date.now() }]);
+        },
+        info: (...args) => {
+          const message = args.map(arg => String(arg)).join(' ');
+          setConsoleOutput(prev => [...prev, { type: 'info', message, timestamp: Date.now() }]);
+        }
+      };
+
       // Create a new p5 instance
       const sketch = (p) => {
-        // Execute the user's code in p5 context
-        const userCode = new Function('p', `
+        // Execute the user's code in p5 context with custom console
+        const userCode = new Function('p', 'console', `
           with (p) {
             ${transformedCode}
           }
         `);
-        userCode(p);
+        userCode(p, customConsole);
       };
 
       p5InstanceRef.current = new window.p5(sketch, canvasRef.current);
     } catch (err) {
       console.error('Code error:', err);
+      setConsoleOutput(prev => [...prev, { type: 'error', message: `Error: ${err.message}`, timestamp: Date.now() }]);
       if (canvasRef.current) {
         canvasRef.current.innerHTML = `<div class="error-message">Error: ${err.message}</div>`;
       }
@@ -336,6 +379,46 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit 
             )}
           </div>
         </div>
+      </div>
+
+      {/* Console Output Panel */}
+      <div className="console-section">
+        <div className="console-header">
+          <h3>Console</h3>
+          <div className="console-actions">
+            <button
+              onClick={() => setConsoleOutput([])}
+              className="console-clear-btn"
+              title="Clear console"
+            >
+              Clear
+            </button>
+            <button
+              onClick={() => setShowConsole(!showConsole)}
+              className="console-toggle-btn"
+            >
+              {showConsole ? '▼ Hide' : '▶ Show'}
+            </button>
+          </div>
+        </div>
+        {showConsole && (
+          <div className="console-output" ref={consoleRef}>
+            {consoleOutput.length === 0 ? (
+              <div className="console-placeholder">
+                Console output will appear here when you use console.log() in your code
+              </div>
+            ) : (
+              consoleOutput.map((entry, index) => (
+                <div key={index} className={`console-entry console-${entry.type}`}>
+                  <span className="console-prefix">
+                    {entry.type === 'error' ? '✖' : entry.type === 'warn' ? '⚠' : '›'}
+                  </span>
+                  <span className="console-message">{entry.message}</span>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       <div className="hints-section">

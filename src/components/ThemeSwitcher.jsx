@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react';
 
 const themes = [
   {
+    id: '20s',
+    name: '20s Metropolis',
+    description: 'Art Deco machine age',
+    preview: ['#d4af37', '#1a1a1a', '#c0c0c0', '#8b7355']
+  },
+  {
     id: '60s',
     name: '60s Space Age',
     description: 'Atomic era optimism',
