@@ -2,39 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { getDataApiExerciseById } from '../../data/data-apis-exercises';
 import { getDataApisVocabularyById } from '../../data/data-apis-vocabulary';
 
-// Helper to load external scripts dynamically
-const loadScript = (src) => {
-  return new Promise((resolve, reject) => {
-    const existing = document.querySelector(`script[src="${src}"]`);
-    if (existing) {
-      resolve();
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = src;
-    script.async = true;
-    script.onload = resolve;
-    script.onerror = reject;
-    document.head.appendChild(script);
-  });
-};
-
-// Helper to load CSS
-const loadCSS = (href) => {
-  return new Promise((resolve) => {
-    const existing = document.querySelector(`link[href="${href}"]`);
-    if (existing) {
-      resolve();
-      return;
-    }
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = href;
-    link.onload = resolve;
-    document.head.appendChild(link);
-  });
-};
-
 function DataApisExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit }) {
   const exercise = getDataApiExerciseById(exerciseId);
   const [code, setCode] = useState('');
@@ -46,7 +13,6 @@ function DataApisExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, o
   const [isRunning, setIsRunning] = useState(false);
   const [output, setOutput] = useState('');
   const [selectedTerm, setSelectedTerm] = useState(null);
-  const [scriptsLoaded, setScriptsLoaded] = useState(false);
   const [consoleOutput, setConsoleOutput] = useState([]);
   const [showConsole, setShowConsole] = useState(true);
   const outputRef = useRef(null);
@@ -88,37 +54,6 @@ function DataApisExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, o
       consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
     }
   }, [consoleOutput]);
-
-  // Load required scripts based on exercise
-  useEffect(() => {
-    const loadRequiredScripts = async () => {
-      try {
-        // Always load p5.js for client-side exercises
-        if (!exercise?.requiresNode) {
-          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js');
-        }
-
-        // Load Chart.js if needed
-        if (exercise?.libraries?.includes('chartjs')) {
-          await loadScript('https://cdn.jsdelivr.net/npm/chart.js');
-        }
-
-        // Load Leaflet if needed
-        if (exercise?.libraries?.includes('leaflet')) {
-          await loadCSS('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
-          await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
-        }
-
-        setScriptsLoaded(true);
-      } catch (err) {
-        console.error('Failed to load scripts:', err);
-      }
-    };
-
-    if (exercise) {
-      loadRequiredScripts();
-    }
-  }, [exercise]);
 
   if (!exercise) {
     return (
@@ -178,16 +113,18 @@ Your server code is ready in the "Server" tab.
     const includeP5 = !includeLeaflet && !includeChartjs;
 
     let styles = '';
+    let scripts = '';
+
+    if (includeP5) {
+      scripts += '<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"><\/script>';
+    }
     if (includeLeaflet) {
       styles += '<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />';
+      scripts += '<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>';
     }
-
-    // Build library loading configuration
-    const libConfig = JSON.stringify({
-      p5: includeP5,
-      leaflet: includeLeaflet,
-      chartjs: includeChartjs
-    });
+    if (includeChartjs) {
+      scripts += '<script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>';
+    }
 
     return `
 <!DOCTYPE html>
@@ -200,6 +137,7 @@ Your server code is ready in the "Server" tab.
     canvas { display: block; }
   </style>
   ${styles}
+  ${scripts}
 </head>
 <body>
   <div id="app"></div>
@@ -251,40 +189,8 @@ Your server code is ready in the "Server" tab.
       sendToParent('Promise Error: ' + event.reason, 'error');
     });
 
-    // Dynamic library loader
-    const libConfig = ${libConfig};
-
-    function loadScript(src) {
-      return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = src;
-        script.onload = resolve;
-        script.onerror = () => reject(new Error('Failed to load ' + src));
-        document.head.appendChild(script);
-      });
-    }
-
-    async function loadLibrariesAndRun() {
-      try {
-        // Load libraries dynamically only if not already present
-        if (libConfig.p5 && typeof p5 === 'undefined') {
-          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js');
-        }
-        if (libConfig.leaflet && typeof L === 'undefined') {
-          await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
-        }
-        if (libConfig.chartjs && typeof Chart === 'undefined') {
-          await loadScript('https://cdn.jsdelivr.net/npm/chart.js');
-        }
-
-        // Run user code
-        ${userCode}
-      } catch(e) {
-        sendToParent('Error: ' + e.message, 'error');
-      }
-    }
-
-    loadLibrariesAndRun();
+    // User code runs in global scope so p5.js can find setup() and draw()
+    ${userCode}
   </script>
 </body>
 </html>
@@ -357,12 +263,13 @@ Your server code is ready in the "Server" tab.
     const currentCode = isServerCode ? serverCode : code;
     const setCurrentCode = isServerCode ? setServerCode : setCode;
 
+    const textarea = e.target;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
     const openChar = e.key;
     if (pairs[openChar]) {
       e.preventDefault();
-      const textarea = e.target;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
       const selectedText = currentCode.substring(start, end);
       const closeChar = pairs[openChar];
 
@@ -374,11 +281,46 @@ Your server code is ready in the "Server" tab.
       }, 0);
     }
 
+    // Handle Enter key for auto-indentation
+    if (e.key === 'Enter') {
+      const charBefore = currentCode[start - 1];
+      const charAfter = currentCode[start];
+
+      const lineStart = currentCode.lastIndexOf('\n', start - 1) + 1;
+      const currentLine = currentCode.substring(lineStart, start);
+      const currentIndent = currentLine.match(/^(\s*)/)[1];
+
+      if (charBefore === '{' && charAfter === '}') {
+        e.preventDefault();
+        const newIndent = currentIndent + '  ';
+        const newCode = currentCode.substring(0, start) + '\n' + newIndent + '\n' + currentIndent + currentCode.substring(start);
+        setCurrentCode(newCode);
+
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = start + 1 + newIndent.length;
+        }, 0);
+      } else if (charBefore === '{' || charBefore === '(' || charBefore === '[') {
+        e.preventDefault();
+        const newIndent = currentIndent + '  ';
+        const newCode = currentCode.substring(0, start) + '\n' + newIndent + currentCode.substring(end);
+        setCurrentCode(newCode);
+
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = start + 1 + newIndent.length;
+        }, 0);
+      } else if (currentIndent) {
+        e.preventDefault();
+        const newCode = currentCode.substring(0, start) + '\n' + currentIndent + currentCode.substring(end);
+        setCurrentCode(newCode);
+
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = start + 1 + currentIndent.length;
+        }, 0);
+      }
+    }
+
     if (e.key === 'Tab') {
       e.preventDefault();
-      const textarea = e.target;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
 
       const newCode = currentCode.substring(0, start) + '  ' + currentCode.substring(end);
       setCurrentCode(newCode);

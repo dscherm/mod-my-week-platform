@@ -123,6 +123,35 @@ function draw() {
             difficulty: "Easy",
             points: 10,
             description: "Explore and display different parts of an API response",
+            explanation: {
+              title: "Understanding JSON Response Structure",
+              concept: `When you fetch data from an API, you get back a JSON object with multiple properties. Think of it like receiving a package with labeled compartments.
+
+Each property in the JSON can be accessed using dot notation:
+- data.name gets the "name" property
+- data.location.city gets nested properties
+
+Understanding the structure of the response is crucial - you need to know what properties exist before you can use them!`,
+              example: `// If the API returns this JSON:
+{
+  "setup": "Why do programmers prefer dark mode?",
+  "punchline": "Because light attracts bugs!",
+  "type": "programming",
+  "id": 42
+}
+
+// You access properties like this:
+joke.setup       // "Why do programmers prefer dark mode?"
+joke.punchline   // "Because light attracts bugs!"
+joke.type        // "programming"
+joke.id          // 42`,
+              keyPoints: [
+                "JSON responses contain multiple properties (key-value pairs)",
+                "Use dot notation to access specific properties: object.property",
+                "console.log() the response first to see its structure",
+                "Property names are case-sensitive"
+              ]
+            },
             prompt: "Fetch a random joke from the Joke API and display the setup and punchline on the canvas.",
             starterCode: `let joke = null;
 
@@ -213,6 +242,34 @@ function mousePressed() {
             difficulty: "Easy",
             points: 10,
             description: "Load a text file and display its contents",
+            explanation: {
+              title: "Fetching Text vs JSON",
+              concept: `Not all data from the internet is JSON! Sometimes you want plain text - like a poem, a story, or CSV data.
+
+The difference is in the second step:
+- For JSON: response.json()
+- For text: response.text()
+
+Both return Promises, so you still use .then() to get the result. The key is knowing what format the data is in!`,
+              example: `// Fetching JSON (structured data):
+fetch('https://api.example.com/data')
+  .then(response => response.json())  // Parse as JSON
+  .then(data => console.log(data.name));
+
+// Fetching text (plain text):
+fetch('https://example.com/poem.txt')
+  .then(response => response.text())  // Get as plain text
+  .then(text => console.log(text));
+
+// The text can contain newlines (\\n)
+// Use split('\\n') to break it into lines`,
+              keyPoints: [
+                "Use response.text() for plain text files",
+                "Use response.json() for JSON data",
+                "Text often contains newline characters (\\n)",
+                "split('\\n') breaks text into an array of lines"
+              ]
+            },
             prompt: "Fetch the text content from a URL and display it on the canvas. We'll use a sample haiku.",
             starterCode: `let poemText = "";
 
@@ -319,6 +376,41 @@ function draw() {
             difficulty: "Easy",
             points: 15,
             description: "Load and display an image from a URL using p5.js",
+            explanation: {
+              title: "Loading Images with preload()",
+              concept: `Images take time to download from the internet. If you try to draw an image before it's loaded, you'll get errors or nothing shows up.
+
+p5.js solves this with preload() - a special function that runs BEFORE setup() and WAITS for all assets to load.
+
+The pattern:
+1. preload() - Load images/data here
+2. setup() - Called after preload finishes
+3. draw() - Safe to use loaded images`,
+              example: `let myImage;
+
+function preload() {
+  // This WAITS until the image is fully loaded
+  myImage = loadImage('https://example.com/photo.jpg');
+}
+
+function setup() {
+  createCanvas(400, 400);
+  // Image is guaranteed to be ready here!
+}
+
+function draw() {
+  image(myImage, 0, 0);  // Draw the image
+}
+
+// loadImage can also take callbacks:
+// loadImage(url, successCallback, errorCallback)`,
+              keyPoints: [
+                "preload() runs before setup() and waits for loading",
+                "loadImage() fetches an image from a URL",
+                "image(img, x, y) draws the image on canvas",
+                "imageMode(CENTER) makes x,y the image center"
+              ]
+            },
             prompt: "Use loadImage() to fetch an image from a URL and display it on the canvas.",
             starterCode: `let catImage;
 let imageLoaded = false;
@@ -520,6 +612,40 @@ function mousePressed() {
             difficulty: "Medium",
             points: 15,
             description: "Rewrite fetch code using async/await instead of .then()",
+            explanation: {
+              title: "Async/Await: Cleaner Asynchronous Code",
+              concept: `The .then() chain works, but it can get messy with nested callbacks. async/await is modern JavaScript syntax that makes asynchronous code look synchronous!
+
+Two keywords work together:
+- async: Marks a function as asynchronous
+- await: Pauses execution until a Promise resolves
+
+The code reads top-to-bottom, like normal code, but handles async operations properly.`,
+              example: `// OLD WAY: .then() chains
+fetch('https://api.example.com/data')
+  .then(response => response.json())
+  .then(data => {
+    console.log(data);
+  });
+
+// NEW WAY: async/await
+async function getData() {
+  let response = await fetch('https://api.example.com/data');
+  let data = await response.json();
+  console.log(data);
+}
+
+// Key points:
+// 1. Function must be marked "async"
+// 2. "await" pauses until the Promise resolves
+// 3. Code reads top-to-bottom!`,
+              keyPoints: [
+                "async functions always return a Promise",
+                "await pauses the function until the Promise resolves",
+                "await can only be used inside an async function",
+                "Makes code easier to read and debug"
+              ]
+            },
             prompt: "Convert the .then() chain to use async/await syntax. This makes asynchronous code read more like synchronous code.",
             starterCode: `let userData = null;
 
@@ -771,6 +897,42 @@ function keyPressed() {
             difficulty: "Easy",
             points: 10,
             description: "Parse CSV text into usable data",
+            explanation: {
+              title: "CSV: Comma-Separated Values",
+              concept: `CSV is one of the simplest data formats - just text with commas and newlines!
+
+Structure:
+- First row is usually headers (column names)
+- Each following row is one record
+- Columns are separated by commas
+
+To parse CSV manually:
+1. Split by newlines (\\n) → get rows
+2. Split each row by commas → get columns`,
+              example: `// CSV text:
+name,score,level
+Alice,850,5
+Bob,720,4
+
+// Parsing step by step:
+let lines = csvText.split('\\n');
+// lines = ["name,score,level", "Alice,850,5", "Bob,720,4"]
+
+let headers = lines[0].split(',');
+// headers = ["name", "score", "level"]
+
+let firstDataRow = lines[1].split(',');
+// firstDataRow = ["Alice", "850", "5"]
+
+// Note: CSV values are strings!
+// Use parseInt() or parseFloat() for numbers`,
+              keyPoints: [
+                "CSV = Comma-Separated Values, a simple text format",
+                "First row typically contains column headers",
+                "split('\\n') separates rows, split(',') separates columns",
+                "All CSV values are strings - convert numbers with parseInt()"
+              ]
+            },
             prompt: "Parse a CSV string by splitting it into rows and columns, then display the data.",
             starterCode: `// CSV data as a string (normally loaded from a file)
 let csvText = \`name,score,level
@@ -1572,6 +1734,44 @@ function mousePressed() {
             difficulty: "Medium",
             points: 15,
             description: "Fetch and display the current location of the International Space Station",
+            explanation: {
+              title: "Working with Real-Time APIs",
+              concept: `Some APIs provide live, constantly changing data - like the position of the ISS orbiting Earth at 17,500 mph!
+
+To show live data:
+1. Fetch the current data on load
+2. Display it visually
+3. Optionally refresh periodically (setInterval) or on user action
+
+Real-time APIs are great for:
+- Weather data
+- Stock prices
+- Location tracking
+- Sports scores`,
+              example: `// Fetch live data and update periodically
+async function fetchData() {
+  let response = await fetch('https://api.example.com/live');
+  let data = await response.json();
+  // Update display with new data
+}
+
+// Call immediately
+fetchData();
+
+// Then refresh every 5 seconds
+setInterval(fetchData, 5000);
+
+// Or let user trigger refresh
+function mousePressed() {
+  fetchData();
+}`,
+              keyPoints: [
+                "Real-time APIs return current/live data",
+                "setInterval() can refresh data automatically",
+                "User actions (clicks) can trigger manual refresh",
+                "Always handle loading states while fetching"
+              ]
+            },
             prompt: "Create a visualization that shows the ISS's current latitude and longitude, updating the display.",
             starterCode: `let issData = null;
 
@@ -1858,6 +2058,43 @@ function mousePressed() {
             difficulty: "Medium",
             points: 15,
             description: "Create an interactive map using Leaflet.js",
+            explanation: {
+              title: "Interactive Maps with Leaflet.js",
+              concept: `Leaflet.js is a free, open-source library for creating interactive maps. It's used by major websites like GitHub and Pinterest!
+
+Key components:
+- Map container (a div element)
+- Tile layer (the actual map images)
+- Markers, popups, and other overlays
+
+Leaflet uses latitude and longitude coordinates:
+- Latitude: -90 (south) to +90 (north)
+- Longitude: -180 (west) to +180 (east)`,
+              example: `// 1. Create a map centered on coordinates
+let map = L.map('mapDiv').setView([51.505, -0.09], 13);
+//                          [latitude, longitude], zoomLevel
+
+// 2. Add a tile layer (the map images)
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap'
+}).addTo(map);
+
+// 3. Add a marker
+let marker = L.marker([51.505, -0.09]).addTo(map);
+marker.bindPopup("Hello! I'm a popup.");
+
+// 4. Add a circle
+L.circle([51.508, -0.11], {
+  radius: 500,        // in meters
+  color: 'red'
+}).addTo(map);`,
+              keyPoints: [
+                "L.map() creates the map in a container div",
+                "setView([lat, lng], zoom) sets the initial view",
+                "Tile layers provide the actual map imagery",
+                "L.marker() adds clickable markers to the map"
+              ]
+            },
             prompt: "Set up a basic Leaflet map and add a marker at a specific location. Note: This exercise uses HTML/JS outside p5.js.",
             starterCode: `// This exercise creates a Leaflet map
 // The HTML needs: <div id="map" style="height: 400px;"></div>
@@ -3118,6 +3355,40 @@ function mousePressed() {
             difficulty: "Easy",
             points: 10,
             description: "Write and run your first Node.js program",
+            explanation: {
+              title: "Introduction to Node.js",
+              concept: `Node.js lets you run JavaScript outside the browser - on your computer or a server!
+
+Why is this powerful?
+- Build web servers that respond to requests
+- Read and write files on disk
+- Connect to databases
+- Create command-line tools
+
+Node.js code runs in the terminal:
+\`node myfile.js\`
+
+It has special global objects like 'process' that give you access to system information.`,
+              example: `// In the browser, you have: window, document
+// In Node.js, you have: process, __dirname, require
+
+// Print to console (same as browser)
+console.log("Hello World!");
+
+// Node-specific globals:
+console.log(__dirname);        // Current folder
+console.log(process.version);  // Node.js version
+console.log(process.platform); // "win32", "darwin", "linux"
+
+// Exit the program
+process.exit(0);  // 0 = success, 1 = error`,
+              keyPoints: [
+                "Node.js runs JavaScript outside the browser",
+                "Run files with: node filename.js",
+                "process object has system info and methods",
+                "__dirname gives the current directory path"
+              ]
+            },
             prompt: "Create a simple Node.js script that prints messages to the console. This exercise runs in Node.js, not the browser.",
             starterCode: `// Save this file as: hello.js
 // Run with: node hello.js
@@ -3265,6 +3536,45 @@ try {
             difficulty: "Medium",
             points: 20,
             description: "Create a basic web server using Express.js",
+            explanation: {
+              title: "Web Servers with Express.js",
+              concept: `Express.js is a minimal, flexible Node.js web framework. It makes building web servers easy!
+
+A web server:
+1. Listens for incoming requests (GET, POST, etc.)
+2. Matches the request to a route (URL pattern)
+3. Sends back a response (HTML, JSON, files)
+
+Think of routes like address handlers - each URL gets its own function to handle it.`,
+              example: `const express = require('express');
+const app = express();
+
+// Route: Handle GET requests to "/"
+app.get('/', (req, res) => {
+  res.send('Hello World!');  // Send text
+});
+
+// Route: Send JSON data
+app.get('/api/data', (req, res) => {
+  res.json({ message: 'Hello', count: 42 });
+});
+
+// Route: Access URL parameters
+app.get('/user/:id', (req, res) => {
+  res.send('User ID: ' + req.params.id);
+});
+
+// Start listening on port 3000
+app.listen(3000, () => {
+  console.log('Server running on port 3000');
+});`,
+              keyPoints: [
+                "app.get(path, handler) creates a route for GET requests",
+                "res.send() sends text/HTML, res.json() sends JSON",
+                "req.params contains URL parameters (:id)",
+                "app.listen() starts the server on a port"
+              ]
+            },
             prompt: "Build a simple web server that responds to HTTP requests. Set up routes for different pages.",
             starterCode: `// Save as: server.js
 // Run: npm init -y && npm install express

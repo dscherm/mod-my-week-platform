@@ -347,12 +347,13 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit 
       '`': '`'
     };
 
+    const textarea = e.target;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
     const openChar = e.key;
     if (pairs[openChar]) {
       e.preventDefault();
-      const textarea = e.target;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
       const selectedText = code.substring(start, end);
       const closeChar = pairs[openChar];
 
@@ -366,12 +367,53 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit 
       }, 0);
     }
 
+    // Handle Enter key for auto-indentation
+    if (e.key === 'Enter') {
+      const charBefore = code[start - 1];
+      const charAfter = code[start];
+
+      // Get current line's indentation
+      const lineStart = code.lastIndexOf('\n', start - 1) + 1;
+      const currentLine = code.substring(lineStart, start);
+      const currentIndent = currentLine.match(/^(\s*)/)[1];
+
+      // If cursor is between { and }
+      if (charBefore === '{' && charAfter === '}') {
+        e.preventDefault();
+        const newIndent = currentIndent + '  ';
+        const newCode = code.substring(0, start) + '\n' + newIndent + '\n' + currentIndent + code.substring(start);
+        setCode(newCode);
+
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = start + 1 + newIndent.length;
+        }, 0);
+      }
+      // If after an opening brace, add extra indent
+      else if (charBefore === '{' || charBefore === '(' || charBefore === '[') {
+        e.preventDefault();
+        const newIndent = currentIndent + '  ';
+        const newCode = code.substring(0, start) + '\n' + newIndent + code.substring(end);
+        setCode(newCode);
+
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = start + 1 + newIndent.length;
+        }, 0);
+      }
+      // Maintain current indentation
+      else if (currentIndent) {
+        e.preventDefault();
+        const newCode = code.substring(0, start) + '\n' + currentIndent + code.substring(end);
+        setCode(newCode);
+
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = start + 1 + currentIndent.length;
+        }, 0);
+      }
+    }
+
     // Handle Tab key for indentation
     if (e.key === 'Tab') {
       e.preventDefault();
-      const textarea = e.target;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
 
       const newCode = code.substring(0, start) + '  ' + code.substring(end);
       setCode(newCode);

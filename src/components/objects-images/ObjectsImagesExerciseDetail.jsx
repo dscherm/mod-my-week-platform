@@ -85,31 +85,10 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
     body { margin: 0; padding: 10px; font-family: Arial, sans-serif; background: #1a1a2e; color: white; overflow: hidden; }
     canvas { display: block; }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
 </head>
 <body>
   <div id="app"></div>
-  <script>
-    // Dynamically load p5.js only if not already present
-    function loadP5AndRun() {
-      if (typeof p5 !== 'undefined') {
-        runUserCode();
-        return;
-      }
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js';
-      script.onload = runUserCode;
-      script.onerror = () => sendToParent('Failed to load p5.js', 'error');
-      document.head.appendChild(script);
-    }
-
-    function runUserCode() {
-      try {
-        ${userCode}
-      } catch(e) {
-        sendToParent('Error: ' + e.message, 'error');
-      }
-    }
-  </script>
   <script>
     // Send console output to parent
     function sendToParent(msg, type) {
@@ -156,8 +135,8 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
       sendToParent('Promise Error: ' + event.reason, 'error');
     });
 
-    // Load p5.js and run user code
-    loadP5AndRun();
+    // User code runs in global scope so p5.js can find setup() and draw()
+    ${userCode}
   </script>
 </body>
 </html>
@@ -226,12 +205,13 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
       '`': '`'
     };
 
+    const textarea = e.target;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+
     const openChar = e.key;
     if (pairs[openChar]) {
       e.preventDefault();
-      const textarea = e.target;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
       const selectedText = code.substring(start, end);
       const closeChar = pairs[openChar];
 
@@ -243,11 +223,46 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
       }, 0);
     }
 
+    // Handle Enter key for auto-indentation
+    if (e.key === 'Enter') {
+      const charBefore = code[start - 1];
+      const charAfter = code[start];
+
+      const lineStart = code.lastIndexOf('\n', start - 1) + 1;
+      const currentLine = code.substring(lineStart, start);
+      const currentIndent = currentLine.match(/^(\s*)/)[1];
+
+      if (charBefore === '{' && charAfter === '}') {
+        e.preventDefault();
+        const newIndent = currentIndent + '  ';
+        const newCode = code.substring(0, start) + '\n' + newIndent + '\n' + currentIndent + code.substring(start);
+        setCode(newCode);
+
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = start + 1 + newIndent.length;
+        }, 0);
+      } else if (charBefore === '{' || charBefore === '(' || charBefore === '[') {
+        e.preventDefault();
+        const newIndent = currentIndent + '  ';
+        const newCode = code.substring(0, start) + '\n' + newIndent + code.substring(end);
+        setCode(newCode);
+
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = start + 1 + newIndent.length;
+        }, 0);
+      } else if (currentIndent) {
+        e.preventDefault();
+        const newCode = code.substring(0, start) + '\n' + currentIndent + code.substring(end);
+        setCode(newCode);
+
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = start + 1 + currentIndent.length;
+        }, 0);
+      }
+    }
+
     if (e.key === 'Tab') {
       e.preventDefault();
-      const textarea = e.target;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
 
       const newCode = code.substring(0, start) + '  ' + code.substring(end);
       setCode(newCode);
