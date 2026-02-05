@@ -7419,6 +7419,104 @@ a:hover {
 }
 
 /* ==========================================
+   CUSTOM THEME (fallback defaults)
+   ========================================== */
+
+[data-theme="custom"] {
+  --neon-cyan: #00ffff;
+  --neon-magenta: #ff00ff;
+  --neon-green: #39ff14;
+  --bg-dark: #0a0a0f;
+  --text-primary: #00ffff;
+  --text-secondary: #ff00ff;
+  --glow-cyan: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 40px #00ffff;
+  --glow-magenta: 0 0 10px #ff00ff, 0 0 20px #ff00ff, 0 0 40px #ff00ff;
+  --glow-green: 0 0 10px #39ff14, 0 0 20px #39ff14, 0 0 40px #39ff14;
+}
+
+/* Custom Colors Section */
+.custom-colors-section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.custom-colors-section h3 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: var(--neon-cyan);
+}
+
+.color-pickers-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 500px) {
+  .color-pickers-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.color-picker-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.color-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.color-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.color-input {
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 0;
+  background: transparent;
+}
+
+.color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-input::-webkit-color-swatch {
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+}
+
+.color-input::-moz-color-swatch {
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+}
+
+.color-hex {
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+  letter-spacing: 1px;
+}
+
+/* ==========================================
    60s SPACE AGE THEME
    Atomic era optimism, space race, googie
    ========================================== */
