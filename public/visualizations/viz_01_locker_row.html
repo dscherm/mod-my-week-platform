@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UNPLUG: The Locker Row — Arrays</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;500;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f0f1a; color: #e0e0f0; font-family: 'Outfit', sans-serif; overflow: hidden; }
+  #top-bar { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: linear-gradient(90deg, #1a1a2e, #16213e); display: flex; align-items: center; padding: 0 24px; z-index: 10; border-bottom: 2px solid #00d9ff33; }
+  #top-bar h1 { font-size: 16px; font-weight: 700; color: #00d9ff; letter-spacing: 1px; }
+  #top-bar .tag { background: #e9456033; color: #e94560; font-size: 11px; padding: 2px 10px; border-radius: 20px; margin-left: 16px; font-weight: 700; }
+  #code-panel { position: fixed; bottom: 0; left: 0; right: 0; height: 170px; background: #0d1117; border-top: 2px solid #00d9ff44; padding: 12px 24px; z-index: 10; font-family: 'JetBrains Mono', monospace; }
+  #code-panel .label { font-size: 11px; color: #00d9ff; font-weight: 700; letter-spacing: 2px; margin-bottom: 6px; }
+  #code-lines { font-size: 14px; line-height: 1.7; }
+  .code-dim { color: #4a4a6a; }
+  .code-kw { color: #e94560; }
+  .code-str { color: #4ade80; }
+  .code-num { color: #ffd93d; }
+  .code-fn { color: #00d9ff; }
+  .code-hl { background: #00d9ff15; display: inline-block; padding: 0 4px; border-left: 2px solid #00d9ff; }
+  #instructions { position: fixed; top: 56px; right: 16px; background: #16213e; border: 1px solid #00d9ff33; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #b0b0c0; line-height: 1.6; z-index: 10; max-width: 260px; }
+  #instructions kbd { background: #0f3460; padding: 1px 6px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #00d9ff; border: 1px solid #00d9ff44; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<div id="top-bar">
+  <h1>UNPLUG: THE LOCKER ROW</h1>
+  <span class="tag">ARRAYS</span>
+</div>
+<div id="instructions">
+  <strong style="color:#00d9ff">Controls</strong><br>
+  <kbd>0</kbd>–<kbd>9</kbd> Query an index<br>
+  <kbd>R</kbd> Randomize values<br>
+  <kbd>+</kbd> Add element (push)<br>
+  <kbd>-</kbd> Remove element (pop)<br>
+  <kbd>L</kbd> Show .length<br>
+  <kbd>F</kbd> Show first / last / random<br>
+  Click a person to select
+</div>
+<div id="code-panel">
+  <div class="label">LIVE CODE</div>
+  <div id="code-lines"></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<script>
+const COLORS = ["#e94560","#ff9f43","#ffd93d","#4ade80","#00d9ff","#a78bfa","#f472b6","#38bdf8","#fb923c","#34d399"];
+const NAMES = ["Alice","Bob","Carol","Dave","Eve","Frank","Grace","Hank","Ivy","Jake"];
+const VALUES_POOL = ["🍎","🍊","🍋","🥝","🫐","🍇","🍓","⭐","🌙","🔥","💎","🎵","🎮","📚","⚡"];
+
+let people = [];
+let selectedIdx = -1;
+let animPhase = "";  // "query", "push", "pop", "length", "first-last-random"
+let animTimer = 0;
+let flashIdx = -1;
+let codeText = "";
+let showMode = "";
+let showModeTimer = 0;
+
+function setup() {
+  let c = createCanvas(windowWidth, windowHeight - 170);
+  c.position(0, 48);
+  textAlign(CENTER, CENTER);
+  resetPeople(6);
+}
+
+function resetPeople(n) {
+  people = [];
+  for (let i = 0; i < n; i++) {
+    people.push({
+      name: NAMES[i],
+      value: random(VALUES_POOL),
+      color: COLORS[i],
+      bob: random(1000),
+      highlight: 0,
+      armRaise: 0
+    });
+  }
+  selectedIdx = -1;
+  updateCode("idle");
+}
+
+function draw() {
+  let h = height;
+  background(15, 15, 26);
+
+  // Floor line
+  let floorY = h * 0.72;
+  stroke(30, 40, 70);
+  strokeWeight(2);
+  line(0, floorY, width, floorY);
+
+  // Floor index markers
+  let n = people.length;
+  let spacing = min(120, (width - 200) / max(n, 1));
+  let startX = width / 2 - (n - 1) * spacing / 2;
+
+  // Draw tape numbers on floor
+  for (let i = 0; i < n; i++) {
+    let x = startX + i * spacing;
+    // Tape mark
+    noStroke();
+    fill(0, 217, 255, 40);
+    rect(x - 22, floorY + 2, 44, 28, 4);
+    fill(0, 217, 255);
+    textFont("JetBrains Mono");
+    textSize(16);
+    textStyle(BOLD);
+    text(i, x, floorY + 16);
+    // "INDEX" label
+    textSize(8);
+    fill(100, 100, 150);
+    textStyle(NORMAL);
+    text("INDEX", x, floorY + 38);
+  }
+
+  // Draw people
+  for (let i = 0; i < n; i++) {
+    let x = startX + i * spacing;
+    let p = people[i];
+    p.bob += 0.02;
+
+    // Highlight decay
+    p.highlight = lerp(p.highlight, (i === selectedIdx || i === flashIdx) ? 1 : 0, 0.1);
+    p.armRaise = lerp(p.armRaise, (i === selectedIdx) ? 1 : 0, 0.12);
+
+    let bobY = sin(p.bob) * 3;
+    let baseY = floorY - 10 + bobY;
+
+    push();
+    translate(x, baseY);
+
+    // Glow if selected
+    if (p.highlight > 0.1) {
+      noStroke();
+      fill(red(color(p.color)), green(color(p.color)), blue(color(p.color)), p.highlight * 40);
+      ellipse(0, -50, 100 + p.highlight * 30, 130 + p.highlight * 20);
+    }
+
+    // Body
+    stroke(p.color);
+    strokeWeight(3);
+    noFill();
+    // Torso
+    line(0, -70, 0, -30);
+    // Legs
+    line(0, -30, -12, 0);
+    line(0, -30, 12, 0);
+    // Arms
+    let armAngle = p.armRaise * -PI/3;
+    line(0, -60, -18 * cos(armAngle), -60 + 18 * sin(armAngle));
+    line(0, -60, 18 * cos(armAngle), -60 + 18 * sin(armAngle));
+    // Head
+    fill(15, 15, 26);
+    stroke(p.color);
+    strokeWeight(3);
+    ellipse(0, -82, 24, 24);
+
+    // Card held above if selected
+    if (p.armRaise > 0.3) {
+      let cardY = -110 - p.armRaise * 30;
+      noStroke();
+      fill(255, 255, 255, p.armRaise * 230);
+      rect(-24, cardY - 16, 48, 32, 6);
+      fill(15, 15, 26);
+      textSize(18);
+      textFont("sans-serif");
+      text(p.value, 0, cardY);
+    }
+
+    // Name below
+    noStroke();
+    fill(180, 180, 200);
+    textSize(11);
+    textFont("Outfit");
+    textStyle(NORMAL);
+    text(p.name, 0, 16);
+
+    pop();
+  }
+
+  // Show mode overlays
+  if (showMode && showModeTimer > 0) {
+    showModeTimer--;
+    noStroke();
+    fill(13, 17, 23, 220);
+    rect(width/2 - 200, 70, 400, 80, 12);
+    textFont("JetBrains Mono");
+    textSize(20);
+    fill(255, 217, 61);
+    textStyle(BOLD);
+    text(showMode, width/2, 110);
+    if (showModeTimer <= 0) showMode = "";
+  }
+
+  // Array visualization bar at top
+  let barY = 60;
+  noStroke();
+  fill(22, 33, 62, 200);
+  rect(startX - 30, barY, n * spacing + 16, 44, 8);
+  textFont("JetBrains Mono");
+  for (let i = 0; i < n; i++) {
+    let x = startX + i * spacing;
+    let p = people[i];
+    fill(lerpColor(color(22,33,62), color(p.color), p.highlight * 0.4));
+    rect(x - spacing/2 + 4, barY + 4, spacing - 8, 36, 4);
+    fill(lerpColor(color(160,160,190), color(255,255,255), p.highlight));
+    textSize(14);
+    text(p.value, x, barY + 22);
+  }
+
+  // Brackets
+  fill(100, 100, 150);
+  textSize(28);
+  text("[", startX - spacing/2 - 6, barY + 20);
+  text("]", startX + (n-1) * spacing + spacing/2 + 6, barY + 20);
+}
+
+function keyPressed() {
+  let k = key.toLowerCase();
+  if (k >= '0' && k <= '9') {
+    let idx = int(k);
+    if (idx < people.length) {
+      selectedIdx = idx;
+      updateCode("access", idx);
+    } else {
+      selectedIdx = -1;
+      updateCode("outOfBounds", idx);
+      showMode = `⚠️ Index ${idx} is out of bounds! (length = ${people.length})`;
+      showModeTimer = 120;
+    }
+  } else if (k === 'r') {
+    for (let p of people) p.value = random(VALUES_POOL);
+    selectedIdx = -1;
+    updateCode("randomize");
+  } else if (k === '+' || k === '=') {
+    if (people.length < 10) {
+      let i = people.length;
+      let v = random(VALUES_POOL);
+      people.push({ name: NAMES[i], value: v, color: COLORS[i], bob: random(1000), highlight: 0, armRaise: 0 });
+      selectedIdx = i;
+      updateCode("push", i, v);
+    }
+  } else if (k === '-') {
+    if (people.length > 1) {
+      let removed = people.pop();
+      selectedIdx = -1;
+      updateCode("pop", people.length, removed.value);
+    }
+  } else if (k === 'l') {
+    selectedIdx = -1;
+    showMode = `array.length → ${people.length}`;
+    showModeTimer = 120;
+    updateCode("length");
+  } else if (k === 'f') {
+    let first = 0;
+    let last = people.length - 1;
+    let rand = floor(random(people.length));
+    selectedIdx = rand;
+    showMode = `First [0]=${people[0].value}  Last [${last}]=${people[last].value}  Random [${rand}]=${people[rand].value}`;
+    showModeTimer = 150;
+    updateCode("firstLastRandom", first, last, rand);
+  }
+}
+
+function mousePressed() {
+  let n = people.length;
+  let spacing = min(120, (width - 200) / max(n, 1));
+  let startX = width / 2 - (n - 1) * spacing / 2;
+  let floorY = (height) * 0.72;
+  for (let i = 0; i < n; i++) {
+    let x = startX + i * spacing;
+    if (dist(mouseX, mouseY - 48, x, floorY - 50) < 40) {
+      selectedIdx = i;
+      updateCode("access", i);
+      return;
+    }
+  }
+  selectedIdx = -1;
+  updateCode("idle");
+}
+
+function updateCode(mode, a, b, c) {
+  let el = document.getElementById("code-lines");
+  let arr = people.map(p => `"${p.value}"`).join(", ");
+  let lines = "";
+  if (mode === "idle") {
+    lines = `<span class="code-kw">let</span> <span class="code-fn">colors</span> = [${arr}];
+<span class="code-dim">// Click a person or press 0-9 to access an index</span>
+<span class="code-dim">// Press + to push, - to pop, L for length, F for first/last/random</span>`;
+  } else if (mode === "access") {
+    lines = `<span class="code-kw">let</span> <span class="code-fn">colors</span> = [${arr}];
+<span class="code-hl"><span class="code-fn">colors</span>[<span class="code-num">${a}</span>]  <span class="code-dim">// → ${people[a].value}</span></span>
+<span class="code-dim">// Index ${a} = "${people[a].name}" holding ${people[a].value}</span>`;
+  } else if (mode === "outOfBounds") {
+    lines = `<span class="code-kw">let</span> <span class="code-fn">colors</span> = [${arr}];  <span class="code-dim">// length = ${people.length}</span>
+<span class="code-hl" style="border-color:#e94560;background:#e9456015"><span class="code-fn">colors</span>[<span class="code-num">${a}</span>]  <span class="code-dim">// → undefined! ⚠️ Index ${a} doesn't exist</span></span>
+<span class="code-dim">// Valid indices: 0 to ${people.length - 1}</span>`;
+  } else if (mode === "push") {
+    lines = `<span class="code-kw">let</span> <span class="code-fn">colors</span> = [${arr}];
+<span class="code-hl" style="border-color:#4ade80;background:#4ade8015"><span class="code-fn">colors</span>.<span class="code-fn">push</span>(<span class="code-str">"${b}"</span>);  <span class="code-dim">// Added at index ${a}</span></span>
+<span class="code-dim">// colors.length is now ${people.length}</span>`;
+  } else if (mode === "pop") {
+    lines = `<span class="code-kw">let</span> <span class="code-fn">colors</span> = [${arr}];
+<span class="code-hl" style="border-color:#e94560;background:#e9456015"><span class="code-kw">let</span> removed = <span class="code-fn">colors</span>.<span class="code-fn">pop</span>();  <span class="code-dim">// → "${b}" removed from end</span></span>
+<span class="code-dim">// colors.length is now ${people.length}</span>`;
+  } else if (mode === "length") {
+    lines = `<span class="code-kw">let</span> <span class="code-fn">colors</span> = [${arr}];
+<span class="code-hl"><span class="code-fn">colors</span>.length  <span class="code-dim">// → <span class="code-num">${people.length}</span></span></span>
+<span class="code-dim">// ${people.length} elements, indices 0 to ${people.length - 1}</span>`;
+  } else if (mode === "firstLastRandom") {
+    lines = `<span class="code-kw">let</span> <span class="code-fn">colors</span> = [${arr}];
+<span class="code-fn">colors</span>[<span class="code-num">0</span>]  <span class="code-dim">// → ${people[0].value}  (FIRST)</span>    <span class="code-fn">colors</span>[<span class="code-fn">colors</span>.length - <span class="code-num">1</span>]  <span class="code-dim">// → ${people[b].value}  (LAST)</span>
+<span class="code-hl"><span class="code-fn">colors</span>[floor(random(<span class="code-fn">colors</span>.length))]  <span class="code-dim">// → colors[${c}] → ${people[c].value}  (RANDOM)</span></span>`;
+  } else if (mode === "randomize") {
+    lines = `<span class="code-kw">let</span> <span class="code-fn">colors</span> = [${arr}];
+<span class="code-hl" style="border-color:#ffd93d;background:#ffd93d15"><span class="code-dim">// Values changed but indices stay the same!</span></span>
+<span class="code-dim">// The "floor numbers" (0,1,2...) never move — only what people HOLD changes</span>`;
+  }
+  el.innerHTML = lines;
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight - 170);
+}
+</script>
+</body>
+</html>

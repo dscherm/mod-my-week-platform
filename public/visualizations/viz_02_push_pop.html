@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UNPLUG: Cafeteria Tray Stack — Push & Pop</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;500;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f0f1a; color: #e0e0f0; font-family: 'Outfit', sans-serif; overflow: hidden; }
+  #top-bar { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: linear-gradient(90deg, #1a1a2e, #16213e); display: flex; align-items: center; padding: 0 24px; z-index: 10; border-bottom: 2px solid #4ade8033; }
+  #top-bar h1 { font-size: 16px; font-weight: 700; color: #4ade80; letter-spacing: 1px; }
+  #top-bar .tag { background: #e9456033; color: #e94560; font-size: 11px; padding: 2px 10px; border-radius: 20px; margin-left: 16px; font-weight: 700; }
+  #code-panel { position: fixed; bottom: 0; left: 0; right: 0; height: 150px; background: #0d1117; border-top: 2px solid #4ade8044; padding: 12px 24px; z-index: 10; font-family: 'JetBrains Mono', monospace; }
+  #code-panel .label { font-size: 11px; color: #4ade80; font-weight: 700; letter-spacing: 2px; margin-bottom: 6px; }
+  #code-lines { font-size: 14px; line-height: 1.7; }
+  .code-dim { color: #4a4a6a; }
+  .code-kw { color: #e94560; }
+  .code-str { color: #4ade80; }
+  .code-num { color: #ffd93d; }
+  .code-fn { color: #00d9ff; }
+  .code-hl { background: #4ade8015; display: inline-block; padding: 0 4px; border-left: 2px solid #4ade80; }
+  .code-hl-red { background: #e9456015; display: inline-block; padding: 0 4px; border-left: 2px solid #e94560; }
+  #instructions { position: fixed; top: 56px; right: 16px; background: #16213e; border: 1px solid #4ade8033; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #b0b0c0; line-height: 1.6; z-index: 10; }
+  #instructions kbd { background: #0f3460; padding: 1px 6px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #4ade80; border: 1px solid #4ade8044; }
+</style>
+</head>
+<body>
+<div id="top-bar">
+  <h1>UNPLUG: CAFETERIA TRAY STACK</h1>
+  <span class="tag">PUSH & POP</span>
+</div>
+<div id="instructions">
+  <strong style="color:#4ade80">Controls</strong><br>
+  <kbd>SPACE</kbd> or <kbd>+</kbd> Push a tray<br>
+  <kbd>BACKSPACE</kbd> or <kbd>-</kbd> Pop a tray<br>
+  <kbd>C</kbd> Clear all<br>
+  <kbd>R</kbd> Reset demo
+</div>
+<div id="code-panel">
+  <div class="label">LIVE CODE</div>
+  <div id="code-lines"></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<script>
+const ITEMS = ["Math 📐","Science 🔬","English 📖","History 🏛️","Art 🎨","Music 🎵","Gym 🏀","Code 💻","French 🇫🇷","Bio 🧬"];
+const TRAY_COLORS = ["#e94560","#ff9f43","#ffd93d","#4ade80","#00d9ff","#a78bfa","#f472b6","#38bdf8","#fb923c","#34d399"];
+
+let stack = [];
+let animTrays = []; // for flying-in/out animations
+let nextItem = 0;
+let lastAction = "";
+let lastValue = "";
+let returnValue = "";
+let messageTimer = 0;
+let message = "";
+
+function setup() {
+  let c = createCanvas(windowWidth, windowHeight - 150);
+  c.position(0, 48);
+  textAlign(CENTER, CENTER);
+  updateCode("idle");
+}
+
+function draw() {
+  background(15, 15, 26);
+
+  // Draw table surface
+  let tableY = height * 0.82;
+  noStroke();
+  fill(30, 20, 15);
+  rect(width/2 - 140, tableY, 280, 20, 4);
+  fill(50, 35, 25);
+  rect(width/2 - 130, tableY + 2, 260, 8, 2);
+
+  // Table legs
+  fill(40, 28, 18);
+  rect(width/2 - 120, tableY + 18, 12, 40);
+  rect(width/2 + 108, tableY + 18, 12, 40);
+
+  // Stack visual
+  let trayH = 44;
+  let trayW = 220;
+  let stackBaseY = tableY - 5;
+
+  // Draw stack
+  for (let i = 0; i < stack.length; i++) {
+    let tray = stack[i];
+    let targetY = stackBaseY - (i + 1) * trayH;
+    tray.y = lerp(tray.y, targetY, 0.12);
+    tray.x = lerp(tray.x, width/2, 0.12);
+    tray.alpha = lerp(tray.alpha, 255, 0.1);
+
+    drawTray(tray.x, tray.y, trayW, trayH - 4, tray.color, tray.label, i, i === stack.length - 1);
+  }
+
+  // Animated flying trays
+  for (let i = animTrays.length - 1; i >= 0; i--) {
+    let at = animTrays[i];
+    at.x += at.vx;
+    at.y += at.vy;
+    at.vy += 0.5;
+    at.alpha -= 3;
+    if (at.alpha > 0) {
+      drawTray(at.x, at.y, trayW, trayH - 4, at.color, at.label, -1, false, at.alpha);
+    } else {
+      animTrays.splice(i, 1);
+    }
+  }
+
+  // LIFO label
+  fill(255, 217, 61, 180);
+  textFont("Outfit");
+  textSize(13);
+  textStyle(BOLD);
+  if (stack.length > 0) {
+    let topY = stackBaseY - stack.length * trayH;
+    // Arrow pointing to top
+    fill(255, 217, 61, 150);
+    text("← TOP (Last In)", width/2 + trayW/2 + 60, topY + trayH/2);
+    if (stack.length > 1) {
+      let botY = stackBaseY - trayH;
+      fill(100, 100, 150, 150);
+      textSize(11);
+      text("← BOTTOM (First In)", width/2 + trayW/2 + 60, botY + trayH/2);
+    }
+  }
+
+  // Arrow visualization
+  let arrowX = width/2 - trayW/2 - 80;
+  if (stack.length > 0) {
+    let topY2 = stackBaseY - stack.length * trayH + trayH/2;
+    stroke(74, 222, 128, 180);
+    strokeWeight(2);
+    fill(74, 222, 128, 180);
+    // Push arrow (going up/in)
+    line(arrowX, topY2 + 40, arrowX, topY2);
+    triangle(arrowX, topY2 - 8, arrowX - 6, topY2 + 4, arrowX + 6, topY2 + 4);
+    noStroke();
+    textSize(11);
+    fill(74, 222, 128);
+    text("push()", arrowX, topY2 + 52);
+
+    // Pop arrow (going up/out)
+    let popX = arrowX + 50;
+    stroke(233, 69, 96, 180);
+    strokeWeight(2);
+    fill(233, 69, 96, 180);
+    line(popX, topY2, popX, topY2 - 40);
+    triangle(popX, topY2 - 48, popX - 6, topY2 - 36, popX + 6, topY2 - 36);
+    noStroke();
+    fill(233, 69, 96);
+    text("pop()", popX, topY2 + 52);
+  }
+
+  // Empty state
+  if (stack.length === 0) {
+    fill(80, 80, 120);
+    textFont("Outfit");
+    textSize(18);
+    textStyle(NORMAL);
+    text("Stack is empty — press SPACE to push!", width/2, tableY - 60);
+  }
+
+  // Count display
+  fill(22, 33, 62, 200);
+  noStroke();
+  rect(16, 60, 160, 50, 8);
+  fill(0, 217, 255);
+  textFont("JetBrains Mono");
+  textSize(12);
+  textStyle(BOLD);
+  textAlign(LEFT, TOP);
+  text(`stack.length = ${stack.length}`, 28, 72);
+  fill(180, 180, 200);
+  textSize(11);
+  textStyle(NORMAL);
+  text(stack.length === 0 ? "[ ]" : `[${stack.map(t=>'"'+t.label.split(' ')[0]+'"').join(", ")}]`, 28, 90);
+  textAlign(CENTER, CENTER);
+
+  // Message overlay
+  if (messageTimer > 0) {
+    messageTimer--;
+    fill(13, 17, 23, 200);
+    noStroke();
+    rect(width/2 - 180, height/2 - 50, 360, 60, 10);
+    fill(255, 217, 61);
+    textFont("JetBrains Mono");
+    textSize(16);
+    textStyle(BOLD);
+    text(message, width/2, height/2 - 20);
+  }
+}
+
+function drawTray(x, y, w, h, col, label, idx, isTop, alpha) {
+  let a = alpha || 255;
+  push();
+  // Tray body
+  noStroke();
+  let c = color(col);
+  fill(red(c), green(c), blue(c), a * 0.7);
+  rect(x - w/2, y, w, h, 6);
+  // Top edge highlight
+  fill(red(c), green(c), blue(c), a);
+  rect(x - w/2, y, w, 6, 6, 6, 0, 0);
+  // Label
+  fill(255, 255, 255, a);
+  textFont("Outfit");
+  textSize(15);
+  textStyle(BOLD);
+  text(label, x, y + h/2);
+  // Index badge
+  if (idx >= 0) {
+    fill(15, 15, 26, a * 0.8);
+    rect(x - w/2 + 6, y + 8, 28, 22, 4);
+    fill(0, 217, 255, a);
+    textFont("JetBrains Mono");
+    textSize(11);
+    text(idx, x - w/2 + 20, y + 19);
+  }
+  pop();
+}
+
+function keyPressed() {
+  if (key === ' ' || key === '+' || key === '=') {
+    if (stack.length < 10) {
+      let item = ITEMS[nextItem % ITEMS.length];
+      let col = TRAY_COLORS[nextItem % TRAY_COLORS.length];
+      stack.push({ label: item, color: col, x: width/2 + 300, y: -100, alpha: 0 });
+      nextItem++;
+      lastAction = "push";
+      lastValue = item;
+      updateCode("push", item);
+    } else {
+      message = "Stack is full! (max 10)";
+      messageTimer = 90;
+    }
+  } else if (keyCode === BACKSPACE || key === '-') {
+    if (stack.length > 0) {
+      let removed = stack.pop();
+      animTrays.push({ ...removed, vx: random(2, 5), vy: random(-8, -4), alpha: 255 });
+      lastAction = "pop";
+      lastValue = removed.label;
+      returnValue = removed.label;
+      updateCode("pop", removed.label);
+    } else {
+      message = "pop() → undefined (empty stack!)";
+      messageTimer = 120;
+      updateCode("popEmpty");
+    }
+  } else if (key === 'c' || key === 'C') {
+    while (stack.length > 0) {
+      let removed = stack.pop();
+      animTrays.push({ ...removed, vx: random(-5, 5), vy: random(-10, -5), alpha: 255 });
+    }
+    updateCode("clear");
+  } else if (key === 'r' || key === 'R') {
+    stack = [];
+    animTrays = [];
+    nextItem = 0;
+    updateCode("idle");
+  }
+  return false; // prevent backspace navigation
+}
+
+function updateCode(mode, val) {
+  let el = document.getElementById("code-lines");
+  let arr = stack.length === 0 ? "[]" : `[${stack.map(t=>'"'+t.label.split(' ')[0]+'"').join(", ")}]`;
+  let lines = "";
+  if (mode === "idle") {
+    lines = `<span class="code-kw">let</span> <span class="code-fn">stack</span> = ${arr};
+<span class="code-dim">// Press SPACE to push, BACKSPACE to pop</span>
+<span class="code-dim">// LIFO: Last In, First Out — like a stack of plates!</span>`;
+  } else if (mode === "push") {
+    lines = `<span class="code-kw">let</span> <span class="code-fn">stack</span> = ${arr};
+<span class="code-hl"><span class="code-fn">stack</span>.<span class="code-fn">push</span>(<span class="code-str">"${val.split(' ')[0]}"</span>);  <span class="code-dim">// Added to the END → now length = ${stack.length}</span></span>
+<span class="code-dim">// The new item goes on TOP — it will be the FIRST to be removed</span>`;
+  } else if (mode === "pop") {
+    lines = `<span class="code-kw">let</span> <span class="code-fn">stack</span> = ${arr};
+<span class="code-hl-red"><span class="code-kw">let</span> removed = <span class="code-fn">stack</span>.<span class="code-fn">pop</span>();  <span class="code-dim">// → "${val.split(' ')[0]}" — removed from END</span></span>
+<span class="code-dim">// The LAST item pushed was the FIRST popped — that's LIFO!</span>`;
+  } else if (mode === "popEmpty") {
+    lines = `<span class="code-kw">let</span> <span class="code-fn">stack</span> = [];
+<span class="code-hl-red"><span class="code-kw">let</span> removed = <span class="code-fn">stack</span>.<span class="code-fn">pop</span>();  <span class="code-dim">// → undefined ⚠️ Nothing to remove!</span></span>
+<span class="code-dim">// Always check stack.length > 0 before popping</span>`;
+  } else if (mode === "clear") {
+    lines = `<span class="code-kw">let</span> <span class="code-fn">stack</span> = [];
+<span class="code-hl"><span class="code-fn">stack</span> = [];  <span class="code-dim">// Reset to empty!</span></span>
+<span class="code-dim">// All items removed — stack.length is now 0</span>`;
+  }
+  el.innerHTML = lines;
+}
+
+function windowResized() { resizeCanvas(windowWidth, windowHeight - 150); }
+</script>
+</body>
+</html>

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UNPLUG: Human Spreadsheet — Parallel Arrays</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;500;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f0f1a; color: #e0e0f0; font-family: 'Outfit', sans-serif; overflow: hidden; }
+  #top-bar { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: linear-gradient(90deg, #1a1a2e, #16213e); display: flex; align-items: center; padding: 0 24px; z-index: 10; border-bottom: 2px solid #f472b633; }
+  #top-bar h1 { font-size: 16px; font-weight: 700; color: #f472b6; letter-spacing: 1px; }
+  #top-bar .tag { background: #4ade8033; color: #4ade80; font-size: 11px; padding: 2px 10px; border-radius: 20px; margin-left: 16px; font-weight: 700; }
+  #code-panel { position: fixed; bottom: 0; left: 0; right: 0; height: 160px; background: #0d1117; border-top: 2px solid #f472b644; padding: 12px 24px; z-index: 10; font-family: 'JetBrains Mono', monospace; }
+  #code-panel .label { font-size: 11px; color: #f472b6; font-weight: 700; letter-spacing: 2px; margin-bottom: 6px; }
+  #code-lines { font-size: 13px; line-height: 1.6; white-space: pre; }
+  .code-dim { color: #4a4a6a; }
+  .code-kw { color: #e94560; }
+  .code-str { color: #4ade80; }
+  .code-num { color: #ffd93d; }
+  .code-fn { color: #00d9ff; }
+  .code-hl { background: #f472b615; display: inline; padding: 0 4px; border-left: 2px solid #f472b6; }
+  .code-hl-red { background: #e9456020; display: inline; padding: 0 4px; border-left: 2px solid #e94560; }
+  #controls { position: fixed; top: 56px; right: 16px; background: #16213e; border: 1px solid #f472b633; border-radius: 8px; padding: 14px 16px; z-index: 10; min-width: 220px; font-size: 12px; color: #b0b0c0; line-height: 1.8; }
+  #controls button { display: block; width: 100%; background: #0f3460; border: 1px solid #f472b622; color: #b0b0c0; padding: 7px 12px; border-radius: 5px; font-family: 'Outfit', sans-serif; font-size: 12px; cursor: pointer; margin-bottom: 4px; text-align: left; }
+  #controls button:hover { background: #f472b615; color: white; }
+  #controls button.danger { border-color: #e9456044; color: #e94560; }
+  #controls button.danger:hover { background: #e9456015; }
+  #controls kbd { background: #0d1117; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #f472b6; }
+</style>
+</head>
+<body>
+<div id="top-bar">
+  <h1>UNPLUG: HUMAN SPREADSHEET</h1>
+  <span class="tag">PARALLEL ARRAYS</span>
+</div>
+<div id="controls">
+  <strong style="color:#f472b6">Controls</strong><br>
+  <button onclick="pushPoint()">➕ Push a Point (click canvas too!)</button>
+  <button onclick="popPoint()">⬆ Pop (undo last)</button>
+  <button onclick="clearAll()">🗑 Clear All</button>
+  <button onclick="breakSync()" class="danger">⚠ Break Sync (remove from xs only)</button>
+  <button onclick="fixSync()" class="danger">🔧 Fix Sync</button>
+  <hr style="border-color:#2a2a4a;margin:8px 0">
+  <kbd>CLICK</kbd> canvas to add point<br>
+  <kbd>U</kbd> Undo &nbsp; <kbd>C</kbd> Clear
+</div>
+<div id="code-panel">
+  <div class="label">LIVE CODE — PARALLEL ARRAYS</div>
+  <div id="code-lines"></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<script>
+let xs = [], ys = [], cs = [], sizes = [];
+let broken = false;
+let lastAction = "idle";
+let selectedIdx = -1;
+let dotAnim = [];
+
+function setup() {
+  let c = createCanvas(windowWidth, windowHeight - 160);
+  c.position(0, 48);
+  colorMode(HSB, 360, 100, 100, 100);
+  textAlign(CENTER, CENTER);
+  updateCode("idle");
+}
+
+function draw() {
+  background(15, 15, 26);
+
+  // Draw the three column headers
+  let colW = min(200, width / 5);
+  let tableX = 20;
+  let tableY = 16;
+  let headerH = 28;
+  let rowH = 26;
+
+  // Column labels
+  let cols = [
+    { name: "xs[]", color: [0, 217, 255], data: xs },
+    { name: "ys[]", color: [74, 222, 128], data: ys },
+    { name: "cs[]", color: [244, 114, 182], data: cs },
+    { name: "sizes[]", color: [255, 217, 61], data: sizes }
+  ];
+
+  // Table background
+  noStroke();
+  fill(22, 33, 62, 80);
+  rect(tableX, tableY, colW * cols.length + 60, headerH + rowH * max(xs.length, 1) + 10, 8);
+
+  // Headers
+  for (let ci = 0; ci < cols.length; ci++) {
+    let cx = tableX + 40 + ci * colW;
+    fill(cols[ci].color[0], cols[ci].color[1], cols[ci].color[2]);
+    textFont("JetBrains Mono");
+    textSize(12);
+    textStyle(BOLD);
+    textAlign(CENTER, CENTER);
+    text(cols[ci].name, cx + colW/2, tableY + headerH/2);
+  }
+
+  // Index column
+  fill(100, 100, 150);
+  textSize(10);
+  textAlign(CENTER, CENTER);
+  text("idx", tableX + 18, tableY + headerH/2);
+
+  // Rows
+  let maxLen = max(xs.length, ys.length, cs.length, sizes.length);
+  for (let i = 0; i < maxLen; i++) {
+    let ry = tableY + headerH + 4 + i * rowH;
+    let isSelected = (i === selectedIdx);
+
+    // Row highlight
+    if (isSelected) {
+      noStroke();
+      fill(167, 139, 250, 15);
+      rect(tableX + 2, ry - 2, colW * cols.length + 56, rowH, 3);
+    }
+
+    // Index
+    fill(isSelected ? 255 : 120, isSelected ? 217 : 120, isSelected ? 61 : 150);
+    textFont("JetBrains Mono");
+    textSize(11);
+    textStyle(BOLD);
+    text(`[${i}]`, tableX + 18, ry + rowH/2 - 2);
+
+    // Values
+    for (let ci = 0; ci < cols.length; ci++) {
+      let cx = tableX + 40 + ci * colW;
+      let val = cols[ci].data[i];
+      let exists = i < cols[ci].data.length;
+
+      if (exists) {
+        fill(255, 255, 255, isSelected ? 100 : 70);
+        textStyle(NORMAL);
+        textSize(10);
+        let displayVal = (ci === 2) ? `hsl(${int(val)},...)` : (ci === 3) ? int(val) : int(val);
+        text(displayVal, cx + colW/2, ry + rowH/2 - 2);
+      } else if (broken && ci === 0 && i >= xs.length) {
+        // Show missing data
+        fill(233, 69, 96, 80);
+        textSize(10);
+        text("MISSING!", cx + colW/2, ry + rowH/2 - 2);
+      }
+    }
+  }
+
+  // Sync status
+  let synced = xs.length === ys.length && ys.length === cs.length && cs.length === sizes.length;
+  let statusY = tableY + headerH + 4 + maxLen * rowH + 8;
+  noStroke();
+  if (synced) {
+    fill(74, 222, 128, 60);
+    rect(tableX, statusY, colW * cols.length + 60, 22, 4);
+    fill(74, 222, 128);
+    textSize(10);
+    textStyle(BOLD);
+    text(`✓ IN SYNC — all arrays length = ${xs.length}`, tableX + (colW * cols.length + 60) / 2, statusY + 11);
+  } else {
+    fill(233, 69, 96, 60);
+    rect(tableX, statusY, colW * cols.length + 60, 22, 4);
+    fill(233, 69, 96);
+    textSize(10);
+    textStyle(BOLD);
+    text(`⚠ BROKEN! xs=${xs.length}, ys=${ys.length}, cs=${cs.length}, sizes=${sizes.length}`, tableX + (colW * cols.length + 60) / 2, statusY + 11);
+  }
+
+  // Canvas drawing area
+  let canvasX = tableX + colW * cols.length + 80;
+  let canvasW = width - canvasX - 240;
+  let canvasY = 16;
+  let canvasH = height - 40;
+
+  // Canvas border
+  stroke(40, 50, 80);
+  strokeWeight(1);
+  noFill();
+  rect(canvasX, canvasY, canvasW, canvasH, 6);
+
+  // Canvas label
+  noStroke();
+  fill(80, 80, 120);
+  textFont("Outfit");
+  textSize(10);
+  textStyle(NORMAL);
+  text("CANVAS — click to add points", canvasX + canvasW/2, canvasY + canvasH - 10);
+
+  // Draw dots (use the minimum length to avoid out-of-bounds)
+  let drawLen = min(xs.length, ys.length, cs.length, sizes.length);
+  for (let i = 0; i < drawLen; i++) {
+    // Map coords to canvas area
+    let dotX = map(xs[i], 0, width, canvasX, canvasX + canvasW);
+    let dotY = map(ys[i], 0, height, canvasY, canvasY + canvasH);
+    let s = sizes[i];
+    let h = cs[i];
+    let isSelected = (i === selectedIdx);
+
+    // Glow if selected
+    if (isSelected) {
+      noStroke();
+      fill(h, 80, 100, 20);
+      ellipse(dotX, dotY, s + 20, s + 20);
+    }
+
+    noStroke();
+    fill(h, 80, 90, 80);
+    ellipse(dotX, dotY, s, s);
+
+    // Index label
+    if (isSelected || drawLen <= 12) {
+      fill(0, 0, 100, 80);
+      textFont("JetBrains Mono");
+      textSize(9);
+      text(i, dotX, dotY);
+    }
+  }
+
+  // Show broken dots (if xs shorter than others)
+  if (broken && ys.length > xs.length) {
+    for (let i = xs.length; i < ys.length; i++) {
+      let dotX = map(0, 0, width, canvasX, canvasX + canvasW);
+      let dotY = map(ys[i], 0, height, canvasY, canvasY + canvasH);
+      stroke(233, 69, 96, 60);
+      strokeWeight(2);
+      noFill();
+      ellipse(dotX, dotY, sizes[i], sizes[i]);
+      fill(233, 69, 96, 80);
+      noStroke();
+      textSize(8);
+      text("?", dotX, dotY);
+    }
+  }
+
+  // Dot animations
+  for (let i = dotAnim.length - 1; i >= 0; i--) {
+    let da = dotAnim[i];
+    da.size += 2;
+    da.alpha -= 4;
+    if (da.alpha > 0) {
+      let dx = map(da.x, 0, width, canvasX, canvasX + canvasW);
+      let dy = map(da.y, 0, height, canvasY, canvasY + canvasH);
+      noFill();
+      stroke(da.hue, 80, 100, da.alpha);
+      strokeWeight(2);
+      ellipse(dx, dy, da.size, da.size);
+    } else {
+      dotAnim.splice(i, 1);
+    }
+  }
+
+  // Count display
+  fill(0, 0, 14, 85);
+  noStroke();
+  rect(canvasX, canvasY, 130, 28, 0, 0, 6, 0);
+  fill(0, 0, 100);
+  textFont("JetBrains Mono");
+  textSize(11);
+  textStyle(BOLD);
+  textAlign(LEFT, CENTER);
+  text(`Points: ${drawLen}`, canvasX + 8, canvasY + 14);
+  textAlign(CENTER, CENTER);
+}
+
+function mousePressed() {
+  let colW = min(200, width / 5);
+  let canvasX = 20 + colW * 4 + 80;
+  let canvasW = width - canvasX - 240;
+  let canvasY = 16;
+  let canvasH = height - 160 - 40;
+  let mx = mouseX, my = mouseY - 48;
+
+  // Click on canvas
+  if (mx > canvasX && mx < canvasX + canvasW && my > canvasY && my < canvasY + canvasH) {
+    let px = map(mx, canvasX, canvasX + canvasW, 0, width);
+    let py = map(my, canvasY, canvasY + canvasH, 0, height);
+    addPoint(px, py);
+    return;
+  }
+
+  // Click on table row
+  let tableX = 20;
+  let headerH = 28;
+  let rowH = 26;
+  let tableY = 16;
+  for (let i = 0; i < xs.length; i++) {
+    let ry = tableY + headerH + 4 + i * rowH;
+    if (my > ry && my < ry + rowH && mx > tableX && mx < tableX + colW * 4 + 60) {
+      selectedIdx = (selectedIdx === i) ? -1 : i;
+      updateCode("select");
+      return;
+    }
+  }
+  selectedIdx = -1;
+}
+
+function addPoint(px, py) {
+  let h = random(360);
+  let s = random(15, 40);
+  xs.push(px);
+  ys.push(py);
+  cs.push(h);
+  sizes.push(s);
+  selectedIdx = xs.length - 1;
+  broken = false;
+  dotAnim.push({ x: px, y: py, hue: h, size: s, alpha: 80 });
+  updateCode("push");
+}
+
+function pushPoint() {
+  addPoint(random(100, width - 100), random(100, height - 200));
+}
+
+function popPoint() {
+  if (xs.length > 0) {
+    let rx = xs.pop(), ry = ys.pop(), rc = cs.pop(), rs = sizes.pop();
+    selectedIdx = -1;
+    broken = false;
+    updateCode("pop");
+  }
+}
+
+function clearAll() {
+  xs = []; ys = []; cs = []; sizes = [];
+  selectedIdx = -1;
+  broken = false;
+  updateCode("clear");
+}
+
+function breakSync() {
+  if (xs.length > 0) {
+    xs.pop();
+    broken = true;
+    updateCode("broken");
+  }
+}
+
+function fixSync() {
+  // Trim all to shortest
+  let minLen = min(xs.length, ys.length, cs.length, sizes.length);
+  xs.length = minLen;
+  ys.length = minLen;
+  cs.length = minLen;
+  sizes.length = minLen;
+  broken = false;
+  updateCode("fixed");
+}
+
+function keyPressed() {
+  if (key === 'u' || key === 'U') popPoint();
+  else if (key === 'c' || key === 'C') clearAll();
+}
+
+function updateCode(mode) {
+  let el = document.getElementById("code-lines");
+  let xArr = xs.length === 0 ? "[]" : `[${xs.map(v=>int(v)).join(", ")}]`;
+  let yArr = ys.length === 0 ? "[]" : `[${ys.map(v=>int(v)).join(", ")}]`;
+
+  let lines = "";
+  if (mode === "idle" || mode === "select") {
+    lines = `<span class="code-kw">let</span> <span class="code-fn">xs</span> = ${xArr};  <span class="code-dim">// x positions</span>
+<span class="code-kw">let</span> <span class="code-fn">ys</span> = ${yArr};  <span class="code-dim">// y positions</span>
+<span class="code-kw">let</span> <span class="code-fn">cs</span> = [<span class="code-dim">...hues...</span>];  <span class="code-kw">let</span> <span class="code-fn">sizes</span> = [<span class="code-dim">...sizes...</span>];
+<span class="code-dim">// Same index = same point: xs[i], ys[i], cs[i], sizes[i] describe ONE dot</span>`;
+    if (mode === "select" && selectedIdx >= 0 && selectedIdx < xs.length) {
+      lines += `\n<span class="code-hl"><span class="code-dim">// Point ${selectedIdx}: x=${int(xs[selectedIdx])}, y=${int(ys[selectedIdx])}, hue=${int(cs[selectedIdx])}, size=${int(sizes[selectedIdx])}</span></span>`;
+    }
+  } else if (mode === "push") {
+    let i = xs.length - 1;
+    lines = `<span class="code-hl"><span class="code-fn">xs</span>.<span class="code-fn">push</span>(<span class="code-num">${int(xs[i])}</span>);  <span class="code-fn">ys</span>.<span class="code-fn">push</span>(<span class="code-num">${int(ys[i])}</span>);  <span class="code-fn">cs</span>.<span class="code-fn">push</span>(<span class="code-num">${int(cs[i])}</span>);  <span class="code-fn">sizes</span>.<span class="code-fn">push</span>(<span class="code-num">${int(sizes[i])}</span>);</span>
+<span class="code-dim">// Push to ALL arrays → new point at index ${i}</span>
+<span class="code-dim">// Golden Rule: What you do to ONE parallel array, you do to ALL of them!</span>
+<span class="code-dim">// All arrays now have length = ${xs.length}</span>`;
+  } else if (mode === "pop") {
+    lines = `<span class="code-hl"><span class="code-fn">xs</span>.<span class="code-fn">pop</span>();  <span class="code-fn">ys</span>.<span class="code-fn">pop</span>();  <span class="code-fn">cs</span>.<span class="code-fn">pop</span>();  <span class="code-fn">sizes</span>.<span class="code-fn">pop</span>();</span>
+<span class="code-dim">// Pop from ALL arrays → last point removed</span>
+<span class="code-dim">// All arrays now have length = ${xs.length}</span>`;
+  } else if (mode === "clear") {
+    lines = `<span class="code-fn">xs</span> = [];  <span class="code-fn">ys</span> = [];  <span class="code-fn">cs</span> = [];  <span class="code-fn">sizes</span> = [];
+<span class="code-dim">// Reset ALL arrays to empty</span>`;
+  } else if (mode === "broken") {
+    lines = `<span class="code-hl-red">⚠ xs.<span class="code-fn">pop</span>() was called WITHOUT popping from ys, cs, sizes!</span>
+<span class="code-dim">// xs.length = ${xs.length}, but ys.length = ${ys.length} — DATA IS BROKEN!</span>
+<span class="code-dim">// The last point has y, color, size but NO x position → it draws at x=0</span>
+<span class="code-dim">// This is why parallel arrays must ALWAYS stay in sync.</span>`;
+  } else if (mode === "fixed") {
+    lines = `<span class="code-dim">// Trimmed all arrays to shortest length = ${xs.length}</span>
+<span class="code-fn">xs</span>.length = <span class="code-num">${xs.length}</span>;  <span class="code-fn">ys</span>.length = <span class="code-num">${ys.length}</span>;  <span class="code-fn">cs</span>.length = <span class="code-num">${cs.length}</span>;  <span class="code-fn">sizes</span>.length = <span class="code-num">${sizes.length}</span>;
+<span class="code-dim">// ✓ Back in sync! All arrays have the same length again.</span>`;
+  }
+  el.innerHTML = lines;
+}
+
+function windowResized() { resizeCanvas(windowWidth, windowHeight - 160); }
+</script>
+</body>
+</html>

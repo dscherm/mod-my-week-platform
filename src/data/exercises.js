@@ -5,6 +5,22 @@ export const exercises = {
   week1: {
     title: "Arrays Basics",
     bigIdea: "Arrays store collections of values that we can access by index.",
+    visualizations: [
+      {
+        id: "viz-locker-row",
+        title: "The Locker Row",
+        description: "Interactive array visualization: access by index, push, pop, and length",
+        file: "/visualizations/viz_01_locker_row.html",
+        icon: "🗃️"
+      },
+      {
+        id: "viz-push-pop",
+        title: "Cafeteria Tray Stack",
+        description: "Visualize push and pop operations with LIFO (Last In, First Out)",
+        file: "/visualizations/viz_02_push_pop.html",
+        icon: "📚"
+      }
+    ],
     days: [
       {
         day: 1,
@@ -844,6 +860,15 @@ function keyPressed() {
   week2: {
     title: "Loops Basics",
     bigIdea: "Loops repeat instructions efficiently.",
+    visualizations: [
+      {
+        id: "viz-human-loop",
+        title: "The Human Loop",
+        description: "Interactive for-loop visualization: see how start, stop, and step control iteration",
+        file: "/visualizations/viz_03_human_loop.html",
+        icon: "🔄"
+      }
+    ],
     days: [
       {
         day: 6,
@@ -1657,6 +1682,15 @@ function keyPressed() {
   week3: {
     title: "Traversing Arrays",
     bigIdea: "Loops + arrays = traversal. Read and update every element.",
+    visualizations: [
+      {
+        id: "viz-traversal",
+        title: "The Inspection Line",
+        description: "Interactive traversal patterns: read all, update all, filter, count, and sum",
+        file: "/visualizations/viz_04_traversal.html",
+        icon: "🔍"
+      }
+    ],
     days: [
       {
         day: 11,
@@ -2890,6 +2924,22 @@ function applyGray() {
   week4: {
     title: "Filtering and 2D Arrays",
     bigIdea: "Traversal can filter, transform, and work with grids.",
+    visualizations: [
+      {
+        id: "viz-2d-grid",
+        title: "The Human Grid",
+        description: "Interactive 2D array and nested loop visualization: see row-by-row traversal",
+        file: "/visualizations/viz_05_2d_grid.html",
+        icon: "🎮"
+      },
+      {
+        id: "viz-parallel-arrays",
+        title: "Human Spreadsheet",
+        description: "Visualize parallel arrays: keep multiple arrays in sync with the same index",
+        file: "/visualizations/viz_06_parallel_arrays.html",
+        icon: "📊"
+      }
+    ],
     days: [
       {
         day: 16,

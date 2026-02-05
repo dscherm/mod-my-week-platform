@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UNPLUG: The Human Grid — 2D Arrays & Nested Loops</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;500;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f0f1a; color: #e0e0f0; font-family: 'Outfit', sans-serif; overflow: hidden; }
+  #top-bar { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: linear-gradient(90deg, #1a1a2e, #16213e); display: flex; align-items: center; padding: 0 24px; z-index: 10; border-bottom: 2px solid #a78bfa33; }
+  #top-bar h1 { font-size: 16px; font-weight: 700; color: #a78bfa; letter-spacing: 1px; }
+  #top-bar .tag { background: #e9456033; color: #e94560; font-size: 11px; padding: 2px 10px; border-radius: 20px; margin-left: 16px; font-weight: 700; }
+  #code-panel { position: fixed; bottom: 0; left: 0; right: 0; height: 200px; background: #0d1117; border-top: 2px solid #a78bfa44; padding: 12px 24px; z-index: 10; font-family: 'JetBrains Mono', monospace; }
+  #code-panel .label { font-size: 11px; color: #a78bfa; font-weight: 700; letter-spacing: 2px; margin-bottom: 6px; }
+  #code-lines { font-size: 13px; line-height: 1.55; white-space: pre; }
+  .code-dim { color: #4a4a6a; }
+  .code-kw { color: #e94560; }
+  .code-num { color: #ffd93d; }
+  .code-fn { color: #00d9ff; }
+  .code-hl { background: #a78bfa15; display: inline; padding: 0 4px; border-left: 2px solid #a78bfa; }
+  .code-hl-row { background: #00d9ff15; display: inline; padding: 0 4px; border-left: 2px solid #00d9ff; }
+  #controls { position: fixed; top: 56px; right: 16px; background: #16213e; border: 1px solid #a78bfa33; border-radius: 8px; padding: 14px 16px; z-index: 10; min-width: 220px; font-size: 12px; color: #b0b0c0; line-height: 1.8; }
+  #controls button { display: block; width: 100%; background: #0f3460; border: 1px solid #a78bfa22; color: #b0b0c0; padding: 7px 12px; border-radius: 5px; font-family: 'Outfit', sans-serif; font-size: 12px; cursor: pointer; margin-bottom: 4px; text-align: left; }
+  #controls button:hover { background: #a78bfa15; color: white; }
+  #controls kbd { background: #0d1117; padding: 1px 5px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #a78bfa; border: 1px solid #a78bfa33; }
+</style>
+</head>
+<body>
+<div id="top-bar">
+  <h1>UNPLUG: THE HUMAN GRID</h1>
+  <span class="tag">2D ARRAYS · NESTED LOOPS</span>
+</div>
+<div id="controls">
+  <strong style="color:#a78bfa">Controls</strong><br>
+  <button onclick="runNestedLoop()">▶ Run Nested Loop</button>
+  <button onclick="stepOnce()">⏭ Step to Next Cell</button>
+  <button onclick="resetGrid()">↻ Reset</button>
+  <button onclick="randomizeGrid()">🎲 Randomize Grid</button>
+  <hr style="border-color:#2a2a4a;margin:8px 0">
+  Click any cell to query <kbd>grid[r][c]</kbd><br>
+  <kbd>SPACE</kbd> Run &nbsp; <kbd>S</kbd> Step<br>
+  <kbd>R</kbd> Reset &nbsp; <kbd>G</kbd> Randomize
+</div>
+<div id="code-panel">
+  <div class="label">LIVE CODE — NESTED LOOP</div>
+  <div id="code-lines"></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<script>
+const ROWS = 6, COLS = 8;
+const CELL_TYPES = {
+  0: { label: "floor", color: [200, 210, 230], emoji: "" },
+  1: { label: "wall",  color: [50, 40, 60],    emoji: "🧱" },
+  2: { label: "goal",  color: [74, 222, 128],   emoji: "⭐" },
+  3: { label: "coin",  color: [255, 217, 61],   emoji: "🪙" },
+};
+
+let grid = [];
+let curR = -1, curC = -1;
+let visitOrder = 0;
+let visited = [];
+let running = false;
+let timer = 0;
+let speed = 12;
+let phase = "idle";
+let hoverR = -1, hoverC = -1;
+let queryR = -1, queryC = -1;
+
+function setup() {
+  let c = createCanvas(windowWidth, windowHeight - 200);
+  c.position(0, 48);
+  textAlign(CENTER, CENTER);
+  initGrid();
+  updateCode();
+}
+
+function initGrid() {
+  grid = [];
+  visited = [];
+  for (let r = 0; r < ROWS; r++) {
+    grid[r] = [];
+    visited[r] = [];
+    for (let c = 0; c < COLS; c++) {
+      let v = 0;
+      let rnd = random();
+      if (rnd < 0.2) v = 1;
+      else if (rnd < 0.25) v = 3;
+      grid[r][c] = v;
+      visited[r][c] = 0;
+    }
+  }
+  // Place goal
+  grid[ROWS-1][COLS-1] = 2;
+  grid[0][0] = 0; // ensure start is floor
+}
+
+function randomizeGrid() {
+  initGrid();
+  resetGrid();
+}
+
+function resetGrid() {
+  curR = -1; curC = -1;
+  running = false;
+  phase = "idle";
+  visitOrder = 0;
+  queryR = -1; queryC = -1;
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      visited[r][c] = 0;
+  updateCode();
+}
+
+function runNestedLoop() {
+  resetGrid();
+  running = true;
+  phase = "running";
+  curR = 0; curC = 0;
+  visitOrder = 1;
+  visited[0][0] = visitOrder;
+  timer = 0;
+  updateCode();
+}
+
+function stepOnce() {
+  if (phase === "idle") {
+    phase = "stepping";
+    curR = 0; curC = 0;
+    visitOrder = 1;
+    visited[0][0] = visitOrder;
+    updateCode();
+    return;
+  }
+  if (phase === "stepping" || phase === "running") {
+    running = false;
+    phase = "stepping";
+    advanceCell();
+  }
+}
+
+function advanceCell() {
+  // Move to next cell
+  curC++;
+  if (curC >= COLS) {
+    curC = 0;
+    curR++;
+  }
+  if (curR >= ROWS) {
+    phase = "done";
+    curR = -1; curC = -1;
+  } else {
+    visitOrder++;
+    visited[curR][curC] = visitOrder;
+  }
+  updateCode();
+}
+
+function draw() {
+  background(15, 15, 26);
+
+  if (running && phase === "running") {
+    timer++;
+    if (timer >= speed) {
+      timer = 0;
+      advanceCell();
+      if (phase === "done") running = false;
+    }
+  }
+
+  // Grid dimensions
+  let cellSize = min(70, (width - 320) / COLS, (height - 100) / ROWS);
+  let gridW = COLS * cellSize;
+  let gridH = ROWS * cellSize;
+  let offsetX = (width - 200) / 2 - gridW / 2 + 40;
+  let offsetY = 70;
+
+  // Row/Col headers
+  textFont("JetBrains Mono");
+  textSize(11);
+  for (let c = 0; c < COLS; c++) {
+    let x = offsetX + c * cellSize + cellSize / 2;
+    fill(0, 217, 255, (curC === c && curR >= 0) ? 255 : 80);
+    text(`c=${c}`, x, offsetY - 12);
+  }
+  for (let r = 0; r < ROWS; r++) {
+    let y = offsetY + r * cellSize + cellSize / 2;
+    fill(167, 139, 250, (curR === r) ? 255 : 80);
+    textAlign(RIGHT, CENTER);
+    text(`r=${r}`, offsetX - 10, y);
+  }
+  textAlign(CENTER, CENTER);
+
+  // Detect hover
+  hoverR = -1; hoverC = -1;
+  let mx = mouseX, my = mouseY - 48;
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      let x = offsetX + c * cellSize;
+      let y = offsetY + r * cellSize;
+      if (mx > x && mx < x + cellSize && my > y && my < y + cellSize) {
+        hoverR = r; hoverC = c;
+      }
+    }
+  }
+
+  // Draw cells
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      let x = offsetX + c * cellSize;
+      let y = offsetY + r * cellSize;
+      let v = grid[r][c];
+      let ct = CELL_TYPES[v];
+      let isActive = (r === curR && c === curC);
+      let isHover = (r === hoverR && c === hoverC);
+      let isQuery = (r === queryR && c === queryC);
+      let vis = visited[r][c];
+
+      // Cell background
+      noStroke();
+      if (isActive) {
+        fill(167, 139, 250, 80);
+      } else if (vis > 0) {
+        fill(ct.color[0], ct.color[1], ct.color[2], 180);
+      } else {
+        fill(ct.color[0], ct.color[1], ct.color[2], 100);
+      }
+      rect(x + 1, y + 1, cellSize - 2, cellSize - 2, 4);
+
+      // Active highlight border
+      if (isActive) {
+        stroke(167, 139, 250);
+        strokeWeight(3);
+        noFill();
+        rect(x + 1, y + 1, cellSize - 2, cellSize - 2, 4);
+      } else if (isQuery) {
+        stroke(255, 217, 61);
+        strokeWeight(2);
+        noFill();
+        rect(x + 1, y + 1, cellSize - 2, cellSize - 2, 4);
+      } else if (isHover) {
+        stroke(100, 100, 150);
+        strokeWeight(1);
+        noFill();
+        rect(x + 1, y + 1, cellSize - 2, cellSize - 2, 4);
+      }
+
+      // Content
+      noStroke();
+      let cx = x + cellSize / 2;
+      let cy = y + cellSize / 2;
+
+      if (ct.emoji && cellSize > 30) {
+        textSize(cellSize * 0.4);
+        text(ct.emoji, cx, cy - 4);
+        fill(255, 255, 255, 150);
+        textSize(10);
+        text(v, cx, cy + cellSize * 0.3);
+      } else {
+        fill(v === 0 ? color(180,190,210) : color(255,255,255));
+        textSize(16);
+        textStyle(BOLD);
+        text(v, cx, cy);
+      }
+
+      // Visit order number
+      if (vis > 0 && phase !== "idle") {
+        fill(167, 139, 250, 180);
+        textSize(9);
+        textStyle(NORMAL);
+        textAlign(LEFT, TOP);
+        text(vis, x + 4, y + 3);
+        textAlign(CENTER, CENTER);
+      }
+    }
+  }
+
+  // Active cell callout
+  if (curR >= 0 && curC >= 0 && curR < ROWS && curC < COLS) {
+    let ax = offsetX + curC * cellSize + cellSize / 2;
+    let ay = offsetY + curR * cellSize;
+    // Arrow and label above
+    fill(167, 139, 250);
+    textFont("JetBrains Mono");
+    textSize(13);
+    textStyle(BOLD);
+    let label = `grid[${curR}][${curC}] = ${grid[curR][curC]}`;
+    let tw = textWidth(label) + 20;
+    noStroke();
+    fill(22, 33, 62, 240);
+    rect(ax - tw/2, ay - 36, tw, 24, 6);
+    fill(167, 139, 250);
+    text(label, ax, ay - 24);
+  }
+
+  // Query callout
+  if (queryR >= 0 && queryC >= 0 && phase === "idle") {
+    let qx = offsetX + queryC * cellSize + cellSize / 2;
+    let qy = offsetY + queryR * cellSize + cellSize + 10;
+    fill(22, 33, 62, 240);
+    let ql = `grid[${queryR}][${queryC}] → ${grid[queryR][queryC]} (${CELL_TYPES[grid[queryR][queryC]].label})`;
+    let qw = 200;
+    noStroke();
+    rect(qx - qw/2, qy, qw, 28, 6);
+    fill(255, 217, 61);
+    textFont("JetBrains Mono");
+    textSize(12);
+    text(ql, qx, qy + 14);
+  }
+
+  // Legend
+  let legX = offsetX + gridW + 30;
+  let legY = offsetY;
+  noStroke();
+  fill(22, 33, 62);
+  rect(legX, legY, 120, 130, 8);
+  fill(167, 139, 250);
+  textFont("Outfit");
+  textSize(11);
+  textStyle(BOLD);
+  textAlign(LEFT, CENTER);
+  text("LEGEND", legX + 10, legY + 14);
+  for (let v = 0; v <= 3; v++) {
+    let ly = legY + 32 + v * 24;
+    let ct = CELL_TYPES[v];
+    fill(ct.color[0], ct.color[1], ct.color[2]);
+    rect(legX + 10, ly - 8, 18, 18, 3);
+    fill(180, 180, 200);
+    textFont("Outfit");
+    textSize(11);
+    textStyle(NORMAL);
+    text(`${v} = ${ct.label}`, legX + 34, ly + 1);
+  }
+  textAlign(CENTER, CENTER);
+
+  // Execution order info
+  if (phase !== "idle") {
+    let infoX = offsetX;
+    let infoY = offsetY + gridH + 20;
+    fill(22, 33, 62, 200);
+    noStroke();
+    rect(infoX, infoY, gridW, 40, 6);
+    fill(167, 139, 250);
+    textFont("JetBrains Mono");
+    textSize(12);
+    textStyle(BOLD);
+    if (phase === "done") {
+      text(`✓ Visited all ${ROWS * COLS} cells! Row by row, left to right.`, infoX + gridW/2, infoY + 20);
+    } else {
+      text(`Cell ${visitOrder} of ${ROWS * COLS} | Row ${curR}, Col ${curC} | Reading left → right, top → bottom`, infoX + gridW/2, infoY + 20);
+    }
+  }
+
+  // Row highlight bar
+  if (curR >= 0 && curR < ROWS) {
+    noFill();
+    stroke(0, 217, 255, 40);
+    strokeWeight(2);
+    rect(offsetX - 4, offsetY + curR * cellSize - 2, gridW + 8, cellSize + 4, 4);
+  }
+}
+
+function mousePressed() {
+  let cellSize = min(70, (width - 320) / COLS, (height - 100) / ROWS);
+  let gridW = COLS * cellSize;
+  let offsetX = (width - 200) / 2 - gridW / 2 + 40;
+  let offsetY = 70;
+  let mx = mouseX, my = mouseY - 48;
+
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      let x = offsetX + c * cellSize;
+      let y = offsetY + r * cellSize;
+      if (mx > x && mx < x + cellSize && my > y && my < y + cellSize) {
+        queryR = r; queryC = c;
+        // Toggle cell value on click
+        if (phase === "idle") {
+          grid[r][c] = (grid[r][c] + 1) % 4;
+        }
+        updateCode();
+        return;
+      }
+    }
+  }
+  queryR = -1; queryC = -1;
+  updateCode();
+}
+
+function keyPressed() {
+  if (key === ' ') runNestedLoop();
+  else if (key === 's' || key === 'S') stepOnce();
+  else if (key === 'r' || key === 'R') resetGrid();
+  else if (key === 'g' || key === 'G') randomizeGrid();
+}
+
+function updateCode() {
+  let el = document.getElementById("code-lines");
+  let lines = "";
+
+  if (phase === "idle") {
+    if (queryR >= 0 && queryC >= 0) {
+      lines = `<span class="code-kw">let</span> grid = [[...], [...], ...];  <span class="code-dim">// ${ROWS}×${COLS} grid</span>
+<span class="code-hl">grid[<span class="code-num">${queryR}</span>][<span class="code-num">${queryC}</span>]  <span class="code-dim">// → ${grid[queryR][queryC]} (${CELL_TYPES[grid[queryR][queryC]].label})</span></span>
+<span class="code-dim">// grid[ROW][COLUMN] — row first, then column</span>
+<span class="code-dim">// Click cells to cycle: 0=floor, 1=wall, 2=goal, 3=coin</span>`;
+    } else {
+      lines = `<span class="code-kw">let</span> grid = [[...], [...], ...];  <span class="code-dim">// ${ROWS}×${COLS} grid</span>
+
+<span class="code-kw">for</span> (<span class="code-kw">let</span> r = <span class="code-num">0</span>; r < <span class="code-num">${ROWS}</span>; r++) {        <span class="code-dim">// ← OUTER loop: each ROW</span>
+  <span class="code-kw">for</span> (<span class="code-kw">let</span> c = <span class="code-num">0</span>; c < <span class="code-num">${COLS}</span>; c++) {      <span class="code-dim">// ← INNER loop: each COLUMN</span>
+    <span class="code-dim">// Process grid[r][c]</span>
+  }
+}  <span class="code-dim">// Press SPACE to run, S to step</span>`;
+    }
+  } else if (phase === "running" || phase === "stepping") {
+    let v = grid[curR][curC];
+    let typeLabel = CELL_TYPES[v].label;
+    lines = `<span class="code-kw">for</span> (<span class="code-kw">let</span> r = <span class="code-num">0</span>; r < <span class="code-num">${ROWS}</span>; r++) {
+  <span class="code-hl-row"><span class="code-dim">// r = ${curR} — processing row ${curR}</span></span>
+  <span class="code-kw">for</span> (<span class="code-kw">let</span> c = <span class="code-num">0</span>; c < <span class="code-num">${COLS}</span>; c++) {
+    <span class="code-hl">grid[<span class="code-num">${curR}</span>][<span class="code-num">${curC}</span>] → <span class="code-num">${v}</span> (${typeLabel})  <span class="code-dim">// Cell #${visitOrder} of ${ROWS*COLS}</span></span>
+  }
+}`;
+  } else if (phase === "done") {
+    lines = `<span class="code-kw">for</span> (<span class="code-kw">let</span> r = <span class="code-num">0</span>; r < <span class="code-num">${ROWS}</span>; r++) {        <span class="code-dim">// Rows: 0, 1, 2, 3, 4, 5</span>
+  <span class="code-kw">for</span> (<span class="code-kw">let</span> c = <span class="code-num">0</span>; c < <span class="code-num">${COLS}</span>; c++) {      <span class="code-dim">// Cols: 0, 1, 2, 3, 4, 5, 6, 7</span>
+    <span class="code-dim">// Process grid[r][c]</span>
+  }
+}
+<span class="code-fn">// ✓ Visited all ${ROWS * COLS} cells! Outer loop ran ${ROWS}× → inner loop ran ${COLS}× each = ${ROWS*COLS} total</span>`;
+  }
+  el.innerHTML = lines;
+}
+
+function windowResized() { resizeCanvas(windowWidth, windowHeight - 200); }
+</script>
+</body>
+</html>

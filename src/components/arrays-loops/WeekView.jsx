@@ -7,6 +7,11 @@ function WeekView({ weekKey, onSelectExercise, onBack, completedExercises }) {
   const isPixelWeek = weekKey === 'pixelWeek';
   const weekNum = isPixelWeek ? '★' : weekKey.replace('week', '');
   const objectives = learningObjectives[weekKey] || [];
+  const visualizations = week.visualizations || [];
+
+  const openVisualization = (vizFile) => {
+    window.open(vizFile, '_blank', 'width=1200,height=800');
+  };
 
   const getDifficultyClass = (difficulty) => {
     return `difficulty difficulty-${difficulty.toLowerCase()}`;
@@ -36,6 +41,31 @@ function WeekView({ weekKey, onSelectExercise, onBack, completedExercises }) {
           ))}
         </ul>
       </div>
+
+      {visualizations.length > 0 && (
+        <div className="visualizations-section">
+          <h3>🎬 Interactive Visualizations</h3>
+          <p className="visualizations-intro">
+            Explore these interactive demos to see how the concepts work before diving into the exercises.
+          </p>
+          <div className="visualizations-grid">
+            {visualizations.map((viz) => (
+              <div
+                key={viz.id}
+                className="visualization-card"
+                onClick={() => openVisualization(viz.file)}
+              >
+                <span className="viz-icon">{viz.icon}</span>
+                <div className="viz-content">
+                  <h4>{viz.title}</h4>
+                  <p>{viz.description}</p>
+                </div>
+                <span className="viz-open-icon">↗</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="days-list">
         {week.days.map((day) => (

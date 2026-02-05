@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UNPLUG: The Human Loop — For Loops</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;500;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f0f1a; color: #e0e0f0; font-family: 'Outfit', sans-serif; overflow: hidden; }
+  #top-bar { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: linear-gradient(90deg, #1a1a2e, #16213e); display: flex; align-items: center; padding: 0 24px; z-index: 10; border-bottom: 2px solid #ffd93d33; }
+  #top-bar h1 { font-size: 16px; font-weight: 700; color: #ffd93d; letter-spacing: 1px; }
+  #top-bar .tag { background: #00d9ff33; color: #00d9ff; font-size: 11px; padding: 2px 10px; border-radius: 20px; margin-left: 16px; font-weight: 700; }
+  #code-panel { position: fixed; bottom: 0; left: 0; right: 0; height: 170px; background: #0d1117; border-top: 2px solid #ffd93d44; padding: 12px 24px; z-index: 10; font-family: 'JetBrains Mono', monospace; }
+  #code-panel .label { font-size: 11px; color: #ffd93d; font-weight: 700; letter-spacing: 2px; margin-bottom: 6px; }
+  #code-lines { font-size: 14px; line-height: 1.7; white-space: pre; }
+  .code-dim { color: #4a4a6a; }
+  .code-kw { color: #e94560; }
+  .code-str { color: #4ade80; }
+  .code-num { color: #ffd93d; }
+  .code-fn { color: #00d9ff; }
+  .code-hl { background: #ffd93d15; display: inline; padding: 0 4px; border-left: 2px solid #ffd93d; }
+  #controls { position: fixed; top: 56px; right: 16px; background: #16213e; border: 1px solid #ffd93d33; border-radius: 8px; padding: 14px 16px; font-size: 12px; color: #b0b0c0; line-height: 2; z-index: 10; min-width: 240px; }
+  #controls label { color: #ffd93d; font-weight: 700; font-size: 11px; letter-spacing: 1px; }
+  #controls input[type=range] { width: 100%; accent-color: #ffd93d; }
+  #controls .val { color: #00d9ff; font-family: 'JetBrains Mono', monospace; font-size: 13px; float: right; }
+  #controls button { background: #0f3460; border: 1px solid #00d9ff44; color: #00d9ff; padding: 6px 14px; border-radius: 4px; font-family: 'Outfit', sans-serif; font-size: 12px; cursor: pointer; margin: 4px 4px 0 0; }
+  #controls button:hover { background: #00d9ff22; }
+  #controls button.active { background: #00d9ff33; border-color: #00d9ff; }
+</style>
+</head>
+<body>
+<div id="top-bar">
+  <h1>UNPLUG: THE HUMAN LOOP</h1>
+  <span class="tag">FOR LOOPS</span>
+</div>
+<div id="controls">
+  <label>START (let i = ?) <span class="val" id="startVal">0</span></label>
+  <input type="range" id="startSlider" min="0" max="9" value="0" oninput="updateParams()"><br>
+  <label>STOP (i < ?) <span class="val" id="stopVal">10</span></label>
+  <input type="range" id="stopSlider" min="1" max="10" value="10" oninput="updateParams()"><br>
+  <label>STEP (i += ?) <span class="val" id="stepVal">1</span></label>
+  <input type="range" id="stepSlider" min="1" max="3" value="1" oninput="updateParams()"><br>
+  <button onclick="startLoop()" id="btnRun">▶ Run Loop</button>
+  <button onclick="stepOnce()" id="btnStep">⏭ Step</button>
+  <button onclick="resetLoop()">↻ Reset</button>
+  <button onclick="toggleSpeed()" id="btnSpeed">🐢 Slow</button>
+</div>
+<div id="code-panel">
+  <div class="label">LIVE CODE</div>
+  <div id="code-lines"></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<script>
+const N = 10;
+const COLORS = ["#e94560","#ff9f43","#ffd93d","#4ade80","#00d9ff","#a78bfa","#f472b6","#38bdf8","#fb923c","#34d399"];
+
+let loopStart = 0, loopStop = 10, loopStep = 1;
+let currentI = -1;
+let running = false;
+let stepping = false;
+let timer = 0;
+let speed = 60; // frames per step
+let people = [];
+let iterationCount = 0;
+let history = []; // track which indices were visited
+let phase = "idle"; // idle, running, stepping, done
+let jumpPhase = 0; // 0=standing, 1=jumping up, 2=coming down
+let jumpTarget = -1;
+
+function setup() {
+  let c = createCanvas(windowWidth, windowHeight - 170);
+  c.position(0, 48);
+  textAlign(CENTER, CENTER);
+  for (let i = 0; i < N; i++) {
+    people.push({ bob: random(1000), jumpY: 0, state: "waiting", opacity: 255 });
+  }
+  updateCode();
+}
+
+function updateParams() {
+  loopStart = int(document.getElementById("startSlider").value);
+  loopStop = int(document.getElementById("stopSlider").value);
+  loopStep = int(document.getElementById("stepSlider").value);
+  document.getElementById("startVal").textContent = loopStart;
+  document.getElementById("stopVal").textContent = loopStop;
+  document.getElementById("stepVal").textContent = loopStep;
+  resetLoop();
+}
+
+function startLoop() {
+  resetLoop();
+  running = true;
+  phase = "running";
+  currentI = loopStart;
+  timer = 0;
+  history = [];
+  iterationCount = 0;
+  activatePerson(currentI);
+}
+
+function stepOnce() {
+  if (phase === "idle") {
+    currentI = loopStart;
+    phase = "stepping";
+    history = [];
+    iterationCount = 0;
+    activatePerson(currentI);
+    updateCode();
+    return;
+  }
+  if (phase === "stepping" || phase === "running") {
+    running = false;
+    phase = "stepping";
+    advanceLoop();
+  }
+}
+
+function advanceLoop() {
+  if (currentI >= 0 && currentI < N) {
+    people[currentI].state = "done";
+    history.push(currentI);
+    iterationCount++;
+  }
+  currentI += loopStep;
+  if (currentI < loopStop && currentI < N) {
+    activatePerson(currentI);
+  } else {
+    phase = "done";
+    currentI = -1;
+  }
+  updateCode();
+}
+
+function activatePerson(idx) {
+  if (idx >= 0 && idx < N) {
+    people[idx].state = "active";
+    people[idx].jumpY = 0;
+    jumpPhase = 0;
+  }
+}
+
+function resetLoop() {
+  running = false;
+  phase = "idle";
+  currentI = -1;
+  iterationCount = 0;
+  history = [];
+  timer = 0;
+  for (let p of people) { p.state = "waiting"; p.jumpY = 0; }
+  updateCode();
+}
+
+function toggleSpeed() {
+  if (speed === 60) { speed = 30; document.getElementById("btnSpeed").textContent = "🐇 Fast"; }
+  else if (speed === 30) { speed = 15; document.getElementById("btnSpeed").textContent = "⚡ Turbo"; }
+  else { speed = 60; document.getElementById("btnSpeed").textContent = "🐢 Slow"; }
+}
+
+function draw() {
+  background(15, 15, 26);
+  let h = height;
+  let floorY = h * 0.7;
+
+  // Auto advance
+  if (running && phase === "running") {
+    timer++;
+    if (timer >= speed) {
+      timer = 0;
+      advanceLoop();
+      if (phase === "done") running = false;
+    }
+  }
+
+  // Floor
+  stroke(40, 50, 80);
+  strokeWeight(2);
+  line(0, floorY, width, floorY);
+
+  let spacing = min(100, (width - 300) / N);
+  let startX = 80;
+
+  // Draw people
+  for (let i = 0; i < N; i++) {
+    let x = startX + i * spacing;
+    let p = people[i];
+    p.bob += 0.02;
+
+    let inRange = i >= loopStart && i < loopStop && ((i - loopStart) % loopStep === 0);
+    let baseAlpha = inRange ? 255 : 80;
+
+    // Jump animation
+    if (p.state === "active") {
+      p.jumpY = lerp(p.jumpY, -40, 0.08);
+    } else {
+      p.jumpY = lerp(p.jumpY, 0, 0.1);
+    }
+
+    let bobY = (p.state === "active") ? 0 : sin(p.bob) * 2;
+    let baseY = floorY + bobY + p.jumpY;
+
+    push();
+    translate(x, baseY);
+
+    // Glow for active
+    if (p.state === "active") {
+      noStroke();
+      fill(255, 217, 61, 40);
+      ellipse(0, -50, 90, 120);
+    }
+
+    // Color based on state
+    let col;
+    if (p.state === "active") col = color("#ffd93d");
+    else if (p.state === "done") col = color(74, 222, 128, 150);
+    else if (!inRange) col = color(60, 60, 90);
+    else col = color(COLORS[i]);
+
+    // Draw stick figure
+    stroke(col);
+    strokeWeight(p.state === "active" ? 4 : 2.5);
+    noFill();
+    // Arms
+    if (p.state === "active") {
+      // Jumping jack pose
+      line(0, -58, -18, -78);
+      line(0, -58, 18, -78);
+      line(0, -28, -16, -6);
+      line(0, -28, 16, -6);
+    } else if (p.state === "done") {
+      // Sitting/resting
+      line(0, -55, -15, -45);
+      line(0, -55, 15, -45);
+      line(0, -28, -12, 0);
+      line(0, -28, 12, 0);
+    } else {
+      // Standing
+      line(0, -55, -15, -42);
+      line(0, -55, 15, -42);
+      line(0, -28, -10, 0);
+      line(0, -28, 10, 0);
+    }
+    // Torso
+    line(0, -68, 0, -28);
+    // Head
+    fill(15, 15, 26);
+    ellipse(0, -80, 22, 22);
+
+    // Number badge
+    noStroke();
+    if (p.state === "active") {
+      fill(255, 217, 61);
+      rect(-14, -105, 28, 20, 4);
+      fill(15, 15, 26);
+    } else {
+      fill(22, 33, 62, baseAlpha);
+      rect(-14, -105, 28, 20, 4);
+      fill(red(col), green(col), blue(col), baseAlpha);
+    }
+    textFont("JetBrains Mono");
+    textSize(12);
+    textStyle(BOLD);
+    text(i, 0, -95);
+
+    // Status emoji
+    if (p.state === "active") {
+      textSize(20);
+      text("⭐", 0, -130);
+    } else if (p.state === "done") {
+      textSize(16);
+      fill(74, 222, 128, 150);
+      text("✓", 0, -125);
+    }
+
+    pop();
+
+    // Floor marker
+    noStroke();
+    fill(0, 217, 255, inRange ? 60 : 20);
+    rect(x - 16, floorY + 4, 32, 24, 3);
+    fill(0, 217, 255, inRange ? 200 : 50);
+    textFont("JetBrains Mono");
+    textSize(13);
+    textStyle(BOLD);
+    text(i, x, floorY + 16);
+  }
+
+  // Iteration counter
+  noStroke();
+  fill(22, 33, 62, 220);
+  rect(16, 60, 220, 80, 8);
+  textAlign(LEFT, TOP);
+  textFont("JetBrains Mono");
+  textSize(12);
+  fill(255, 217, 61);
+  textStyle(BOLD);
+  text(`i = ${currentI >= 0 ? currentI : "—"}`, 28, 70);
+  fill(180, 180, 200);
+  textStyle(NORMAL);
+  text(`Iterations: ${iterationCount}`, 28, 88);
+  textSize(11);
+  fill(100, 100, 150);
+  text(`Visited: [${history.join(", ")}]`, 28, 106);
+  if (phase === "done") {
+    fill(74, 222, 128);
+    textSize(12);
+    textStyle(BOLD);
+    text("LOOP COMPLETE ✓", 28, 124);
+  }
+  textAlign(CENTER, CENTER);
+
+  // Progress bar
+  let progW = width - 300;
+  let progX = 60;
+  let progY = h * 0.83;
+  noStroke();
+  fill(22, 33, 62);
+  rect(progX, progY, progW, 24, 6);
+  // Segments
+  let segCount = 0;
+  for (let i = loopStart; i < loopStop && i < N; i += loopStep) segCount++;
+  if (segCount > 0) {
+    let segW = progW / segCount;
+    let seg = 0;
+    for (let i = loopStart; i < loopStop && i < N; i += loopStep) {
+      let done = history.includes(i);
+      let active = (i === currentI);
+      fill(active ? color(255,217,61) : done ? color(74,222,128,150) : color(40,50,70));
+      rect(progX + seg * segW + 1, progY + 1, segW - 2, 22, seg === 0 ? 6 : 0, seg === segCount-1 ? 6 : 0, seg === segCount-1 ? 6 : 0, seg === 0 ? 6 : 0);
+      fill(active ? color(15,15,26) : color(180,180,200, done ? 150 : 80));
+      textSize(10);
+      text(`i=${i}`, progX + seg * segW + segW/2, progY + 12);
+      seg++;
+    }
+  }
+  textFont("Outfit");
+  textSize(11);
+  fill(100,100,150);
+  text(`${segCount} iterations total`, progX + progW/2, progY + 38);
+}
+
+function updateCode() {
+  let el = document.getElementById("code-lines");
+  let startStr = `<span class="code-kw">let</span> i = <span class="code-num">${loopStart}</span>`;
+  let stopStr = `i < <span class="code-num">${loopStop}</span>`;
+  let stepStr = loopStep === 1 ? `i++` : `i += <span class="code-num">${loopStep}</span>`;
+  let base = `<span class="code-kw">for</span> (${startStr}; ${stopStr}; ${stepStr}) {`;
+
+  if (phase === "idle") {
+    el.innerHTML = `${base}
+  <span class="code-dim">// Student i does a jumping jack ⭐</span>
+}  <span class="code-dim">// Press ▶ Run or ⏭ Step to start</span>`;
+  } else if (phase === "running" || phase === "stepping") {
+    el.innerHTML = `${base}
+  <span class="code-hl">// i = <span class="code-num">${currentI}</span> → Student ${currentI} does a jumping jack ⭐</span>
+}  <span class="code-dim">// ${currentI < loopStop ? `Condition: ${currentI} < ${loopStop} → TRUE, keep going` : `STOP: ${currentI} < ${loopStop} is FALSE`}</span>`;
+  } else if (phase === "done") {
+    el.innerHTML = `${base}
+  <span class="code-dim">// Student i does a jumping jack ⭐</span>
+} <span class="code-str">// ✓ DONE! Loop ran ${iterationCount} times. Visited: [${history.join(", ")}]</span>
+<span class="code-dim">// i reached ${history.length > 0 ? history[history.length-1] + loopStep : loopStart}, which is NOT < ${loopStop}, so the loop stopped.</span>`;
+  }
+}
+
+function windowResized() { resizeCanvas(windowWidth, windowHeight - 170); }
+</script>
+</body>
+</html>
