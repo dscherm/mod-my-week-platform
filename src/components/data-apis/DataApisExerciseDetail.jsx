@@ -92,11 +92,8 @@ Your server code is ready in the "Server" tab.
         const htmlContent = generateHTMLPreview(code);
 
         if (iframeRef.current) {
-          const iframe = iframeRef.current;
-          const doc = iframe.contentDocument || iframe.contentWindow.document;
-          doc.open();
-          doc.write(htmlContent);
-          doc.close();
+          // Use srcdoc for clean replacement - avoids p5.js duplicate import issues
+          iframeRef.current.srcdoc = htmlContent;
         }
 
         setOutput('Code running in preview...');
@@ -200,10 +197,7 @@ Your server code is ready in the "Server" tab.
   const stopCode = () => {
     setIsRunning(false);
     if (iframeRef.current) {
-      const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow.document;
-      doc.open();
-      doc.write('<html><body style="background:#1a1a2e;color:#888;padding:20px;">Click "Run Code" to see your output</body></html>');
-      doc.close();
+      iframeRef.current.srcdoc = '<html><body style="background:#1a1a2e;color:#888;padding:20px;">Click "Run Code" to see your output</body></html>';
     }
   };
 
