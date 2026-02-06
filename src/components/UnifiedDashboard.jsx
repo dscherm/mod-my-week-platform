@@ -6,6 +6,7 @@ import { pseudocodeTopics, pseudocodeExercises } from '../data/pseudocode';
 import { flowchartExercises } from '../data/flowcharts';
 import { dataApisExercises, getDataApisWeekExercises } from '../data/data-apis-exercises';
 import { objectsImagesExercises, getObjectsImagesWeekExercises } from '../data/objects-images-exercises';
+import { functionsScopeExercises, getFunctionsScopeWeekExercises } from '../data/functions-scope-exercises';
 
 const UnifiedDashboard = ({
   studentName,
@@ -18,12 +19,14 @@ const UnifiedDashboard = ({
   completedFlowcharts = [],
   completedDataApisExercises = [],
   completedObjectsImagesExercises = [],
+  completedFunctionsScopeExercises = [],
   onSelectCategory,
   onSelectNetworkMonitor,
   onSelectWeek,
   onSelectAPCSP,
   onSelectDataApisWeek,
-  onSelectObjectsImagesWeek
+  onSelectObjectsImagesWeek,
+  onSelectFunctionsScopeWeek
 }) => {
   // Check if entire modules are assigned
   const hasCyberModule = assignments.some(a => a.type === 'cyber-range');
@@ -31,6 +34,7 @@ const UnifiedDashboard = ({
   const hasAPCSPModule = assignments.some(a => a.type === 'ap-csp');
   const hasDataApisModule = assignments.some(a => a.type === 'data-apis');
   const hasObjectsImagesModule = assignments.some(a => a.type === 'objects-images');
+  const hasFunctionsScopeModule = assignments.some(a => a.type === 'functions-scope');
 
   // Calculate cyber-range progress
   const getCyberCategoryProgress = (categoryId) => {
@@ -100,12 +104,24 @@ const UnifiedDashboard = ({
     };
   };
 
+  // Calculate Functions & Scope progress
+  const getFunctionsScopeWeekProgress = (weekKey) => {
+    const weekExercises = getFunctionsScopeWeekExercises(weekKey);
+    const completed = weekExercises.filter(e => completedFunctionsScopeExercises.includes(e.id)).length;
+    return {
+      completed,
+      total: weekExercises.length,
+      percentage: weekExercises.length > 0 ? (completed / weekExercises.length) * 100 : 0
+    };
+  };
+
   // Get total stats
   const totalChallengesCompleted = completedChallenges.length + completedScenarios.length;
   const totalExercisesCompleted = completedExercises.length;
   const totalAPCSPCompleted = completedPseudocode.length + completedFlowcharts.length;
   const totalDataApisCompleted = completedDataApisExercises.length;
   const totalObjectsImagesCompleted = completedObjectsImagesExercises.length;
+  const totalFunctionsScopeCompleted = completedFunctionsScopeExercises.length;
 
   const cyberCategories = [
     { id: 'cryptography', name: 'Cryptography', icon: '[ CRYPTO ]', description: 'Encryption, ciphers, and secure communication' },
@@ -121,7 +137,7 @@ const UnifiedDashboard = ({
     { id: 'flowcharts', name: 'Flowcharts', icon: '[ FLOW ]', description: 'Read, interpret, and build flowcharts' }
   ];
 
-  const hasAssignments = hasCyberModule || hasProgrammingModule || hasAPCSPModule || hasDataApisModule || hasObjectsImagesModule;
+  const hasAssignments = hasCyberModule || hasProgrammingModule || hasAPCSPModule || hasDataApisModule || hasObjectsImagesModule || hasFunctionsScopeModule;
 
   return (
     <div className="unified-dashboard">
@@ -154,6 +170,10 @@ const UnifiedDashboard = ({
         <div className="stat-card objects-images">
           <span className="stat-value">{totalObjectsImagesCompleted}</span>
           <span className="stat-label">Objects & Images</span>
+        </div>
+        <div className="stat-card functions-scope">
+          <span className="stat-value">{totalFunctionsScopeCompleted}</span>
+          <span className="stat-label">Functions & Scope</span>
         </div>
       </div>
 
@@ -333,6 +353,42 @@ const UnifiedDashboard = ({
                       <div className="category-progress">
                         <div
                           className="category-progress-bar objects-images"
+                          style={{ width: `${progress.percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {hasFunctionsScopeModule && (
+            <section className="content-section functions-scope-section">
+              <h2 className="section-title functions-scope">
+                <span className="section-icon">{contentTypes['functions-scope'].icon}</span>
+                Functions & Scope
+              </h2>
+
+              <div className="categories">
+                {Object.entries(functionsScopeExercises).map(([weekKey, week]) => {
+                  const progress = getFunctionsScopeWeekProgress(weekKey);
+                  const weekNum = weekKey.replace('week', '');
+                  return (
+                    <div
+                      key={weekKey}
+                      className="category-card functions-scope"
+                      onClick={() => onSelectFunctionsScopeWeek(weekKey)}
+                    >
+                      <div className="category-icon">[ WEEK {weekNum} ]</div>
+                      <h3>{week.title}</h3>
+                      <p className="category-description">{week.bigIdea}</p>
+                      <p className="category-progress-text">
+                        {progress.completed} / {progress.total} completed
+                      </p>
+                      <div className="category-progress">
+                        <div
+                          className="category-progress-bar functions-scope"
                           style={{ width: `${progress.percentage}%` }}
                         />
                       </div>

@@ -250,6 +250,43 @@ const AssignmentManager = ({ classCode, assignments, onAssignmentCreated }) => {
             )}
           </div>
         </div>
+
+        {/* Functions & Scope Module */}
+        <div className={`am-module-card functions-scope ${isModuleAssigned('functions-scope') ? 'assigned' : ''}`}>
+          <div className="am-module-icon">{contentTypes['functions-scope'].icon}</div>
+          <div className="am-module-info">
+            <h4>{contentTypes['functions-scope'].name}</h4>
+            <p>{contentTypes['functions-scope'].description}</p>
+            <span className="am-module-count">
+              {contentTypes['functions-scope'].units.length} weeks
+            </span>
+          </div>
+          <div className="am-module-action">
+            {isModuleAssigned('functions-scope') ? (
+              <div className="am-assigned-info">
+                <span className="am-assigned-badge">Assigned</span>
+                <button
+                  className="am-remove-btn"
+                  onClick={() => {
+                    const assignment = assignments.find(a => a.type === 'functions-scope');
+                    if (assignment) handleDelete(assignment.id);
+                  }}
+                  disabled={deleting}
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <button
+                className="am-btn functions-scope"
+                onClick={() => handleAssignModule('functions-scope')}
+                disabled={creating === 'functions-scope'}
+              >
+                {creating === 'functions-scope' ? 'Assigning...' : 'Assign Module'}
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {assignments.length > 0 && (

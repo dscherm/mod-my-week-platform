@@ -29,6 +29,8 @@ import DataApisExerciseDetail from './components/data-apis/DataApisExerciseDetai
 import DataApisVocabularyPage from './components/data-apis/DataApisVocabularyPage';
 import ObjectsImagesWeekView from './components/objects-images/ObjectsImagesWeekView';
 import ObjectsImagesExerciseDetail from './components/objects-images/ObjectsImagesExerciseDetail';
+import FunctionsScopeWeekView from './components/functions-scope/FunctionsScopeWeekView';
+import FunctionsScopeExerciseDetail from './components/functions-scope/FunctionsScopeExerciseDetail';
 import { saveStudentProgress, getStudentProgress, subscribeToAssignments, isFirebaseConfigured, saveStudentSubmission } from './services/firebaseService';
 
 function App() {
@@ -76,6 +78,11 @@ function App() {
   const [completedObjectsImagesExercises, setCompletedObjectsImagesExercises] = useState([]);
   const [selectedObjectsImagesWeek, setSelectedObjectsImagesWeek] = useState(null);
   const [selectedObjectsImagesExercise, setSelectedObjectsImagesExercise] = useState(null);
+
+  // Functions & Scope state
+  const [completedFunctionsScopeExercises, setCompletedFunctionsScopeExercises] = useState([]);
+  const [selectedFunctionsScopeWeek, setSelectedFunctionsScopeWeek] = useState(null);
+  const [selectedFunctionsScopeExercise, setSelectedFunctionsScopeExercise] = useState(null);
 
   // Check for existing session
   useEffect(() => {
@@ -128,6 +135,7 @@ function App() {
           setCompletedFlowcharts(progress.completedFlowcharts || []);
           setCompletedDataApisExercises(progress.completedDataApisExercises || []);
           setCompletedObjectsImagesExercises(progress.completedObjectsImagesExercises || []);
+          setCompletedFunctionsScopeExercises(progress.completedFunctionsScopeExercises || []);
           setExitTicketResponses(progress.exitTicketResponses || {});
           setTotalPoints(progress.totalPoints || 0);
         }
@@ -172,6 +180,7 @@ function App() {
         setCompletedFlowcharts(data.completedFlowcharts || []);
         setCompletedDataApisExercises(data.completedDataApisExercises || []);
         setCompletedObjectsImagesExercises(data.completedObjectsImagesExercises || []);
+        setCompletedFunctionsScopeExercises(data.completedFunctionsScopeExercises || []);
         setExitTicketResponses(data.exitTicketResponses || {});
         setTotalPoints(data.points || 0);
       } catch (e) {
@@ -181,7 +190,7 @@ function App() {
   };
 
   // Save progress (to Firebase and localStorage)
-  const saveProgress = useCallback(async (challenges, scenarios, exercises, pseudocode, flowcharts, dataApis, objectsImages, exitTickets, points) => {
+  const saveProgress = useCallback(async (challenges, scenarios, exercises, pseudocode, flowcharts, dataApis, objectsImages, functionsScope, exitTickets, points) => {
     // Always save to localStorage as backup
     localStorage.setItem('cyberrange-progress', JSON.stringify({
       completed: challenges,
@@ -191,6 +200,7 @@ function App() {
       completedFlowcharts: flowcharts,
       completedDataApisExercises: dataApis,
       completedObjectsImagesExercises: objectsImages,
+      completedFunctionsScopeExercises: functionsScope,
       exitTicketResponses: exitTickets,
       points: points
     }));
@@ -206,6 +216,7 @@ function App() {
           completedFlowcharts: flowcharts,
           completedDataApisExercises: dataApis,
           completedObjectsImagesExercises: objectsImages,
+          completedFunctionsScopeExercises: functionsScope,
           exitTicketResponses: exitTickets,
           totalPoints: points
         });
@@ -218,9 +229,9 @@ function App() {
   // Save progress when it changes
   useEffect(() => {
     if (currentUser) {
-      saveProgress(completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, completedDataApisExercises, completedObjectsImagesExercises, exitTicketResponses, totalPoints);
+      saveProgress(completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, completedDataApisExercises, completedObjectsImagesExercises, completedFunctionsScopeExercises, exitTicketResponses, totalPoints);
     }
-  }, [completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, completedDataApisExercises, completedObjectsImagesExercises, exitTicketResponses, totalPoints, currentUser, saveProgress]);
+  }, [completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, completedDataApisExercises, completedObjectsImagesExercises, completedFunctionsScopeExercises, exitTicketResponses, totalPoints, currentUser, saveProgress]);
 
   // Handle student login
   const handleLogin = (user) => {
@@ -286,6 +297,7 @@ function App() {
     setCompletedFlowcharts([]);
     setCompletedDataApisExercises([]);
     setCompletedObjectsImagesExercises([]);
+    setCompletedFunctionsScopeExercises([]);
     setExitTicketResponses({});
     setAssignments([]);
     setTotalPoints(0);
@@ -299,6 +311,8 @@ function App() {
     setSelectedDataApisExercise(null);
     setSelectedObjectsImagesWeek(null);
     setSelectedObjectsImagesExercise(null);
+    setSelectedFunctionsScopeWeek(null);
+    setSelectedFunctionsScopeExercise(null);
     localStorage.removeItem('cyberrange-session');
   };
 
@@ -346,6 +360,7 @@ function App() {
       setCompletedFlowcharts([]);
       setCompletedDataApisExercises([]);
       setCompletedObjectsImagesExercises([]);
+      setCompletedFunctionsScopeExercises([]);
       setExitTicketResponses({});
       setTotalPoints(0);
       localStorage.removeItem('cyberrange-progress');
@@ -521,6 +536,34 @@ function App() {
     setCurrentView('dashboard');
   };
 
+  // Handlers for Functions & Scope
+  const handleSelectFunctionsScopeWeek = (weekKey) => {
+    setSelectedFunctionsScopeWeek(weekKey);
+    setCurrentView('functions-scope-week');
+  };
+
+  const handleSelectFunctionsScopeExercise = (exerciseId) => {
+    setSelectedFunctionsScopeExercise(exerciseId);
+    setCurrentView('functions-scope-exercise');
+  };
+
+  const handleCompleteFunctionsScopeExercise = (exerciseId, points) => {
+    if (!completedFunctionsScopeExercises.includes(exerciseId)) {
+      setCompletedFunctionsScopeExercises([...completedFunctionsScopeExercises, exerciseId]);
+      setTotalPoints(totalPoints + points);
+    }
+  };
+
+  const handleBackFromFunctionsScopeExercise = () => {
+    setSelectedFunctionsScopeExercise(null);
+    setCurrentView('functions-scope-week');
+  };
+
+  const handleBackFromFunctionsScopeWeek = () => {
+    setSelectedFunctionsScopeWeek(null);
+    setCurrentView('dashboard');
+  };
+
   // Show teacher login
   if (showTeacherLogin) {
     return (
@@ -629,12 +672,14 @@ function App() {
             completedFlowcharts={completedFlowcharts}
             completedDataApisExercises={completedDataApisExercises}
             completedObjectsImagesExercises={completedObjectsImagesExercises}
+            completedFunctionsScopeExercises={completedFunctionsScopeExercises}
             onSelectCategory={handleSelectCategory}
             onSelectNetworkMonitor={() => setCurrentView('network-monitor')}
             onSelectWeek={handleSelectWeek}
             onSelectAPCSP={handleSelectAPCSP}
             onSelectDataApisWeek={handleSelectDataApisWeek}
             onSelectObjectsImagesWeek={handleSelectObjectsImagesWeek}
+            onSelectFunctionsScopeWeek={handleSelectFunctionsScopeWeek}
           />
         )}
 
@@ -799,6 +844,25 @@ function App() {
             onComplete={handleCompleteObjectsImagesExercise}
             onBack={handleBackFromObjectsImagesExercise}
             isCompleted={completedObjectsImagesExercises.includes(selectedObjectsImagesExercise)}
+            onSubmit={handleSubmission}
+          />
+        )}
+
+        {currentView === 'functions-scope-week' && selectedFunctionsScopeWeek && (
+          <FunctionsScopeWeekView
+            weekKey={selectedFunctionsScopeWeek}
+            onSelectExercise={handleSelectFunctionsScopeExercise}
+            onBack={handleBackFromFunctionsScopeWeek}
+            completedExercises={completedFunctionsScopeExercises}
+          />
+        )}
+
+        {currentView === 'functions-scope-exercise' && selectedFunctionsScopeExercise && (
+          <FunctionsScopeExerciseDetail
+            exerciseId={selectedFunctionsScopeExercise}
+            onComplete={handleCompleteFunctionsScopeExercise}
+            onBack={handleBackFromFunctionsScopeExercise}
+            isCompleted={completedFunctionsScopeExercises.includes(selectedFunctionsScopeExercise)}
             onSubmit={handleSubmission}
           />
         )}

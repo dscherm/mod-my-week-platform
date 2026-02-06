@@ -155,6 +155,39 @@ export const contentTypes = {
         exerciseCount: 8
       }
     ]
+  },
+  'functions-scope': {
+    id: 'functions-scope',
+    name: 'Functions & Scope',
+    description: 'Master functions, parameters, returns, and scope with p5.js',
+    color: '#9b59b6',
+    icon: '⚡',
+    units: [
+      {
+        id: 'week1',
+        name: 'Week 1: Functions Basics',
+        description: 'Organize code into reusable functions',
+        exerciseCount: 13
+      },
+      {
+        id: 'week2',
+        name: 'Week 2: Parameters & Arguments',
+        description: 'Make functions flexible with parameters',
+        exerciseCount: 13
+      },
+      {
+        id: 'week3',
+        name: 'Week 3: Return Values & Composition',
+        description: 'Return values and combine functions',
+        exerciseCount: 13
+      },
+      {
+        id: 'week4',
+        name: 'Week 4: Scope & Advanced Patterns',
+        description: 'Master scope, closures, and callbacks',
+        exerciseCount: 13
+      }
+    ]
   }
 };
 

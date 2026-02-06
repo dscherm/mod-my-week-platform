@@ -128,6 +128,7 @@ export const loginStudent = async (studentName, classCode) => {
         completedFlowcharts: [],
         completedDataApisExercises: [],
         completedObjectsImagesExercises: [],
+        completedFunctionsScopeExercises: [],
         totalPoints: 0,
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString(),
@@ -165,6 +166,7 @@ export const loginStudent = async (studentName, classCode) => {
       completedFlowcharts: [],
       completedDataApisExercises: [],
       completedObjectsImagesExercises: [],
+      completedFunctionsScopeExercises: [],
       totalPoints: 0,
       createdAt: serverTimestamp(),
       lastLogin: serverTimestamp(),
@@ -189,6 +191,7 @@ export const saveStudentProgress = async (studentId, progress) => {
         completedFlowcharts: progress.completedFlowcharts || [],
         completedDataApisExercises: progress.completedDataApisExercises || [],
         completedObjectsImagesExercises: progress.completedObjectsImagesExercises || [],
+        completedFunctionsScopeExercises: progress.completedFunctionsScopeExercises || [],
         totalPoints: progress.totalPoints || 0,
         lastActivity: new Date().toISOString()
       };
@@ -210,6 +213,7 @@ export const saveStudentProgress = async (studentId, progress) => {
     completedFlowcharts: progress.completedFlowcharts || [],
     completedDataApisExercises: progress.completedDataApisExercises || [],
     completedObjectsImagesExercises: progress.completedObjectsImagesExercises || [],
+    completedFunctionsScopeExercises: progress.completedFunctionsScopeExercises || [],
     totalPoints: progress.totalPoints || 0,
     lastActivity: serverTimestamp()
   });

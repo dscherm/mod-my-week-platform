@@ -9879,3 +9879,148 @@ a:hover {
   left: 0;
   color: #4caf50;
 }
+
+/* ============================================ */
+/* Functions & Scope Module Styles              */
+/* ============================================ */
+
+/* Dashboard - Functions & Scope Section */
+.content-section.functions-scope-section {
+  border-left: 3px solid #9b59b6;
+  padding-left: 1rem;
+  margin-bottom: 2rem;
+}
+
+.section-title.functions-scope {
+  color: #9b59b6;
+}
+
+.stat-card.functions-scope {
+  border-color: #9b59b6;
+}
+
+.stat-card.functions-scope:hover {
+  box-shadow: 0 0 30px rgba(155, 89, 182, 0.3);
+}
+
+.stat-card.functions-scope .stat-value {
+  color: #9b59b6;
+  text-shadow: 0 0 10px rgba(155, 89, 182, 0.5);
+}
+
+.category-card.functions-scope {
+  border-color: rgba(155, 89, 182, 0.5);
+}
+
+.category-card.functions-scope:hover {
+  border-color: #9b59b6;
+  box-shadow: 0 0 30px rgba(155, 89, 182, 0.4), inset 0 0 30px rgba(155, 89, 182, 0.1);
+}
+
+.category-card.functions-scope h3 {
+  color: #9b59b6;
+}
+
+.category-progress-bar.functions-scope {
+  background: linear-gradient(90deg, #9b59b6, #8e44ad);
+  box-shadow: 0 0 10px rgba(155, 89, 182, 0.5);
+}
+
+/* Functions & Scope Week View */
+.functions-scope-week {
+  padding: 1rem;
+}
+
+.functions-scope-week .week-header-large h1 {
+  color: #9b59b6;
+}
+
+.functions-scope-week .learning-objectives {
+  background: rgba(155, 89, 182, 0.1);
+  border: 1px solid rgba(155, 89, 182, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.functions-scope-week .day-header h2 {
+  color: #9b59b6;
+  border-bottom: 2px solid rgba(155, 89, 182, 0.3);
+  padding-bottom: 0.5rem;
+}
+
+.functions-scope-week .exercise-card {
+  border-color: rgba(155, 89, 182, 0.3);
+  transition: all 0.3s ease;
+}
+
+.functions-scope-week .exercise-card:hover {
+  border-color: #9b59b6;
+  box-shadow: 0 0 20px rgba(155, 89, 182, 0.3);
+}
+
+.functions-scope-week .exercise-card.completed {
+  border-color: #4caf50;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.functions-scope-week .capstone-card {
+  border-color: rgba(255, 107, 107, 0.5);
+  background: rgba(255, 107, 107, 0.05);
+}
+
+/* Functions & Scope Exercise Detail */
+.functions-scope-exercise {
+  padding: 1rem;
+}
+
+.functions-scope-exercise .exercise-header-detail h1 {
+  color: #9b59b6;
+}
+
+.functions-scope-exercise .prompt-box {
+  background: rgba(155, 89, 182, 0.1);
+  border: 1px solid rgba(155, 89, 182, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.functions-scope-exercise .prompt-box h3 {
+  color: #9b59b6;
+  margin-bottom: 0.5rem;
+}
+
+.functions-scope-exercise .prompt-box pre {
+  white-space: pre-wrap;
+  color: #e0e0e0;
+  font-family: 'Share Tech Mono', monospace;
+  margin: 0;
+}
+
+.functions-scope-exercise .explanation-toggle {
+  background: rgba(155, 89, 182, 0.1);
+  border: 1px solid rgba(155, 89, 182, 0.3);
+  color: #9b59b6;
+}
+
+.functions-scope-exercise .explanation-toggle:hover {
+  background: rgba(155, 89, 182, 0.2);
+  border-color: #9b59b6;
+}
+
+/* Assignment Manager - Functions & Scope */
+.am-module-card.functions-scope {
+  border-color: rgba(155, 89, 182, 0.3);
+}
+
+.am-module-card.functions-scope:hover,
+.am-module-card.functions-scope.assigned {
+  border-color: #9b59b6;
+  background: rgba(155, 89, 182, 0.05);
+}
+
+.am-btn.functions-scope {
+  background: linear-gradient(135deg, #9b59b6, #8e44ad);
+  color: #fff;
+}
