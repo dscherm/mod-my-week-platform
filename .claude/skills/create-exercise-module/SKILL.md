@@ -1,4 +1,7 @@
-# Create Exercise Module
+---
+name: create-exercise-module
+description: "Complete guide for creating a new programming exercise module with week-based structure. Use when scaffolding a new module including data files, vocabulary, components, contentTypes registration, App.jsx routing, and Firebase progress tracking."
+---
 
 Creates a new programming exercise module with week-based structure, similar to arrays-loops, data-apis, or objects-images modules.
 

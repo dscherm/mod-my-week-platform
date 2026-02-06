@@ -1,4 +1,7 @@
-# Writing Effective Exercise Prompts
+---
+name: write-exercise-prompt
+description: "Guide for writing clear, engaging exercise prompts with proper context, task, requirements, and expected output. Use when authoring exercise instructions for any subject or difficulty level."
+---
 
 Guide for creating clear, engaging exercise instructions that help students succeed.
 

@@ -1,4 +1,7 @@
-# Curriculum Alignment Guide
+---
+name: curriculum-alignment
+description: "Framework for mapping exercises to educational standards (CSTA, ISTE, Common Core, NGSS). Use when creating standards-aligned content, adding standards metadata to exercises, or generating coverage reports."
+---
 
 Framework for mapping exercises to educational standards (CSTA, ISTE, Common Core, NGSS).
 

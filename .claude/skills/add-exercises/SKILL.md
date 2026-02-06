@@ -1,4 +1,7 @@
-# Add Exercises to Module
+---
+name: add-exercises
+description: "Reference for adding new exercises to an existing module's data file. Use when creating exercises, understanding exercise data structure, ID conventions, points guidelines, or starter code patterns for the cyber-range-platform."
+---
 
 Adds new exercises to an existing module's data file.
 

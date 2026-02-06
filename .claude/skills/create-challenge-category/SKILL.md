@@ -1,4 +1,7 @@
-# Create Challenge Category
+---
+name: create-challenge-category
+description: "Guide for adding a new challenge category to the cybersecurity (cyber-range) module. Use when creating new CTF-style challenge sets including data structure, registration in contentTypes.js, vocabulary, difficulty guidelines, and answer formats."
+---
 
 Adds a new challenge category to the Cybersecurity (cyber-range) module.
 

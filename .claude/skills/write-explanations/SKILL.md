@@ -1,4 +1,7 @@
-# Writing Effective Explanations
+---
+name: write-explanations
+description: "Guide for creating effective concept explanations with title, concept text, code examples, and key points. Use when writing the explanation/learn section for exercises or challenges at any difficulty level."
+---
 
 Guide for creating clear concept explanations that help students understand the "why" behind the code.
 
@@ -200,25 +203,25 @@ To defend against this, [mitigation]."
 ## Common Explanation Mistakes
 
 ### Too Abstract
-❌ "Iteration processes sequential elements systematically."
-✅ "A loop visits each item in a list, one at a time, from first to last."
+"Iteration processes sequential elements systematically."
+"A loop visits each item in a list, one at a time, from first to last."
 
 ### Too Much Jargon
-❌ "Instantiate an array literal and traverse via index-based iteration."
-✅ "Create an array and loop through it using the index numbers."
+"Instantiate an array literal and traverse via index-based iteration."
+"Create an array and loop through it using the index numbers."
 
 ### Missing the "Why"
-❌ "Arrays use square brackets and zero-based indexing."
-✅ "Arrays let you store a whole list in one variable, so you can easily
+"Arrays use square brackets and zero-based indexing."
+"Arrays let you store a whole list in one variable, so you can easily
     process all items together using a loop."
 
 ### Example Matches Exercise
-❌ Showing the exact same problem with solution
-✅ Using a different but related scenario
+Showing the exact same problem with solution
+Using a different but related scenario
 
 ### Key Points Too Vague
-❌ "Arrays are important and useful."
-✅ "Use arrays when you have multiple related values to process together."
+"Arrays are important and useful."
+"Use arrays when you have multiple related values to process together."
 
 ## Template for New Explanations
 

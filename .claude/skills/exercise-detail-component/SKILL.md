@@ -1,4 +1,7 @@
-# Exercise Detail Component
+---
+name: exercise-detail-component
+description: "Template and reference for creating exercise detail components with code editor, execution strategies, hints, vocabulary, and completion tracking. Use when building new ExerciseDetail components for any module."
+---
 
 Template for creating exercise detail components with code editor and execution.
 

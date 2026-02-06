@@ -1,4 +1,7 @@
-# Creating Effective Hint Progressions
+---
+name: create-hints-progression
+description: "Guide for writing effective 3-hint progressions that guide students toward solutions without giving away answers. Use when creating hints for exercises or challenges, covering the conceptual nudge, method guide, and syntax helper pattern."
+---
 
 Guide for writing hints that guide students toward solutions without giving away answers.
 

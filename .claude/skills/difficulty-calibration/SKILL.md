@@ -1,4 +1,7 @@
-# Difficulty Calibration Guide
+---
+name: difficulty-calibration
+description: "Framework for consistently rating exercise difficulty (Easy/Medium/Hard) across subjects and modules. Use when assigning difficulty levels, point values, or planning difficulty progression within days, weeks, and modules."
+---
 
 Framework for consistently rating exercise difficulty across subjects and modules.
 

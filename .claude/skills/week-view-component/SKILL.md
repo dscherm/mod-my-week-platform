@@ -1,4 +1,7 @@
-# Week View Component
+---
+name: week-view-component
+description: "Template for creating week overview components that display exercises organized by day with difficulty badges, completion status, and exit tickets. Use when building WeekView components for any exercise module."
+---
 
 Template for creating week overview components that display exercises organized by day.
 
