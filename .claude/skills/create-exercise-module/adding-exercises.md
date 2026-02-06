@@ -1,9 +1,6 @@
----
-name: add-exercises
-description: "Reference for adding new exercises to an existing module's data file. Use when creating exercises, understanding exercise data structure, ID conventions, points guidelines, or starter code patterns for the cyber-range-platform."
----
+# Adding Exercises to a Module
 
-Adds new exercises to an existing module's data file.
+Detailed reference for adding new exercises to an existing module's data file.
 
 ## Exercise Data Structure
 
@@ -159,5 +156,5 @@ function setup() {
 ## Vocabulary Integration
 
 1. Reference existing terms from the module's vocabulary file
-2. If new terms needed, add them to `{module}-vocabulary.js` first
+2. If new terms needed, add them to `{module}-vocabulary.js` first (see [adding-vocabulary.md](adding-vocabulary.md))
 3. Terms appear as clickable tags showing definition popup

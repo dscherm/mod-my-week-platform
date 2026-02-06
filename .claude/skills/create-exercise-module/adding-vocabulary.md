@@ -1,9 +1,6 @@
----
-name: add-vocabulary
-description: "Reference for adding vocabulary terms that appear as clickable tags in exercises and challenges. Use when creating vocabulary entries, linking terms to exercises, or implementing the vocabulary popup UI pattern."
----
+# Adding Vocabulary Terms
 
-Pattern for adding vocabulary terms that appear as clickable tags in exercises and challenges.
+Reference for adding vocabulary terms that appear as clickable tags in exercises and challenges.
 
 ## Vocabulary Data Structure
 

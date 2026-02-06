@@ -1,6 +1,7 @@
 ---
 name: common-ui-patterns
 description: "Catalog of reusable UI patterns used across the cyber-range-platform including progressive hints, expandable explanations, solution reveal, difficulty badges, completion status, console output, and card grids. Use when building or modifying UI components."
+user-invocable: false
 ---
 
 Reusable UI patterns found throughout the cyber-range-platform.

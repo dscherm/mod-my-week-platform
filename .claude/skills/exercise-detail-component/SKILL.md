@@ -1,7 +1,10 @@
 ---
 name: exercise-detail-component
 description: "Template and reference for creating exercise detail components with code editor, execution strategies, hints, vocabulary, and completion tracking. Use when building new ExerciseDetail components for any module."
+user-invocable: false
 ---
+
+> **Note:** This template may drift from the actual source code. Always read the latest ExerciseDetail components in `src/components/` (e.g., `arrays-loops/ExerciseDetail.jsx`, `data-apis/DataApisExerciseDetail.jsx`) to catch any changes before creating a new one.
 
 Template for creating exercise detail components with code editor and execution.
 

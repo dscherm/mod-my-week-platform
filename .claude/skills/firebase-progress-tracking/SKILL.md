@@ -1,6 +1,7 @@
 ---
 name: firebase-progress-tracking
 description: "Pattern for implementing student progress tracking with Firebase Firestore including demo mode fallback via localStorage. Use when adding progress tracking to new modules, understanding the Firestore data structure, or modifying the Firebase service."
+user-invocable: false
 ---
 
 Pattern for implementing student progress tracking with Firebase, including demo mode fallback.

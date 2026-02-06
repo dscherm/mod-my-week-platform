@@ -5,6 +5,11 @@ description: "Complete guide for creating a new programming exercise module with
 
 Creates a new programming exercise module with week-based structure, similar to arrays-loops, data-apis, or objects-images modules.
 
+## Supporting references
+
+- For detailed exercise data structure, ID conventions, and starter code patterns, see [adding-exercises.md](adding-exercises.md)
+- For vocabulary data structure, term conventions, and popup UI pattern, see [adding-vocabulary.md](adding-vocabulary.md)
+
 ## Required Files
 
 When creating a new module called `{module-name}`:
