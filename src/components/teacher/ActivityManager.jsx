@@ -4,6 +4,7 @@ import { challenges } from '../../data/challenges';
 import { exercises } from '../../data/exercises';
 import { dataApisExercises } from '../../data/data-apis-exercises';
 import { objectsImagesExercises } from '../../data/objects-images-exercises';
+import { functionsScopeExercises } from '../../data/functions-scope-exercises';
 
 const ActivityManager = ({ classCode }) => {
   const [selectedModule, setSelectedModule] = useState(null);
@@ -51,6 +52,23 @@ const ActivityManager = ({ classCode }) => {
       return allExercises;
     } else if (moduleType === 'objects-images') {
       const weekData = objectsImagesExercises[unitId];
+      if (!weekData || !weekData.days) return [];
+
+      const allExercises = [];
+      weekData.days.forEach(day => {
+        if (day.exercises) {
+          day.exercises.forEach(ex => {
+            allExercises.push({
+              ...ex,
+              dayTitle: day.title,
+              dayNumber: day.day
+            });
+          });
+        }
+      });
+      return allExercises;
+    } else if (moduleType === 'functions-scope') {
+      const weekData = functionsScopeExercises[unitId];
       if (!weekData || !weekData.days) return [];
 
       const allExercises = [];
@@ -294,7 +312,27 @@ const ActivityManager = ({ classCode }) => {
                   {activity.explanation && (
                     <div className="am-answer-box explanation">
                       <label>📝 Explanation:</label>
-                      <p>{activity.explanation}</p>
+                      {typeof activity.explanation === 'string' ? (
+                        <p>{activity.explanation}</p>
+                      ) : (
+                        <div className="am-explanation-detail">
+                          {activity.explanation.title && <h5>{activity.explanation.title}</h5>}
+                          {activity.explanation.concept && <pre className="am-code-block">{activity.explanation.concept}</pre>}
+                          {activity.explanation.example && (
+                            <>
+                              <label>Example:</label>
+                              <pre className="am-code-block">{activity.explanation.example}</pre>
+                            </>
+                          )}
+                          {activity.explanation.keyPoints && activity.explanation.keyPoints.length > 0 && (
+                            <ul>
+                              {activity.explanation.keyPoints.map((point, i) => (
+                                <li key={i}>{point}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -429,6 +467,14 @@ const ActivityManager = ({ classCode }) => {
               </div>
             )}
 
+            {/* Starter Code */}
+            {editingActivity.starterCode && (
+              <div className="am-answer-box">
+                <label>📝 Starter Code (given to students):</label>
+                <pre className="am-code-block">{editingActivity.starterCode}</pre>
+              </div>
+            )}
+
             {/* Solution Code */}
             {editingActivity.solutionCode && (
               <div className="am-answer-box solution">
@@ -441,7 +487,27 @@ const ActivityManager = ({ classCode }) => {
             {editingActivity.explanation && (
               <div className="am-answer-box explanation">
                 <label>📝 Explanation for Students:</label>
-                <p>{editingActivity.explanation}</p>
+                {typeof editingActivity.explanation === 'string' ? (
+                  <p>{editingActivity.explanation}</p>
+                ) : (
+                  <div className="am-explanation-detail">
+                    {editingActivity.explanation.title && <h5>{editingActivity.explanation.title}</h5>}
+                    {editingActivity.explanation.concept && <pre className="am-code-block">{editingActivity.explanation.concept}</pre>}
+                    {editingActivity.explanation.example && (
+                      <>
+                        <label>Example:</label>
+                        <pre className="am-code-block">{editingActivity.explanation.example}</pre>
+                      </>
+                    )}
+                    {editingActivity.explanation.keyPoints && editingActivity.explanation.keyPoints.length > 0 && (
+                      <ul>
+                        {editingActivity.explanation.keyPoints.map((point, i) => (
+                          <li key={i}>{point}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

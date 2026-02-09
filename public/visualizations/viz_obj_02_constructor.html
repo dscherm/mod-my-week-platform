@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Constructor Parameter Builder</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #fff;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #00d9ff;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #b0b0c0;
+      margin-bottom: 20px;
+    }
+    .main-content {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .canvas-container {
+      flex: 1;
+      min-width: 500px;
+      background: #0d1117;
+      border-radius: 12px;
+      padding: 15px;
+      border: 1px solid #30363d;
+    }
+    .side-panel {
+      width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .panel {
+      background: #0d1117;
+      border-radius: 12px;
+      padding: 15px;
+      border: 1px solid #30363d;
+    }
+    .panel h3 {
+      color: #4ade80;
+      margin-bottom: 12px;
+      font-size: 1rem;
+    }
+    .code-block {
+      background: #161b22;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'Consolas', monospace;
+      font-size: 12px;
+      color: #4ade80;
+      border-left: 3px solid #4ade80;
+      white-space: pre;
+    }
+    .param-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .param-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .param-label {
+      width: 80px;
+      color: #ffd93d;
+      font-weight: 600;
+      font-family: monospace;
+    }
+    input[type="range"] {
+      flex: 1;
+      height: 8px;
+      -webkit-appearance: none;
+      background: #30363d;
+      border-radius: 4px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      background: #00d9ff;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .param-value {
+      width: 50px;
+      text-align: right;
+      color: #00d9ff;
+      font-family: monospace;
+    }
+    input[type="color"] {
+      width: 40px;
+      height: 30px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button {
+      background: linear-gradient(135deg, #00d9ff, #00b4d8);
+      color: #000;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: all 0.3s;
+      width: 100%;
+      margin-top: 10px;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0,217,255,0.4);
+    }
+    .creature-list {
+      max-height: 180px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 10px;
+    }
+    .creature-item {
+      background: #161b22;
+      padding: 6px 10px;
+      margin: 4px 0;
+      border-radius: 4px;
+      border-left: 3px solid;
+    }
+    .key-insight {
+      background: linear-gradient(135deg, rgba(255,217,61,0.1), rgba(255,217,61,0.05));
+      border: 1px solid #ffd93d;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .key-insight h4 {
+      color: #ffd93d;
+      margin-bottom: 5px;
+    }
+    .key-insight p {
+      color: #b0b0c0;
+      font-size: 0.85rem;
+    }
+    .call-preview {
+      background: #161b22;
+      padding: 10px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 13px;
+      margin-top: 12px;
+      border: 2px solid #e94560;
+    }
+    .call-preview .keyword { color: #e94560; }
+    .call-preview .class-name { color: #4ade80; }
+    .call-preview .param { color: #ffd93d; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔧 Constructor Parameter Builder</h1>
+    <p class="subtitle">Customize parameters → Create unique objects</p>
+    
+    <div class="main-content">
+      <div class="canvas-container">
+        <div id="canvas-holder"></div>
+      </div>
+      
+      <div class="side-panel">
+        <div class="panel">
+          <h3>📝 Set Constructor Parameters</h3>
+          <div class="param-controls">
+            <div class="param-row">
+              <span class="param-label">x:</span>
+              <input type="range" id="param-x" min="50" max="450" value="200">
+              <span class="param-value" id="val-x">200</span>
+            </div>
+            <div class="param-row">
+              <span class="param-label">y:</span>
+              <input type="range" id="param-y" min="50" max="350" value="200">
+              <span class="param-value" id="val-y">200</span>
+            </div>
+            <div class="param-row">
+              <span class="param-label">size:</span>
+              <input type="range" id="param-size" min="20" max="80" value="40">
+              <span class="param-value" id="val-size">40</span>
+            </div>
+            <div class="param-row">
+              <span class="param-label">speed:</span>
+              <input type="range" id="param-speed" min="1" max="10" value="3">
+              <span class="param-value" id="val-speed">3</span>
+            </div>
+            <div class="param-row">
+              <span class="param-label">color:</span>
+              <input type="color" id="param-color" value="#00d9ff">
+            </div>
+          </div>
+          
+          <div class="call-preview">
+            <span class="keyword">new</span> <span class="class-name">Creature</span>(<span class="param" id="preview-params">200, 200, 40, 3</span>)
+          </div>
+          
+          <button onclick="createCreature()">✨ Create Creature!</button>
+        </div>
+        
+        <div class="panel">
+          <h3>📐 The Class Definition</h3>
+          <div class="code-block">class Creature {
+  constructor(x, y, size, speed) {
+    this.x = x;
+    this.y = y;
+    this.size = size;
+    this.speed = speed;
+    this.color = colorParam;
+  }
+}</div>
+        </div>
+        
+        <div class="panel">
+          <h3>🐛 Created Creatures</h3>
+          <div class="creature-list" id="creature-list">
+            <p style="color: #6b7280; font-style: italic;">Set parameters and click Create!</p>
+          </div>
+        </div>
+        
+        <div class="key-insight">
+          <h4>💡 Key Insight</h4>
+          <p>Constructor parameters let you customize each object at creation time. Same class, infinite variations!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let creatures = [];
+    let previewCreature = null;
+    
+    // Update preview on slider change
+    document.querySelectorAll('input[type="range"]').forEach(input => {
+      input.addEventListener('input', updatePreview);
+    });
+    document.getElementById('param-color').addEventListener('input', updatePreview);
+    
+    function updatePreview() {
+      let x = document.getElementById('param-x').value;
+      let y = document.getElementById('param-y').value;
+      let size = document.getElementById('param-size').value;
+      let speed = document.getElementById('param-speed').value;
+      
+      document.getElementById('val-x').textContent = x;
+      document.getElementById('val-y').textContent = y;
+      document.getElementById('val-size').textContent = size;
+      document.getElementById('val-speed').textContent = speed;
+      document.getElementById('preview-params').textContent = `${x}, ${y}, ${size}, ${speed}`;
+    }
+    
+    function setup() {
+      let canvas = createCanvas(520, 400);
+      canvas.parent('canvas-holder');
+    }
+    
+    function draw() {
+      background(20, 22, 30);
+      
+      // Grid
+      stroke(40, 45, 55);
+      strokeWeight(1);
+      for (let x = 0; x < width; x += 50) line(x, 0, x, height);
+      for (let y = 0; y < height; y += 50) line(0, y, width, y);
+      
+      // Draw preview creature (ghost)
+      let px = int(document.getElementById('param-x').value);
+      let py = int(document.getElementById('param-y').value);
+      let psize = int(document.getElementById('param-size').value);
+      let pcolor = document.getElementById('param-color').value;
+      
+      // Ghost preview
+      push();
+      drawingContext.globalAlpha = 0.4;
+      drawCreatureShape(px, py, psize, color(pcolor));
+      pop();
+      
+      // Label
+      fill(150);
+      noStroke();
+      textSize(10);
+      textAlign(CENTER);
+      text("Preview", px, py + psize/2 + 15);
+      
+      // Draw all created creatures
+      for (let c of creatures) {
+        c.update();
+        c.display();
+      }
+      
+      // Axis labels
+      fill(100);
+      textSize(11);
+      textAlign(LEFT);
+      text("x →", 10, height - 10);
+      push();
+      translate(15, height - 20);
+      rotate(-HALF_PI);
+      text("y →", 0, 0);
+      pop();
+    }
+    
+    function drawCreatureShape(x, y, size, col) {
+      // Body
+      fill(col);
+      stroke(red(col) * 0.7, green(col) * 0.7, blue(col) * 0.7);
+      strokeWeight(2);
+      ellipse(x, y, size, size * 0.8);
+      
+      // Eyes
+      fill(255);
+      noStroke();
+      let eyeOffset = size * 0.15;
+      let eyeSize = size * 0.25;
+      ellipse(x - eyeOffset, y - size * 0.1, eyeSize);
+      ellipse(x + eyeOffset, y - size * 0.1, eyeSize);
+      
+      // Pupils
+      fill(30);
+      ellipse(x - eyeOffset + 2, y - size * 0.1, eyeSize * 0.5);
+      ellipse(x + eyeOffset + 2, y - size * 0.1, eyeSize * 0.5);
+      
+      // Antenna
+      stroke(col);
+      strokeWeight(2);
+      noFill();
+      let antY = y - size * 0.35;
+      line(x - size * 0.1, antY, x - size * 0.2, antY - size * 0.3);
+      line(x + size * 0.1, antY, x + size * 0.2, antY - size * 0.3);
+      fill(col);
+      noStroke();
+      ellipse(x - size * 0.2, antY - size * 0.3, 6);
+      ellipse(x + size * 0.2, antY - size * 0.3, 6);
+    }
+    
+    class Creature {
+      constructor(x, y, size, speed, col) {
+        this.x = x;
+        this.y = y;
+        this.size = size;
+        this.speed = speed;
+        this.color = col;
+        this.vx = random(-1, 1) * speed;
+        this.vy = random(-1, 1) * speed;
+        this.id = creatures.length;
+      }
+      
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        
+        if (this.x < this.size/2 || this.x > width - this.size/2) this.vx *= -1;
+        if (this.y < this.size/2 || this.y > height - this.size/2) this.vy *= -1;
+        
+        this.x = constrain(this.x, this.size/2, width - this.size/2);
+        this.y = constrain(this.y, this.size/2, height - this.size/2);
+      }
+      
+      display() {
+        drawCreatureShape(this.x, this.y, this.size, this.color);
+      }
+    }
+    
+    function createCreature() {
+      if (creatures.length >= 10) {
+        creatures.shift(); // Remove oldest
+      }
+      
+      let x = int(document.getElementById('param-x').value);
+      let y = int(document.getElementById('param-y').value);
+      let size = int(document.getElementById('param-size').value);
+      let speed = int(document.getElementById('param-speed').value);
+      let col = document.getElementById('param-color').value;
+      
+      creatures.push(new Creature(x, y, size, speed, color(col)));
+      updateCreatureList();
+    }
+    
+    function updateCreatureList() {
+      let html = '';
+      for (let i = creatures.length - 1; i >= 0; i--) {
+        let c = creatures[i];
+        let colHex = '#' + hex(red(c.color), 2) + hex(green(c.color), 2) + hex(blue(c.color), 2);
+        html += `<div class="creature-item" style="border-color: ${colHex}">
+          creatures[${i}]: { x:${int(c.x)}, y:${int(c.y)}, size:${c.size}, speed:${c.speed} }
+        </div>`;
+      }
+      document.getElementById('creature-list').innerHTML = html || '<p style="color: #6b7280;">No creatures yet</p>';
+    }
+  </script>
+</body>
+</html>

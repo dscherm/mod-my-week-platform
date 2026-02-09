@@ -8,7 +8,6 @@ function DataApisExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, o
   const [serverCode, setServerCode] = useState('');
   const [activeTab, setActiveTab] = useState('client'); // 'client' or 'server'
   const [showHints, setShowHints] = useState([]);
-  const [showSolution, setShowSolution] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [output, setOutput] = useState('');
@@ -25,7 +24,6 @@ function DataApisExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, o
       setCode(exercise.starterCode || '');
       setServerCode(exercise.serverCode || '');
       setShowHints([]);
-      setShowSolution(false);
       setShowExplanation(false);
       setOutput('');
       setActiveTab(exercise.requiresNode ? 'server' : 'client');
@@ -211,11 +209,6 @@ Your server code is ready in the "Server" tab.
     if (!showHints.includes(index)) {
       setShowHints([...showHints, index]);
     }
-  };
-
-  const handleShowSolution = () => {
-    setShowSolution(true);
-    setCode(exercise.solutionCode || '');
   };
 
   const handleComplete = () => {
@@ -562,19 +555,6 @@ Your server code is ready in the "Server" tab.
           </div>
         </div>
       )}
-
-      <div className="solution-section">
-        {!showSolution ? (
-          <button className="solution-button" onClick={handleShowSolution}>
-            Show Solution (try on your own first!)
-          </button>
-        ) : (
-          <div className="solution-revealed">
-            <h3>Solution</h3>
-            <pre className="solution-code">{exercise.solutionCode}</pre>
-          </div>
-        )}
-      </div>
 
       <div className="complete-section">
         {isCompleted ? (

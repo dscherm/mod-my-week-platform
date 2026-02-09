@@ -6,6 +6,36 @@ export const objectsImagesExercises = {
   week1: {
     title: "Arrays of Objects & Interaction",
     bigIdea: "Objects combine data and behavior. Arrays of objects let us manage many entities with their own properties and methods.",
+    visualizations: [
+      {
+        id: "viz-cookie-cutter",
+        title: "Cookie Cutter Factory",
+        description: "See how one class (cookie cutter) creates many unique objects (cookies) with the same shape but different values",
+        file: "/visualizations/viz_obj_01_cookie_cutter.html",
+        icon: "🍪"
+      },
+      {
+        id: "viz-constructor",
+        title: "Constructor Parameter Builder",
+        description: "Watch how constructor parameters customize each object with unique property values",
+        file: "/visualizations/viz_obj_02_constructor.html",
+        icon: "🪪"
+      },
+      {
+        id: "viz-hit-detection",
+        title: "Interactive Hit Detection",
+        description: "Click on objects to see how contains() uses distance to detect mouse interaction",
+        file: "/visualizations/viz_obj_03_hit_detection.html",
+        icon: "🎯"
+      },
+      {
+        id: "viz-removal",
+        title: "Array Removal Animation",
+        description: "Visualize why removing forward skips elements and how reverse iteration fixes it",
+        file: "/visualizations/viz_obj_04_removal.html",
+        icon: "🗑️"
+      }
+    ],
     days: [
       {
         day: 1,
@@ -2044,6 +2074,29 @@ function keyPressed() {
   week2: {
     title: "Object Communication & Images",
     bigIdea: "Objects can detect and respond to each other. Images transform objects from shapes to real graphics.",
+    visualizations: [
+      {
+        id: "viz-collision",
+        title: "Collision Detectives",
+        description: "Drag circles to see how distance vs sum-of-radii determines object-to-object collision",
+        file: "/visualizations/viz_obj_05_collision.html",
+        icon: "🔍"
+      },
+      {
+        id: "viz-nested-loops",
+        title: "Pair-Checking Visualizer",
+        description: "See how j = i + 1 checks each pair exactly once, like handshakes at a party",
+        file: "/visualizations/viz_obj_06_nested_loops.html",
+        icon: "💃"
+      },
+      {
+        id: "viz-image-refs",
+        title: "Reference vs Copy Demo",
+        description: "Understand why we load images once and pass references instead of making copies",
+        file: "/visualizations/viz_obj_07_image_refs.html",
+        icon: "📸"
+      }
+    ],
     days: [
       {
         day: 6,

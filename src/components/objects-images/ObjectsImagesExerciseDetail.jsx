@@ -5,7 +5,6 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
   const exercise = getObjectsImagesExerciseById(exerciseId);
   const [code, setCode] = useState('');
   const [showHints, setShowHints] = useState([]);
-  const [showSolution, setShowSolution] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [consoleOutput, setConsoleOutput] = useState([]);
@@ -18,7 +17,6 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
     if (exercise) {
       setCode(exercise.starterCode || '');
       setShowHints([]);
-      setShowSolution(false);
       setShowExplanation(false);
       setConsoleOutput([]);
     }
@@ -156,11 +154,6 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
     if (!showHints.includes(index)) {
       setShowHints([...showHints, index]);
     }
-  };
-
-  const handleShowSolution = () => {
-    setShowSolution(true);
-    setCode(exercise.solutionCode || '');
   };
 
   const handleComplete = () => {
@@ -450,19 +443,6 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
           </div>
         </div>
       )}
-
-      <div className="solution-section">
-        {!showSolution ? (
-          <button className="solution-button" onClick={handleShowSolution}>
-            Show Solution (try on your own first!)
-          </button>
-        ) : (
-          <div className="solution-revealed">
-            <h3>Solution</h3>
-            <pre className="solution-code">{exercise.solutionCode}</pre>
-          </div>
-        )}
-      </div>
 
       <div className="complete-section">
         {isCompleted ? (

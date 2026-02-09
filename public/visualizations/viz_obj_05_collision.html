@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collision Detection - intersects() Method</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #fff;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #00d9ff;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #b0b0c0;
+      margin-bottom: 20px;
+    }
+    .main-content {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .canvas-container {
+      flex: 1;
+      min-width: 550px;
+      background: #0d1117;
+      border-radius: 12px;
+      padding: 15px;
+      border: 1px solid #30363d;
+    }
+    .side-panel {
+      width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .panel {
+      background: #0d1117;
+      border-radius: 12px;
+      padding: 15px;
+      border: 1px solid #30363d;
+    }
+    .panel h3 {
+      color: #4ade80;
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
+    .code-block {
+      background: #161b22;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'Consolas', monospace;
+      font-size: 11px;
+      color: #4ade80;
+      border-left: 3px solid #4ade80;
+      white-space: pre;
+    }
+    .math-display {
+      background: #161b22;
+      border-radius: 8px;
+      padding: 15px;
+    }
+    .math-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #30363d;
+    }
+    .math-row:last-child {
+      border-bottom: none;
+    }
+    .math-label {
+      color: #6b7280;
+      font-size: 0.85rem;
+    }
+    .math-value {
+      font-family: monospace;
+      font-size: 1.1rem;
+      color: #00d9ff;
+    }
+    .collision-result {
+      text-align: center;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+    .collision-result.colliding {
+      background: rgba(74, 222, 128, 0.2);
+      border: 2px solid #4ade80;
+      color: #4ade80;
+    }
+    .collision-result.not-colliding {
+      background: rgba(100, 100, 120, 0.2);
+      border: 2px solid #6b7280;
+      color: #b0b0c0;
+    }
+    .key-insight {
+      background: linear-gradient(135deg, rgba(255,217,61,0.1), rgba(255,217,61,0.05));
+      border: 1px solid #ffd93d;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .key-insight h4 {
+      color: #ffd93d;
+      margin-bottom: 5px;
+    }
+    .key-insight p {
+      color: #b0b0c0;
+      font-size: 0.85rem;
+    }
+    .formula-box {
+      background: #161b22;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      margin: 10px 0;
+    }
+    .formula {
+      font-family: monospace;
+      font-size: 1.2rem;
+      color: #ffd93d;
+    }
+    .instruction {
+      text-align: center;
+      color: #6b7280;
+      font-size: 0.85rem;
+      padding: 8px;
+      background: #161b22;
+      border-radius: 8px;
+    }
+    .circle-info {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .circle-card {
+      flex: 1;
+      background: #161b22;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .circle-card h4 {
+      font-size: 0.8rem;
+      margin-bottom: 5px;
+    }
+    .circle-card.a { border-left: 3px solid #00d9ff; }
+    .circle-card.a h4 { color: #00d9ff; }
+    .circle-card.b { border-left: 3px solid #e94560; }
+    .circle-card.b h4 { color: #e94560; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>💥 Collision Detection: intersects() Method</h1>
+    <p class="subtitle">Drag the circles to see collision math in real-time</p>
+    
+    <div class="main-content">
+      <div class="canvas-container">
+        <div id="canvas-holder"></div>
+        <div class="instruction">🖱️ Drag circles to test collision detection</div>
+      </div>
+      
+      <div class="side-panel">
+        <div class="panel">
+          <h3>📐 The Collision Formula</h3>
+          <div class="formula-box">
+            <div style="color: #b0b0c0; font-size: 0.8rem; margin-bottom: 5px;">Two circles collide when:</div>
+            <div class="formula">distance < r₁ + r₂</div>
+          </div>
+          
+          <div class="circle-info">
+            <div class="circle-card a">
+              <h4>Circle A (Blue)</h4>
+              <div style="font-size: 0.75rem; color: #6b7280;">
+                Center: (<span id="a-x">0</span>, <span id="a-y">0</span>)<br>
+                Radius: <span id="a-r">0</span>
+              </div>
+            </div>
+            <div class="circle-card b">
+              <h4>Circle B (Red)</h4>
+              <div style="font-size: 0.75rem; color: #6b7280;">
+                Center: (<span id="b-x">0</span>, <span id="b-y">0</span>)<br>
+                Radius: <span id="b-r">0</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="math-display" style="margin-top: 15px;">
+            <div class="math-row">
+              <span class="math-label">Distance between centers:</span>
+              <span class="math-value" id="distance">0</span>
+            </div>
+            <div class="math-row">
+              <span class="math-label">Sum of radii (r₁ + r₂):</span>
+              <span class="math-value" id="sum-radii">0</span>
+            </div>
+            <div class="math-row">
+              <span class="math-label">Comparison:</span>
+              <span class="math-value" id="comparison">-</span>
+            </div>
+          </div>
+          
+          <div class="collision-result not-colliding" id="result">
+            No Collision
+          </div>
+        </div>
+        
+        <div class="panel">
+          <h3>💻 The intersects() Method</h3>
+          <div class="code-block">intersects(other) {
+  let d = dist(this.x, this.y, 
+               other.x, other.y);
+  return d < this.r + other.r;
+}
+
+// Usage:
+if (circleA.intersects(circleB)) {
+  // Handle collision!
+}</div>
+        </div>
+        
+        <div class="key-insight">
+          <h4>💡 Key Insight</h4>
+          <p>Circle collision is simple: if the distance between centers is less than the sum of both radii, the circles overlap. No complex math needed!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let circleA, circleB;
+    let dragging = null;
+    let offsetX, offsetY;
+    
+    function setup() {
+      let canvas = createCanvas(580, 400);
+      canvas.parent('canvas-holder');
+      
+      circleA = { x: 180, y: 200, r: 60, color: color(0, 217, 255) };
+      circleB = { x: 400, y: 200, r: 50, color: color(233, 69, 96) };
+    }
+    
+    function draw() {
+      background(20, 22, 30);
+      
+      // Grid
+      stroke(35, 40, 50);
+      strokeWeight(1);
+      for (let x = 0; x < width; x += 40) line(x, 0, x, height);
+      for (let y = 0; y < height; y += 40) line(0, y, width, y);
+      
+      // Calculate collision
+      let d = dist(circleA.x, circleA.y, circleB.x, circleB.y);
+      let sumRadii = circleA.r + circleB.r;
+      let isColliding = d < sumRadii;
+      
+      // Draw connection line
+      stroke(100);
+      strokeWeight(1);
+      drawingContext.setLineDash([5, 5]);
+      line(circleA.x, circleA.y, circleB.x, circleB.y);
+      drawingContext.setLineDash([]);
+      
+      // Draw distance indicator
+      let midX = (circleA.x + circleB.x) / 2;
+      let midY = (circleA.y + circleB.y) / 2;
+      fill(150);
+      noStroke();
+      textAlign(CENTER, CENTER);
+      textSize(12);
+      text(`d = ${d.toFixed(0)}`, midX, midY - 15);
+      
+      // Draw circles with collision effect
+      if (isColliding) {
+        // Collision glow
+        for (let i = 3; i > 0; i--) {
+          noStroke();
+          fill(74, 222, 128, 30);
+          ellipse(circleA.x, circleA.y, circleA.r * 2 + i * 20);
+          ellipse(circleB.x, circleB.y, circleB.r * 2 + i * 20);
+        }
+      }
+      
+      // Circle A
+      fill(red(circleA.color), green(circleA.color), blue(circleA.color), 180);
+      stroke(circleA.color);
+      strokeWeight(3);
+      ellipse(circleA.x, circleA.y, circleA.r * 2);
+      
+      // Circle A center
+      fill(255);
+      noStroke();
+      ellipse(circleA.x, circleA.y, 8);
+      
+      // Circle A radius line
+      stroke(circleA.color);
+      strokeWeight(2);
+      line(circleA.x, circleA.y, circleA.x + circleA.r, circleA.y);
+      fill(circleA.color);
+      noStroke();
+      textSize(10);
+      text(`r₁ = ${circleA.r}`, circleA.x + circleA.r/2, circleA.y - 10);
+      
+      // Circle A label
+      fill(255);
+      textSize(14);
+      text("A", circleA.x, circleA.y + circleA.r + 20);
+      
+      // Circle B
+      fill(red(circleB.color), green(circleB.color), blue(circleB.color), 180);
+      stroke(circleB.color);
+      strokeWeight(3);
+      ellipse(circleB.x, circleB.y, circleB.r * 2);
+      
+      // Circle B center
+      fill(255);
+      noStroke();
+      ellipse(circleB.x, circleB.y, 8);
+      
+      // Circle B radius line
+      stroke(circleB.color);
+      strokeWeight(2);
+      line(circleB.x, circleB.y, circleB.x + circleB.r, circleB.y);
+      fill(circleB.color);
+      noStroke();
+      textSize(10);
+      text(`r₂ = ${circleB.r}`, circleB.x + circleB.r/2, circleB.y - 10);
+      
+      // Circle B label
+      fill(255);
+      textSize(14);
+      text("B", circleB.x, circleB.y + circleB.r + 20);
+      
+      // Collision spark effect
+      if (isColliding) {
+        let angle = atan2(circleB.y - circleA.y, circleB.x - circleA.x);
+        let collisionX = circleA.x + cos(angle) * circleA.r;
+        let collisionY = circleA.y + sin(angle) * circleA.r;
+        
+        // Spark
+        fill(255, 255, 100);
+        noStroke();
+        push();
+        translate(collisionX, collisionY);
+        for (let i = 0; i < 8; i++) {
+          rotate(TWO_PI / 8);
+          let sparkLen = 8 + sin(frameCount * 0.3 + i) * 4;
+          triangle(0, -2, 0, 2, sparkLen, 0);
+        }
+        pop();
+      }
+      
+      // Update UI
+      updateUI(d, sumRadii, isColliding);
+    }
+    
+    function updateUI(d, sumRadii, isColliding) {
+      document.getElementById('a-x').textContent = int(circleA.x);
+      document.getElementById('a-y').textContent = int(circleA.y);
+      document.getElementById('a-r').textContent = circleA.r;
+      
+      document.getElementById('b-x').textContent = int(circleB.x);
+      document.getElementById('b-y').textContent = int(circleB.y);
+      document.getElementById('b-r').textContent = circleB.r;
+      
+      document.getElementById('distance').textContent = d.toFixed(1);
+      document.getElementById('sum-radii').textContent = sumRadii;
+      
+      let compEl = document.getElementById('comparison');
+      if (isColliding) {
+        compEl.innerHTML = `<span style="color:#4ade80">${d.toFixed(0)} < ${sumRadii}</span>`;
+      } else {
+        compEl.innerHTML = `<span style="color:#e94560">${d.toFixed(0)} ≥ ${sumRadii}</span>`;
+      }
+      
+      let resultEl = document.getElementById('result');
+      if (isColliding) {
+        resultEl.className = 'collision-result colliding';
+        resultEl.innerHTML = '💥 COLLISION DETECTED!';
+      } else {
+        resultEl.className = 'collision-result not-colliding';
+        resultEl.innerHTML = 'No Collision';
+      }
+    }
+    
+    function mousePressed() {
+      // Check if clicking on circle A
+      if (dist(mouseX, mouseY, circleA.x, circleA.y) < circleA.r) {
+        dragging = circleA;
+        offsetX = circleA.x - mouseX;
+        offsetY = circleA.y - mouseY;
+      }
+      // Check if clicking on circle B
+      else if (dist(mouseX, mouseY, circleB.x, circleB.y) < circleB.r) {
+        dragging = circleB;
+        offsetX = circleB.x - mouseX;
+        offsetY = circleB.y - mouseY;
+      }
+    }
+    
+    function mouseDragged() {
+      if (dragging) {
+        dragging.x = mouseX + offsetX;
+        dragging.y = mouseY + offsetY;
+        
+        // Keep in bounds
+        dragging.x = constrain(dragging.x, dragging.r, width - dragging.r);
+        dragging.y = constrain(dragging.y, dragging.r, height - dragging.r);
+      }
+    }
+    
+    function mouseReleased() {
+      dragging = null;
+    }
+  </script>
+</body>
+</html>

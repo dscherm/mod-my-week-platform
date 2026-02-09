@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image References - Load Once, Pass Many</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #fff;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #00d9ff;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #b0b0c0;
+      margin-bottom: 20px;
+    }
+    .main-content {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .canvas-container {
+      flex: 1;
+      min-width: 550px;
+      background: #0d1117;
+      border-radius: 12px;
+      padding: 15px;
+      border: 1px solid #30363d;
+    }
+    .mode-toggle {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 2px solid transparent;
+    }
+    .mode-btn.wrong {
+      background: rgba(233, 69, 96, 0.2);
+      color: #e94560;
+    }
+    .mode-btn.wrong.active {
+      border-color: #e94560;
+    }
+    .mode-btn.right {
+      background: rgba(74, 222, 128, 0.2);
+      color: #4ade80;
+    }
+    .mode-btn.right.active {
+      border-color: #4ade80;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    button {
+      background: linear-gradient(135deg, #00d9ff, #00b4d8);
+      color: #000;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    button:hover {
+      transform: translateY(-2px);
+    }
+    button.secondary {
+      background: linear-gradient(135deg, #e94560, #c73659);
+      color: #fff;
+    }
+    .side-panel {
+      width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .panel {
+      background: #0d1117;
+      border-radius: 12px;
+      padding: 15px;
+      border: 1px solid #30363d;
+    }
+    .panel h3 {
+      color: #4ade80;
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
+    .code-block {
+      background: #161b22;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'Consolas', monospace;
+      font-size: 10px;
+      color: #4ade80;
+      border-left: 3px solid #4ade80;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .code-block.bad {
+      border-left-color: #e94560;
+      color: #e94560;
+    }
+    .memory-display {
+      background: #161b22;
+      border-radius: 8px;
+      padding: 15px;
+    }
+    .memory-bar {
+      height: 30px;
+      background: #30363d;
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+    .memory-used {
+      height: 100%;
+      transition: width 0.5s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.8rem;
+    }
+    .memory-used.low { background: linear-gradient(90deg, #4ade80, #22c55e); color: #000; }
+    .memory-used.medium { background: linear-gradient(90deg, #ffd93d, #f59e0b); color: #000; }
+    .memory-used.high { background: linear-gradient(90deg, #e94560, #dc2626); color: #fff; }
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #30363d;
+    }
+    .stats-row:last-child { border-bottom: none; }
+    .stats-label { color: #6b7280; }
+    .stats-value { color: #00d9ff; font-family: monospace; }
+    .stats-value.bad { color: #e94560; }
+    .stats-value.good { color: #4ade80; }
+    .key-insight {
+      background: linear-gradient(135deg, rgba(255,217,61,0.1), rgba(255,217,61,0.05));
+      border: 1px solid #ffd93d;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .key-insight h4 {
+      color: #ffd93d;
+      margin-bottom: 5px;
+    }
+    .key-insight p {
+      color: #b0b0c0;
+      font-size: 0.85rem;
+    }
+    .analogy-box {
+      background: #161b22;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+      margin-top: 10px;
+    }
+    .analogy-box .icon {
+      font-size: 2rem;
+      margin-bottom: 5px;
+    }
+    .analogy-box p {
+      font-size: 0.85rem;
+      color: #b0b0c0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📸 Image References: Load Once, Pass Many</h1>
+    <p class="subtitle">See the memory difference between loading copies vs. sharing references</p>
+    
+    <div class="main-content">
+      <div class="canvas-container">
+        <div class="mode-toggle">
+          <div class="mode-btn wrong active" onclick="setMode('wrong')">
+            ❌ Wrong Way<br>
+            <small>Load image for each object</small>
+          </div>
+          <div class="mode-btn right" onclick="setMode('right')">
+            ✅ Right Way<br>
+            <small>Load once, pass reference</small>
+          </div>
+        </div>
+        <div class="controls">
+          <button onclick="addBug()">🐛 Add Bug (+1)</button>
+          <button onclick="addManyBugs()">🐛🐛🐛 Add 5 Bugs</button>
+          <button class="secondary" onclick="reset()">🔄 Reset</button>
+        </div>
+        <div id="canvas-holder"></div>
+      </div>
+      
+      <div class="side-panel">
+        <div class="panel">
+          <h3>💾 Memory Usage</h3>
+          <div class="memory-display">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span>Memory</span>
+              <span id="memory-text">0 KB</span>
+            </div>
+            <div class="memory-bar">
+              <div class="memory-used low" id="memory-bar" style="width: 0%"></div>
+            </div>
+            <div class="stats-row">
+              <span class="stats-label">Image copies loaded:</span>
+              <span class="stats-value" id="copies-loaded">0</span>
+            </div>
+            <div class="stats-row">
+              <span class="stats-label">Objects created:</span>
+              <span class="stats-value" id="objects-created">0</span>
+            </div>
+            <div class="stats-row">
+              <span class="stats-label">Memory per bug:</span>
+              <span class="stats-value" id="memory-per-bug">0 KB</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="panel">
+          <h3 id="code-title">❌ The Wrong Way</h3>
+          <div class="code-block bad" id="code-block">// DON'T DO THIS!
+class Bug {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    // Loading image INSIDE constructor
+    this.img = loadImage("bug.png");
+  }
+}
+
+// Each bug loads its own copy!
+for (let i = 0; i < 10; i++) {
+  bugs.push(new Bug(...));
+  // 10 bugs = 10 image copies = 💥
+}</div>
+        </div>
+        
+        <div class="key-insight">
+          <h4>💡 The Library Book Analogy</h4>
+          <div class="analogy-box">
+            <div class="icon">📚</div>
+            <p><strong>Wrong:</strong> Give everyone their own copy of Harry Potter</p>
+            <p><strong>Right:</strong> Give everyone the library's ADDRESS - they all read the SAME book!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let bugs = [];
+    let mode = 'wrong';
+    let imageLoadCount = 0;
+    const IMAGE_SIZE_KB = 50; // Simulated image size
+    
+    function setup() {
+      let canvas = createCanvas(580, 350);
+      canvas.parent('canvas-holder');
+      textAlign(CENTER, CENTER);
+    }
+    
+    function draw() {
+      background(20, 22, 30);
+      
+      // Draw grass
+      fill(30, 60, 30);
+      noStroke();
+      rect(0, height - 40, width, 40);
+      
+      // Draw memory visualization at top
+      drawMemoryVisualization();
+      
+      // Draw all bugs
+      for (let bug of bugs) {
+        bug.update();
+        bug.display();
+      }
+      
+      // Draw the "image source" indicator
+      if (mode === 'right' && bugs.length > 0) {
+        // Draw single image source
+        fill(74, 222, 128, 100);
+        stroke(74, 222, 128);
+        strokeWeight(2);
+        rect(width - 80, 60, 60, 60, 8);
+        
+        fill(74, 222, 128);
+        noStroke();
+        textSize(10);
+        text("ONE", width - 50, 75);
+        text("IMAGE", width - 50, 88);
+        
+        // Draw bug icon
+        textSize(24);
+        text("🐛", width - 50, 105);
+        
+        // Draw reference arrows from bugs
+        stroke(74, 222, 128, 100);
+        strokeWeight(1);
+        for (let bug of bugs) {
+          if (random() < 0.3) { // Animate some lines
+            drawingContext.setLineDash([3, 3]);
+            line(bug.x, bug.y - 15, width - 80, 90);
+            drawingContext.setLineDash([]);
+          }
+        }
+      }
+      
+      // Empty state message
+      if (bugs.length === 0) {
+        fill(100);
+        noStroke();
+        textSize(14);
+        text("Click 'Add Bug' to see the difference!", width/2, height/2);
+      }
+    }
+    
+    function drawMemoryVisualization() {
+      let memoryUsed = imageLoadCount * IMAGE_SIZE_KB;
+      let maxMemory = 500; // KB for visualization
+      
+      // Memory blocks at top
+      let blockSize = 20;
+      let blocksPerRow = 20;
+      let startX = 20;
+      let startY = 20;
+      
+      for (let i = 0; i < imageLoadCount && i < 40; i++) {
+        let x = startX + (i % blocksPerRow) * (blockSize + 3);
+        let y = startY + Math.floor(i / blocksPerRow) * (blockSize + 3);
+        
+        if (mode === 'wrong') {
+          fill(233, 69, 96, 180);
+          stroke(233, 69, 96);
+        } else {
+          fill(74, 222, 128, 180);
+          stroke(74, 222, 128);
+        }
+        strokeWeight(1);
+        rect(x, y, blockSize, blockSize, 3);
+        
+        // Bug icon in block
+        fill(255);
+        noStroke();
+        textSize(10);
+        text("🐛", x + blockSize/2, y + blockSize/2);
+      }
+      
+      // "..." if too many
+      if (imageLoadCount > 40) {
+        fill(150);
+        noStroke();
+        textSize(12);
+        text("...", startX + 20 * 23, startY + 10);
+      }
+      
+      // Label
+      fill(100);
+      textSize(10);
+      textAlign(LEFT);
+      text(mode === 'wrong' ? "Image copies in memory:" : "Single image in memory:", startX, startY - 5);
+      textAlign(CENTER, CENTER);
+    }
+    
+    class Bug {
+      constructor(x, y, hasOwnImage) {
+        this.x = x;
+        this.y = y;
+        this.size = random(25, 40);
+        this.speed = random(0.5, 2);
+        this.direction = random([-1, 1]);
+        this.wobble = random(TWO_PI);
+        this.hasOwnImage = hasOwnImage;
+        
+        // In "wrong" mode, each bug "loads" its own image
+        if (hasOwnImage) {
+          imageLoadCount++;
+        }
+      }
+      
+      update() {
+        this.x += this.speed * this.direction;
+        this.wobble += 0.1;
+        
+        // Bounce off edges
+        if (this.x < this.size || this.x > width - this.size) {
+          this.direction *= -1;
+        }
+      }
+      
+      display() {
+        push();
+        translate(this.x, height - 60);
+        
+        // Wobble animation
+        rotate(sin(this.wobble) * 0.1);
+        
+        // Bug body
+        fill(60, 40, 20);
+        stroke(40, 25, 10);
+        strokeWeight(2);
+        ellipse(0, 0, this.size, this.size * 0.7);
+        
+        // Head
+        fill(50, 35, 15);
+        ellipse(this.direction * this.size * 0.4, -this.size * 0.1, this.size * 0.4);
+        
+        // Eyes
+        fill(255);
+        noStroke();
+        let eyeX = this.direction * this.size * 0.45;
+        ellipse(eyeX - 3, -this.size * 0.15, 6);
+        ellipse(eyeX + 3, -this.size * 0.15, 6);
+        fill(0);
+        ellipse(eyeX - 2, -this.size * 0.15, 3);
+        ellipse(eyeX + 4, -this.size * 0.15, 3);
+        
+        // Legs
+        stroke(40, 25, 10);
+        strokeWeight(2);
+        for (let i = -1; i <= 1; i++) {
+          let legX = i * this.size * 0.25;
+          line(legX, this.size * 0.2, legX - 8, this.size * 0.5);
+          line(legX, this.size * 0.2, legX + 8, this.size * 0.5);
+        }
+        
+        // Reference indicator (for right mode)
+        if (!this.hasOwnImage) {
+          noFill();
+          stroke(74, 222, 128, 150);
+          strokeWeight(1);
+          ellipse(0, -this.size * 0.5, 10, 10);
+          line(0, -this.size * 0.5 - 5, 0, -this.size * 0.5 - 15);
+        }
+        
+        pop();
+      }
+    }
+    
+    function addBug() {
+      let hasOwnImage = (mode === 'wrong');
+      bugs.push(new Bug(random(60, width - 60), 0, hasOwnImage));
+      
+      // In "right" mode, first bug loads the image once
+      if (mode === 'right' && bugs.length === 1) {
+        imageLoadCount = 1;
+      }
+      
+      updateUI();
+    }
+    
+    function addManyBugs() {
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => addBug(), i * 100);
+      }
+    }
+    
+    function reset() {
+      bugs = [];
+      imageLoadCount = 0;
+      updateUI();
+    }
+    
+    function setMode(newMode) {
+      mode = newMode;
+      document.querySelector('.mode-btn.wrong').classList.toggle('active', mode === 'wrong');
+      document.querySelector('.mode-btn.right').classList.toggle('active', mode === 'right');
+      
+      if (mode === 'wrong') {
+        document.getElementById('code-title').innerHTML = '❌ The Wrong Way';
+        document.getElementById('code-block').className = 'code-block bad';
+        document.getElementById('code-block').innerHTML = 
+`// DON'T DO THIS!
+class Bug {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    // Loading image INSIDE constructor
+    this.img = loadImage("bug.png");
+  }
+}
+
+// Each bug loads its own copy!
+for (let i = 0; i < 10; i++) {
+  bugs.push(new Bug(...));
+  // 10 bugs = 10 image copies = 💥
+}`;
+      } else {
+        document.getElementById('code-title').innerHTML = '✅ The Right Way';
+        document.getElementById('code-block').className = 'code-block';
+        document.getElementById('code-block').innerHTML = 
+`// Load ONCE in preload
+let bugImg;
+
+function preload() {
+  bugImg = loadImage("bug.png");
+}
+
+class Bug {
+  constructor(x, y, img) {
+    this.x = x;
+    this.y = y;
+    this.img = img; // Store REFERENCE
+  }
+}
+
+// Pass the SAME image to all bugs
+for (let i = 0; i < 10; i++) {
+  bugs.push(new Bug(..., bugImg));
+  // 10 bugs, 1 image = ✓
+}`;
+      }
+      
+      reset();
+    }
+    
+    function updateUI() {
+      let memoryUsed = imageLoadCount * IMAGE_SIZE_KB;
+      let memoryPercent = Math.min((memoryUsed / 500) * 100, 100);
+      
+      document.getElementById('memory-text').textContent = memoryUsed + ' KB';
+      
+      let bar = document.getElementById('memory-bar');
+      bar.style.width = memoryPercent + '%';
+      bar.textContent = memoryUsed + ' KB';
+      
+      if (memoryPercent < 20) {
+        bar.className = 'memory-used low';
+      } else if (memoryPercent < 60) {
+        bar.className = 'memory-used medium';
+      } else {
+        bar.className = 'memory-used high';
+      }
+      
+      document.getElementById('copies-loaded').textContent = imageLoadCount;
+      document.getElementById('copies-loaded').className = 'stats-value ' + (imageLoadCount > 1 && mode === 'wrong' ? 'bad' : 'good');
+      
+      document.getElementById('objects-created').textContent = bugs.length;
+      
+      let perBug = bugs.length > 0 ? (memoryUsed / bugs.length).toFixed(1) : 0;
+      document.getElementById('memory-per-bug').textContent = perBug + ' KB';
+      document.getElementById('memory-per-bug').className = 'stats-value ' + (mode === 'wrong' && bugs.length > 0 ? 'bad' : 'good');
+    }
+  </script>
+</body>
+</html>

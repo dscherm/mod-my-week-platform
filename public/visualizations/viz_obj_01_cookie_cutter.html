@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cookie Cutter Factory - Class vs Objects</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #fff;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #00d9ff;
+      margin-bottom: 10px;
+      font-size: 2rem;
+    }
+    .subtitle {
+      text-align: center;
+      color: #b0b0c0;
+      margin-bottom: 20px;
+    }
+    .main-content {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .canvas-container {
+      flex: 1;
+      min-width: 500px;
+      background: #0d1117;
+      border-radius: 12px;
+      padding: 15px;
+      border: 1px solid #30363d;
+    }
+    .side-panel {
+      width: 350px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .panel {
+      background: #0d1117;
+      border-radius: 12px;
+      padding: 15px;
+      border: 1px solid #30363d;
+    }
+    .panel h3 {
+      color: #4ade80;
+      margin-bottom: 10px;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .code-block {
+      background: #161b22;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'Consolas', monospace;
+      font-size: 12px;
+      color: #4ade80;
+      overflow-x: auto;
+      white-space: pre;
+      border-left: 3px solid #4ade80;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+    button {
+      background: linear-gradient(135deg, #00d9ff, #00b4d8);
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0,217,255,0.4);
+    }
+    button.secondary {
+      background: linear-gradient(135deg, #e94560, #c73659);
+      color: #fff;
+    }
+    button.tertiary {
+      background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+      color: #fff;
+    }
+    .cookie-list {
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 11px;
+    }
+    .cookie-item {
+      background: #161b22;
+      padding: 6px 10px;
+      margin: 4px 0;
+      border-radius: 4px;
+      border-left: 3px solid #ffd93d;
+    }
+    .key-insight {
+      background: linear-gradient(135deg, rgba(255,217,61,0.1), rgba(255,217,61,0.05));
+      border: 1px solid #ffd93d;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 10px;
+    }
+    .key-insight h4 {
+      color: #ffd93d;
+      margin-bottom: 5px;
+    }
+    .key-insight p {
+      color: #b0b0c0;
+      font-size: 0.9rem;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .stat {
+      background: #161b22;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #00d9ff;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🍪 Cookie Cutter Factory</h1>
+    <p class="subtitle">Class = Cookie Cutter | Objects = Cookies</p>
+    
+    <div class="main-content">
+      <div class="canvas-container">
+        <div class="controls">
+          <button onclick="stampCookie()">🍪 Stamp New Cookie</button>
+          <button class="secondary" onclick="stampMany()">Stamp 5 Cookies</button>
+          <button class="tertiary" onclick="clearCookies()">Clear All</button>
+        </div>
+        <div id="canvas-holder"></div>
+      </div>
+      
+      <div class="side-panel">
+        <div class="panel">
+          <h3>📐 The Class (Blueprint)</h3>
+          <div class="code-block">class Cookie {
+  constructor() {
+    this.x = random(width);
+    this.y = random(height);
+    this.size = random(30, 60);
+    this.color = randomColor();
+    this.sprinkles = floor(random(3,8));
+  }
+  
+  display() {
+    // Draw the cookie
+  }
+}</div>
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-value">1</div>
+              <div class="stat-label">Class (Blueprint)</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value" id="cookie-count">0</div>
+              <div class="stat-label">Objects Created</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="panel">
+          <h3>🍪 Cookie Instances</h3>
+          <div class="cookie-list" id="cookie-list">
+            <p style="color: #6b7280; font-style: italic;">Click "Stamp New Cookie" to create objects...</p>
+          </div>
+        </div>
+        
+        <div class="key-insight">
+          <h4>💡 Key Insight</h4>
+          <p>One class creates MANY objects. Each object has the SAME properties (x, y, size, color) but DIFFERENT values!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let cookies = [];
+    let cutterAngle = 0;
+    let stampEffect = 0;
+    
+    function setup() {
+      let canvas = createCanvas(560, 400);
+      canvas.parent('canvas-holder');
+      textAlign(CENTER, CENTER);
+    }
+    
+    function draw() {
+      // Bakery background
+      background(30, 25, 35);
+      
+      // Draw conveyor belt
+      fill(60, 50, 40);
+      noStroke();
+      rect(0, height - 60, width, 60);
+      
+      // Belt lines
+      stroke(80, 70, 60);
+      strokeWeight(2);
+      for (let x = (frameCount * 2) % 40 - 40; x < width + 40; x += 40) {
+        line(x, height - 60, x + 30, height);
+      }
+      
+      // Draw cookie cutter (the class)
+      push();
+      translate(100, 100);
+      rotate(sin(cutterAngle) * 0.1);
+      cutterAngle += 0.02;
+      
+      // Cutter body
+      fill(180, 160, 140);
+      stroke(200, 180, 160);
+      strokeWeight(3);
+      beginShape();
+      for (let a = 0; a < TWO_PI; a += 0.3) {
+        let r = 45 + sin(a * 6) * 8;
+        vertex(cos(a) * r, sin(a) * r);
+      }
+      endShape(CLOSE);
+      
+      // Label
+      fill(255);
+      noStroke();
+      textSize(12);
+      text("CLASS", 0, 0);
+      textSize(9);
+      text("Cookie", 0, 14);
+      pop();
+      
+      // Draw stamp effect
+      if (stampEffect > 0) {
+        push();
+        translate(100, 100);
+        noFill();
+        stroke(255, 217, 61, stampEffect * 5);
+        strokeWeight(3);
+        ellipse(0, 0, 120 + (20 - stampEffect) * 5);
+        pop();
+        stampEffect--;
+      }
+      
+      // Draw all cookies (objects)
+      for (let cookie of cookies) {
+        cookie.display();
+        cookie.move();
+      }
+      
+      // Arrow showing creation
+      if (cookies.length > 0) {
+        drawArrow(160, 100, 220, 150, color(0, 217, 255));
+        fill(0, 217, 255);
+        noStroke();
+        textSize(10);
+        text("new Cookie()", 200, 110);
+      }
+      
+      // Instructions
+      fill(150);
+      noStroke();
+      textSize(11);
+      textAlign(LEFT);
+      text("Each cookie has same SHAPE (properties) but unique VALUES", 10, height - 75);
+    }
+    
+    function drawArrow(x1, y1, x2, y2, col) {
+      stroke(col);
+      strokeWeight(2);
+      line(x1, y1, x2, y2);
+      
+      push();
+      translate(x2, y2);
+      let angle = atan2(y2 - y1, x2 - x1);
+      rotate(angle);
+      fill(col);
+      noStroke();
+      triangle(0, 0, -10, -5, -10, 5);
+      pop();
+    }
+    
+    class Cookie {
+      constructor() {
+        this.x = random(200, width - 50);
+        this.y = random(80, height - 100);
+        this.size = random(30, 55);
+        this.color = color(
+          random(180, 220),
+          random(140, 180),
+          random(80, 120)
+        );
+        this.sprinkles = floor(random(4, 10));
+        this.sprinkleColors = [];
+        this.sprinklePos = [];
+        for (let i = 0; i < this.sprinkles; i++) {
+          this.sprinkleColors.push(color(
+            random(255), random(255), random(255)
+          ));
+          this.sprinklePos.push({
+            x: random(-0.3, 0.3) * this.size,
+            y: random(-0.3, 0.3) * this.size,
+            r: random(TWO_PI)
+          });
+        }
+        this.wobble = random(TWO_PI);
+        this.targetY = height - 30;
+        this.falling = true;
+        this.id = cookies.length;
+      }
+      
+      display() {
+        push();
+        translate(this.x, this.y);
+        rotate(sin(this.wobble) * 0.05);
+        
+        // Cookie base
+        fill(this.color);
+        stroke(red(this.color) - 30, green(this.color) - 30, blue(this.color) - 30);
+        strokeWeight(2);
+        beginShape();
+        for (let a = 0; a < TWO_PI; a += 0.3) {
+          let r = this.size/2 + sin(a * 6) * 3;
+          vertex(cos(a) * r, sin(a) * r);
+        }
+        endShape(CLOSE);
+        
+        // Sprinkles
+        noStroke();
+        for (let i = 0; i < this.sprinkles; i++) {
+          fill(this.sprinkleColors[i]);
+          push();
+          translate(this.sprinklePos[i].x, this.sprinklePos[i].y);
+          rotate(this.sprinklePos[i].r);
+          rect(-4, -1.5, 8, 3, 1);
+          pop();
+        }
+        
+        pop();
+        this.wobble += 0.05;
+      }
+      
+      move() {
+        if (this.falling && this.y < this.targetY) {
+          this.y += 3;
+        } else {
+          this.falling = false;
+        }
+      }
+      
+      toString() {
+        return `Cookie #${this.id}: size=${this.size.toFixed(0)}, sprinkles=${this.sprinkles}`;
+      }
+    }
+    
+    function stampCookie() {
+      if (cookies.length < 15) {
+        cookies.push(new Cookie());
+        stampEffect = 20;
+        updateUI();
+      }
+    }
+    
+    function stampMany() {
+      for (let i = 0; i < 5 && cookies.length < 15; i++) {
+        setTimeout(() => {
+          cookies.push(new Cookie());
+          stampEffect = 20;
+          updateUI();
+        }, i * 200);
+      }
+    }
+    
+    function clearCookies() {
+      cookies = [];
+      updateUI();
+    }
+    
+    function updateUI() {
+      document.getElementById('cookie-count').textContent = cookies.length;
+      
+      let listHtml = '';
+      if (cookies.length === 0) {
+        listHtml = '<p style="color: #6b7280; font-style: italic;">Click "Stamp New Cookie" to create objects...</p>';
+      } else {
+        for (let i = cookies.length - 1; i >= 0; i--) {
+          let c = cookies[i];
+          listHtml += `<div class="cookie-item">cookies[${i}]: { size: ${c.size.toFixed(0)}, sprinkles: ${c.sprinkles} }</div>`;
+        }
+      }
+      document.getElementById('cookie-list').innerHTML = listHtml;
+    }
+  </script>
+</body>
+</html>

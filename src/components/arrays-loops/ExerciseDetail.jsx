@@ -45,7 +45,6 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit 
   const exercise = getExerciseById(exerciseId);
   const [code, setCode] = useState(exercise?.starterCode || '');
   const [showHints, setShowHints] = useState([]);
-  const [showSolution, setShowSolution] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [selectedTerm, setSelectedTerm] = useState(null);
@@ -74,7 +73,6 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit 
     if (exercise) {
       setCode(exercise.starterCode);
       setShowHints([]);
-      setShowSolution(false);
       setShowExplanation(false);
     }
   }, [exerciseId]);
@@ -309,11 +307,6 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit 
     if (!showHints.includes(index)) {
       setShowHints([...showHints, index]);
     }
-  };
-
-  const handleShowSolution = () => {
-    setShowSolution(true);
-    setCode(exercise.solutionCode);
   };
 
   const handleComplete = () => {
@@ -644,19 +637,6 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit 
           </div>
         </div>
       )}
-
-      <div className="solution-section">
-        {!showSolution ? (
-          <button className="solution-button" onClick={handleShowSolution}>
-            Show Solution (try on your own first!)
-          </button>
-        ) : (
-          <div className="solution-revealed">
-            <h3>Solution</h3>
-            <pre className="solution-code">{exercise.solutionCode}</pre>
-          </div>
-        )}
-      </div>
 
       {exercise.rubric && (
         <div className="rubric-section">

@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Array Removal - Forward vs Reverse</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #fff;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #00d9ff;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #b0b0c0;
+      margin-bottom: 20px;
+    }
+    .main-content {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .canvas-container {
+      flex: 1;
+      min-width: 600px;
+      background: #0d1117;
+      border-radius: 12px;
+      padding: 15px;
+      border: 1px solid #30363d;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+    button {
+      background: linear-gradient(135deg, #00d9ff, #00b4d8);
+      color: #000;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0,217,255,0.4);
+    }
+    button.secondary {
+      background: linear-gradient(135deg, #e94560, #c73659);
+      color: #fff;
+    }
+    button.tertiary {
+      background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+      color: #fff;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .side-panel {
+      width: 350px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .panel {
+      background: #0d1117;
+      border-radius: 12px;
+      padding: 15px;
+      border: 1px solid #30363d;
+    }
+    .panel h3 {
+      color: #4ade80;
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
+    .code-block {
+      background: #161b22;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'Consolas', monospace;
+      font-size: 11px;
+      color: #4ade80;
+      border-left: 3px solid #4ade80;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .code-block.bad {
+      border-left-color: #e94560;
+      color: #e94560;
+    }
+    .status-box {
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .status-box.success {
+      background: rgba(74, 222, 128, 0.2);
+      border: 2px solid #4ade80;
+      color: #4ade80;
+    }
+    .status-box.error {
+      background: rgba(233, 69, 96, 0.2);
+      border: 2px solid #e94560;
+      color: #e94560;
+    }
+    .status-box.neutral {
+      background: rgba(0, 217, 255, 0.1);
+      border: 2px solid #00d9ff;
+      color: #00d9ff;
+    }
+    .key-insight {
+      background: linear-gradient(135deg, rgba(255,217,61,0.1), rgba(255,217,61,0.05));
+      border: 1px solid #ffd93d;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .key-insight h4 {
+      color: #ffd93d;
+      margin-bottom: 5px;
+    }
+    .key-insight p {
+      color: #b0b0c0;
+      font-size: 0.85rem;
+    }
+    .mode-indicator {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 2px solid transparent;
+    }
+    .mode-btn.forward {
+      background: rgba(233, 69, 96, 0.2);
+      color: #e94560;
+    }
+    .mode-btn.forward.active {
+      border-color: #e94560;
+      background: rgba(233, 69, 96, 0.4);
+    }
+    .mode-btn.reverse {
+      background: rgba(74, 222, 128, 0.2);
+      color: #4ade80;
+    }
+    .mode-btn.reverse.active {
+      border-color: #4ade80;
+      background: rgba(74, 222, 128, 0.4);
+    }
+    .log-area {
+      max-height: 150px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 10px;
+      background: #161b22;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .log-entry {
+      padding: 3px 0;
+      border-bottom: 1px solid #30363d;
+    }
+    .log-entry.error { color: #e94560; }
+    .log-entry.success { color: #4ade80; }
+    .log-entry.info { color: #00d9ff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🗑️ Array Removal: Forward vs Reverse</h1>
+    <p class="subtitle">Watch what happens when removing marked items from an array</p>
+    
+    <div class="main-content">
+      <div class="canvas-container">
+        <div class="mode-indicator">
+          <div class="mode-btn forward active" onclick="setMode('forward')">
+            ❌ Forward Loop<br><small>i = 0 → length</small>
+          </div>
+          <div class="mode-btn reverse" onclick="setMode('reverse')">
+            ✅ Reverse Loop<br><small>i = length → 0</small>
+          </div>
+        </div>
+        <div class="controls">
+          <button onclick="resetArray()">🔄 Reset Array</button>
+          <button class="secondary" onclick="stepOnce()" id="step-btn">▶️ Step</button>
+          <button class="tertiary" onclick="runAll()">⏩ Run All</button>
+        </div>
+        <div id="canvas-holder"></div>
+      </div>
+      
+      <div class="side-panel">
+        <div class="panel">
+          <h3 id="code-title">❌ Forward Loop (Buggy)</h3>
+          <div class="code-block bad" id="code-display">for (let i = 0; i < arr.length; i++) {
+  if (arr[i].markedForRemoval) {
+    arr.splice(i, 1);
+  }
+}
+// BUG: After splice, items shift left
+// but i still increments!</div>
+        </div>
+        
+        <div class="panel">
+          <h3>📊 Status</h3>
+          <div class="status-box neutral" id="status-box">
+            Ready to start
+          </div>
+        </div>
+        
+        <div class="panel">
+          <h3>📝 Execution Log</h3>
+          <div class="log-area" id="log-area">
+            <div class="log-entry info">Click "Step" or "Run All" to begin...</div>
+          </div>
+        </div>
+        
+        <div class="key-insight">
+          <h4>💡 Why Reverse Works</h4>
+          <p>When removing from the END, the shift only affects items we've ALREADY checked. Items we haven't checked yet keep their original indices!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let items = [];
+    let currentIndex = -1;
+    let mode = 'forward';
+    let isRunning = false;
+    let removedCount = 0;
+    let skippedCount = 0;
+    let logs = [];
+    
+    const ITEM_WIDTH = 60;
+    const ITEM_HEIGHT = 50;
+    const START_X = 30;
+    const START_Y = 100;
+    
+    function setup() {
+      let canvas = createCanvas(640, 300);
+      canvas.parent('canvas-holder');
+      resetArray();
+    }
+    
+    function draw() {
+      background(20, 22, 30);
+      
+      // Title
+      fill(150);
+      noStroke();
+      textSize(12);
+      textAlign(LEFT);
+      text("Array indices:", START_X, START_Y - 60);
+      
+      // Draw array visualization
+      for (let i = 0; i < items.length; i++) {
+        let item = items[i];
+        let x = START_X + i * (ITEM_WIDTH + 10);
+        let y = START_Y;
+        
+        // Animate position
+        item.displayX = lerp(item.displayX, x, 0.2);
+        
+        // Highlight current index
+        if (i === currentIndex) {
+          // Scanner beam
+          stroke(0, 217, 255);
+          strokeWeight(2);
+          noFill();
+          rect(item.displayX - 5, y - 35, ITEM_WIDTH + 10, ITEM_HEIGHT + 70, 5);
+          
+          // "Scanning" label
+          fill(0, 217, 255);
+          noStroke();
+          textAlign(CENTER);
+          textSize(10);
+          text("i = " + i, item.displayX + ITEM_WIDTH/2, y - 45);
+        }
+        
+        // Item box
+        if (item.markedForRemoval) {
+          fill(233, 69, 96, 180);
+          stroke(233, 69, 96);
+        } else {
+          fill(74, 222, 128, 180);
+          stroke(74, 222, 128);
+        }
+        strokeWeight(2);
+        rect(item.displayX, y, ITEM_WIDTH, ITEM_HEIGHT, 8);
+        
+        // Item label
+        fill(255);
+        noStroke();
+        textAlign(CENTER, CENTER);
+        textSize(14);
+        text(item.label, item.displayX + ITEM_WIDTH/2, y + ITEM_HEIGHT/2);
+        
+        // Index below
+        fill(100);
+        textSize(10);
+        text("[" + i + "]", item.displayX + ITEM_WIDTH/2, y + ITEM_HEIGHT + 15);
+        
+        // Marked indicator
+        if (item.markedForRemoval) {
+          fill(255, 100, 100);
+          textSize(16);
+          text("🗑️", item.displayX + ITEM_WIDTH/2, y - 15);
+        }
+      }
+      
+      // Legend
+      fill(150);
+      textAlign(LEFT);
+      textSize(11);
+      let legendY = height - 40;
+      
+      fill(74, 222, 128);
+      rect(START_X, legendY, 15, 15, 3);
+      fill(150);
+      text("Keep", START_X + 22, legendY + 12);
+      
+      fill(233, 69, 96);
+      rect(START_X + 80, legendY, 15, 15, 3);
+      fill(150);
+      text("Remove (marked)", START_X + 102, legendY + 12);
+      
+      // Direction arrow
+      let arrowY = START_Y + ITEM_HEIGHT + 40;
+      stroke(mode === 'forward' ? color(233, 69, 96) : color(74, 222, 128));
+      strokeWeight(2);
+      if (mode === 'forward') {
+        drawArrow(START_X, arrowY, START_X + 200, arrowY);
+        fill(233, 69, 96);
+        noStroke();
+        text("Forward: i = 0 → length", START_X + 210, arrowY + 5);
+      } else {
+        drawArrow(START_X + 200, arrowY, START_X, arrowY);
+        fill(74, 222, 128);
+        noStroke();
+        text("Reverse: i = length-1 → 0", START_X + 210, arrowY + 5);
+      }
+    }
+    
+    function drawArrow(x1, y1, x2, y2) {
+      line(x1, y1, x2, y2);
+      push();
+      translate(x2, y2);
+      let angle = atan2(y2 - y1, x2 - x1);
+      rotate(angle);
+      fill(mode === 'forward' ? color(233, 69, 96) : color(74, 222, 128));
+      noStroke();
+      triangle(0, 0, -10, -5, -10, 5);
+      pop();
+    }
+    
+    function setMode(newMode) {
+      mode = newMode;
+      document.querySelector('.mode-btn.forward').classList.toggle('active', mode === 'forward');
+      document.querySelector('.mode-btn.reverse').classList.toggle('active', mode === 'reverse');
+      
+      if (mode === 'forward') {
+        document.getElementById('code-title').innerHTML = '❌ Forward Loop (Buggy)';
+        document.getElementById('code-display').className = 'code-block bad';
+        document.getElementById('code-display').innerHTML = 
+`for (let i = 0; i < arr.length; i++) {
+  if (arr[i].markedForRemoval) {
+    arr.splice(i, 1);
+  }
+}
+// BUG: After splice, items shift left
+// but i still increments!`;
+      } else {
+        document.getElementById('code-title').innerHTML = '✅ Reverse Loop (Correct)';
+        document.getElementById('code-display').className = 'code-block';
+        document.getElementById('code-display').innerHTML = 
+`for (let i = arr.length-1; i >= 0; i--) {
+  if (arr[i].markedForRemoval) {
+    arr.splice(i, 1);
+  }
+}
+// Items shift left, but we already
+// checked those indices!`;
+      }
+      
+      resetArray();
+    }
+    
+    function resetArray() {
+      items = [];
+      // Create array with some items marked for removal
+      let labels = ['A', 'B', 'X', 'C', 'X', 'D', 'X', 'E'];
+      for (let i = 0; i < labels.length; i++) {
+        items.push({
+          label: labels[i],
+          markedForRemoval: labels[i] === 'X',
+          displayX: START_X + i * (ITEM_WIDTH + 10)
+        });
+      }
+      
+      currentIndex = -1;
+      isRunning = false;
+      removedCount = 0;
+      skippedCount = 0;
+      logs = [];
+      addLog('Array reset. 3 items marked for removal.', 'info');
+      updateStatus('Ready to start', 'neutral');
+      document.getElementById('step-btn').disabled = false;
+    }
+    
+    function stepOnce() {
+      if (isRunning) return;
+      
+      if (currentIndex === -1) {
+        // First step
+        currentIndex = mode === 'forward' ? 0 : items.length - 1;
+        addLog(`Starting ${mode} loop at i = ${currentIndex}`, 'info');
+      } else {
+        // Process current item
+        processCurrentItem();
+        
+        // Move to next
+        if (mode === 'forward') {
+          currentIndex++;
+        } else {
+          currentIndex--;
+        }
+      }
+      
+      // Check if done
+      checkDone();
+    }
+    
+    function processCurrentItem() {
+      if (currentIndex < 0 || currentIndex >= items.length) return;
+      
+      let item = items[currentIndex];
+      if (item.markedForRemoval) {
+        addLog(`i=${currentIndex}: Found "${item.label}" - REMOVING with splice(${currentIndex}, 1)`, 'success');
+        items.splice(currentIndex, 1);
+        removedCount++;
+        
+        if (mode === 'forward') {
+          addLog(`⚠️ Array shifted left! Next i=${currentIndex + 1} will skip the item that moved to i=${currentIndex}`, 'error');
+          skippedCount++;
+        } else {
+          addLog(`Items shifted, but we already checked those indices ✓`, 'success');
+        }
+      } else {
+        addLog(`i=${currentIndex}: "${item.label}" not marked, keeping`, 'info');
+      }
+    }
+    
+    function checkDone() {
+      let done = false;
+      if (mode === 'forward' && currentIndex >= items.length) done = true;
+      if (mode === 'reverse' && currentIndex < 0) done = true;
+      
+      if (done) {
+        let markedRemaining = items.filter(item => item.markedForRemoval).length;
+        
+        if (markedRemaining > 0) {
+          updateStatus(`❌ BUG! ${markedRemaining} marked item(s) still in array!`, 'error');
+          addLog(`FAIL: ${markedRemaining} item(s) were skipped due to index shifting!`, 'error');
+        } else {
+          updateStatus(`✅ Success! All marked items removed correctly.`, 'success');
+          addLog(`SUCCESS: All ${removedCount} marked items removed!`, 'success');
+        }
+        
+        currentIndex = -1;
+        document.getElementById('step-btn').disabled = true;
+      }
+    }
+    
+    function runAll() {
+      if (currentIndex === -1) {
+        currentIndex = mode === 'forward' ? 0 : items.length - 1;
+        addLog(`Starting ${mode} loop at i = ${currentIndex}`, 'info');
+      }
+      
+      isRunning = true;
+      runStep();
+    }
+    
+    function runStep() {
+      if (!isRunning) return;
+      
+      let done = false;
+      if (mode === 'forward' && currentIndex >= items.length) done = true;
+      if (mode === 'reverse' && currentIndex < 0) done = true;
+      
+      if (done) {
+        isRunning = false;
+        checkDone();
+        return;
+      }
+      
+      processCurrentItem();
+      
+      if (mode === 'forward') {
+        currentIndex++;
+      } else {
+        currentIndex--;
+      }
+      
+      setTimeout(runStep, 500);
+    }
+    
+    function addLog(message, type) {
+      logs.unshift({ message, type });
+      if (logs.length > 20) logs.pop();
+      
+      let html = logs.map(log => 
+        `<div class="log-entry ${log.type}">${log.message}</div>`
+      ).join('');
+      document.getElementById('log-area').innerHTML = html;
+    }
+    
+    function updateStatus(message, type) {
+      let el = document.getElementById('status-box');
+      el.innerHTML = message;
+      el.className = 'status-box ' + type;
+    }
+  </script>
+</body>
+</html>
