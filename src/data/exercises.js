@@ -874,6 +874,15 @@ function keyPressed() {
         day: 6,
         title: "For Loops",
         objective: "Use for-loops to repeat drawing commands",
+        planningTools: [
+          {
+            id: "pt-loop-planning",
+            title: "Loop Planning Template",
+            description: "Map out your variables, loop structure, and what happens each iteration",
+            file: "/planning-tools/loop-planning.pdf",
+            icon: "📋"
+          }
+        ],
         exercises: [
           {
             id: "w2d6-1",
@@ -1025,6 +1034,15 @@ function draw() {
         day: 7,
         title: "Loop Patterns",
         objective: "Use loop variables to create visual patterns",
+        planningTools: [
+          {
+            id: "pt-loop-planning",
+            title: "Loop Planning Template",
+            description: "Map out your variables, loop structure, and what happens each iteration",
+            file: "/planning-tools/loop-planning.pdf",
+            icon: "📋"
+          }
+        ],
         exercises: [
           {
             id: "w2d7-1",
@@ -1170,6 +1188,15 @@ function draw() {
         day: 8,
         title: "Animation with Loops",
         objective: "Combine loops with animation",
+        planningTools: [
+          {
+            id: "pt-loop-planning",
+            title: "Loop Planning Template",
+            description: "Map out your variables, loop structure, and what happens each iteration",
+            file: "/planning-tools/loop-planning.pdf",
+            icon: "📋"
+          }
+        ],
         exercises: [
           {
             id: "w2d8-1",
@@ -1341,6 +1368,15 @@ function draw() {
         day: 9,
         title: "While Loops",
         objective: "Use while-loops for conditional repetition",
+        planningTools: [
+          {
+            id: "pt-loop-planning",
+            title: "Loop Planning Template",
+            description: "Map out your variables, loop structure, and what happens each iteration",
+            file: "/planning-tools/loop-planning.pdf",
+            icon: "📋"
+          }
+        ],
         exercises: [
           {
             id: "w2d9-1",
@@ -1496,6 +1532,15 @@ while (count < 50) {
         day: 10,
         title: "Mini-Project: Pattern Poster Generator",
         objective: "Create an interactive pattern generator using loops",
+        planningTools: [
+          {
+            id: "pt-loop-planning",
+            title: "Loop Planning Template",
+            description: "Map out your variables, loop structure, and what happens each iteration",
+            file: "/planning-tools/loop-planning.pdf",
+            icon: "📋"
+          }
+        ],
         exercises: [
           {
             id: "w2d10-project",

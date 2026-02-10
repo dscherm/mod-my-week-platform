@@ -75,6 +75,27 @@ function WeekView({ weekKey, onSelectExercise, onBack, completedExercises }) {
               <p className="day-objective">{day.objective}</p>
             </div>
 
+            {day.planningTools && day.planningTools.length > 0 && (
+              <div className="planning-tools-strip">
+                {day.planningTools.map((tool) => (
+                  <a
+                    key={tool.id}
+                    className="planning-tool-card"
+                    href={tool.file}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <span className="planning-tool-icon">{tool.icon}</span>
+                    <div className="planning-tool-content">
+                      <h4>{tool.title}</h4>
+                      <p>{tool.description}{tool.page ? ` (${tool.page})` : ''}</p>
+                    </div>
+                    <span className="planning-tool-open">↗</span>
+                  </a>
+                ))}
+              </div>
+            )}
+
             <div className="exercises-grid">
               {day.exercises.map((exercise) => {
                 const isCompleted = completedExercises.includes(exercise.id);

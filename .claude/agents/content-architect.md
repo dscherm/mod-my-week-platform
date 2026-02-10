@@ -6,6 +6,8 @@ model: sonnet
 skills:
   - create-exercise-module
   - difficulty-calibration
+  - add-visualization
+  - add-planning-tool
 memory: project
 ---
 

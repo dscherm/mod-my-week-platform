@@ -8,6 +8,13 @@ export const objectsImagesExercises = {
     bigIdea: "Objects combine data and behavior. Arrays of objects let us manage many entities with their own properties and methods.",
     visualizations: [
       {
+        id: "viz-bubble-factory",
+        title: "OOP: The Bubble Factory",
+        description: "Step through how classes, constructors, methods, arrays & loops work together to build a bubble simulation from scratch",
+        file: "/visualizations/viz_obj_00_bubble_factory.html",
+        icon: "🫧"
+      },
+      {
         id: "viz-cookie-cutter",
         title: "Cookie Cutter Factory",
         description: "See how one class (cookie cutter) creates many unique objects (cookies) with the same shape but different values",
@@ -41,6 +48,16 @@ export const objectsImagesExercises = {
         day: 1,
         title: "Arrays of Objects",
         objective: "Create and manage arrays of objects using classes",
+        planningTools: [
+          {
+            id: "pt-oop-factory",
+            title: "Loop & Array Planning Sheet",
+            description: "Plan your variables, array, and loop structure before coding",
+            file: "/planning-tools/oop-graphic-organizer.docx",
+            icon: "📋",
+            page: "Page 3"
+          }
+        ],
         exercises: [
           {
             id: "oi-w1d1-1",
@@ -358,6 +375,16 @@ function draw() {
         day: 2,
         title: "Building Object Classes",
         objective: "Design classes with meaningful properties and methods",
+        planningTools: [
+          {
+            id: "pt-oop-blueprint",
+            title: "Class Blueprint Organizer",
+            description: "Plan your class name, properties, constructor, and methods before writing code",
+            file: "/planning-tools/oop-graphic-organizer.docx",
+            icon: "📋",
+            page: "Pages 1-2"
+          }
+        ],
         exercises: [
           {
             id: "oi-w1d2-1",
