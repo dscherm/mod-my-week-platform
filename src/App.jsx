@@ -8,6 +8,7 @@ import TeacherHome from './components/TeacherHome';
 import ChallengeList from './components/ChallengeList';
 import ChallengeDetail from './components/ChallengeDetail';
 import VocabularyPage from './components/VocabularyPage';
+import FlashcardPage from './components/FlashcardPage';
 import NetworkMonitor from './components/NetworkMonitor';
 import InteractiveTools from './components/InteractiveTools';
 import StudentLogin from './components/StudentLogin';
@@ -84,6 +85,9 @@ function App() {
   const [selectedFunctionsScopeWeek, setSelectedFunctionsScopeWeek] = useState(null);
   const [selectedFunctionsScopeExercise, setSelectedFunctionsScopeExercise] = useState(null);
 
+  // Planning Tools state
+  const [completedPlanningTools, setCompletedPlanningTools] = useState([]);
+
   // Check for existing session
   useEffect(() => {
     const savedSession = localStorage.getItem('cyberrange-session');
@@ -136,6 +140,7 @@ function App() {
           setCompletedDataApisExercises(progress.completedDataApisExercises || []);
           setCompletedObjectsImagesExercises(progress.completedObjectsImagesExercises || []);
           setCompletedFunctionsScopeExercises(progress.completedFunctionsScopeExercises || []);
+          setCompletedPlanningTools(progress.completedPlanningTools || []);
           setExitTicketResponses(progress.exitTicketResponses || {});
           setTotalPoints(progress.totalPoints || 0);
         }
@@ -181,6 +186,7 @@ function App() {
         setCompletedDataApisExercises(data.completedDataApisExercises || []);
         setCompletedObjectsImagesExercises(data.completedObjectsImagesExercises || []);
         setCompletedFunctionsScopeExercises(data.completedFunctionsScopeExercises || []);
+        setCompletedPlanningTools(data.completedPlanningTools || []);
         setExitTicketResponses(data.exitTicketResponses || {});
         setTotalPoints(data.points || 0);
       } catch (e) {
@@ -190,7 +196,7 @@ function App() {
   };
 
   // Save progress (to Firebase and localStorage)
-  const saveProgress = useCallback(async (challenges, scenarios, exercises, pseudocode, flowcharts, dataApis, objectsImages, functionsScope, exitTickets, points) => {
+  const saveProgress = useCallback(async (challenges, scenarios, exercises, pseudocode, flowcharts, dataApis, objectsImages, functionsScope, planningTools, exitTickets, points) => {
     // Always save to localStorage as backup
     localStorage.setItem('cyberrange-progress', JSON.stringify({
       completed: challenges,
@@ -201,6 +207,7 @@ function App() {
       completedDataApisExercises: dataApis,
       completedObjectsImagesExercises: objectsImages,
       completedFunctionsScopeExercises: functionsScope,
+      completedPlanningTools: planningTools,
       exitTicketResponses: exitTickets,
       points: points
     }));
@@ -217,6 +224,7 @@ function App() {
           completedDataApisExercises: dataApis,
           completedObjectsImagesExercises: objectsImages,
           completedFunctionsScopeExercises: functionsScope,
+          completedPlanningTools: planningTools,
           exitTicketResponses: exitTickets,
           totalPoints: points
         });
@@ -229,9 +237,9 @@ function App() {
   // Save progress when it changes
   useEffect(() => {
     if (currentUser) {
-      saveProgress(completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, completedDataApisExercises, completedObjectsImagesExercises, completedFunctionsScopeExercises, exitTicketResponses, totalPoints);
+      saveProgress(completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, completedDataApisExercises, completedObjectsImagesExercises, completedFunctionsScopeExercises, completedPlanningTools, exitTicketResponses, totalPoints);
     }
-  }, [completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, completedDataApisExercises, completedObjectsImagesExercises, completedFunctionsScopeExercises, exitTicketResponses, totalPoints, currentUser, saveProgress]);
+  }, [completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, completedDataApisExercises, completedObjectsImagesExercises, completedFunctionsScopeExercises, completedPlanningTools, exitTicketResponses, totalPoints, currentUser, saveProgress]);
 
   // Handle student login
   const handleLogin = (user) => {
@@ -298,6 +306,7 @@ function App() {
     setCompletedDataApisExercises([]);
     setCompletedObjectsImagesExercises([]);
     setCompletedFunctionsScopeExercises([]);
+    setCompletedPlanningTools([]);
     setExitTicketResponses({});
     setAssignments([]);
     setTotalPoints(0);
@@ -361,6 +370,7 @@ function App() {
       setCompletedDataApisExercises([]);
       setCompletedObjectsImagesExercises([]);
       setCompletedFunctionsScopeExercises([]);
+      setCompletedPlanningTools([]);
       setExitTicketResponses({});
       setTotalPoints(0);
       localStorage.removeItem('cyberrange-progress');
@@ -554,6 +564,13 @@ function App() {
     }
   };
 
+  // Handler for planning tool saves
+  const handlePlanningToolSave = (toolId) => {
+    if (!completedPlanningTools.includes(toolId)) {
+      setCompletedPlanningTools(prev => [...prev, toolId]);
+    }
+  };
+
   const handleBackFromFunctionsScopeExercise = () => {
     setSelectedFunctionsScopeExercise(null);
     setCurrentView('functions-scope-week');
@@ -637,6 +654,12 @@ function App() {
               Vocabulary
             </button>
             <button
+              className={`nav-btn ${currentView === 'flashcards' ? 'active' : ''}`}
+              onClick={() => setCurrentView('flashcards')}
+            >
+              Flashcards
+            </button>
+            <button
               className="nav-btn theme-btn"
               onClick={() => setShowThemeSwitcher(true)}
               title="Change Theme"
@@ -716,6 +739,9 @@ function App() {
             completedExercises={completedExercises}
             exitTicketResponses={exitTicketResponses}
             onSubmitExitTicket={handleSubmitExitTicket}
+            student={currentUser}
+            completedPlanningTools={completedPlanningTools}
+            onPlanningToolSave={handlePlanningToolSave}
           />
         )}
 
@@ -726,10 +752,16 @@ function App() {
             onBack={handleBackFromExercise}
             isCompleted={completedExercises.includes(selectedExercise)}
             onSubmit={handleSubmission}
+            onNavigateExercise={handleSelectExercise}
+            completedExercises={completedExercises}
           />
         )}
 
         {currentView === 'vocabulary' && <VocabularyPage />}
+
+        {currentView === 'flashcards' && (
+          <FlashcardPage onBack={handleBackToDashboard} />
+        )}
 
         {currentView === 'tools' && <InteractiveTools />}
 
@@ -822,6 +854,8 @@ function App() {
             onBack={handleBackFromDataApisExercise}
             isCompleted={completedDataApisExercises.includes(selectedDataApisExercise)}
             onSubmit={handleSubmission}
+            onNavigateExercise={handleSelectDataApisExercise}
+            completedExercises={completedDataApisExercises}
           />
         )}
 
@@ -835,6 +869,9 @@ function App() {
             onSelectExercise={handleSelectObjectsImagesExercise}
             onBack={handleBackFromObjectsImagesWeek}
             completedExercises={completedObjectsImagesExercises}
+            student={currentUser}
+            completedPlanningTools={completedPlanningTools}
+            onPlanningToolSave={handlePlanningToolSave}
           />
         )}
 
@@ -845,6 +882,8 @@ function App() {
             onBack={handleBackFromObjectsImagesExercise}
             isCompleted={completedObjectsImagesExercises.includes(selectedObjectsImagesExercise)}
             onSubmit={handleSubmission}
+            onNavigateExercise={handleSelectObjectsImagesExercise}
+            completedExercises={completedObjectsImagesExercises}
           />
         )}
 

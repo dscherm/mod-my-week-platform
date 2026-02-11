@@ -4073,6 +4073,16 @@ export function getExerciseById(id) {
   return null;
 }
 
+export function getExerciseContext(exerciseId) {
+  for (const [weekKey, week] of Object.entries(exercises)) {
+    const flat = [];
+    for (const day of week.days) flat.push(...day.exercises);
+    const idx = flat.findIndex(ex => ex.id === exerciseId);
+    if (idx !== -1) return { weekKey, weekTitle: week.title, days: week.days, flatExercises: flat, currentIndex: idx };
+  }
+  return null;
+}
+
 export function getAllExercises() {
   const all = [];
   for (const week of Object.values(exercises)) {

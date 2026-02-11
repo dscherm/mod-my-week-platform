@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getObjectsImagesExerciseById } from '../../data/objects-images-exercises';
+import { getObjectsImagesExerciseById, getObjectsImagesExerciseContext } from '../../data/objects-images-exercises';
 
-function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit }) {
+function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit, onNavigateExercise, completedExercises }) {
   const exercise = getObjectsImagesExerciseById(exerciseId);
   const [code, setCode] = useState('');
   const [showHints, setShowHints] = useState([]);
@@ -9,8 +9,17 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
   const [isRunning, setIsRunning] = useState(false);
   const [consoleOutput, setConsoleOutput] = useState([]);
   const [showConsole, setShowConsole] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(() => localStorage.getItem('editor-expanded') === 'true');
+  const [draftSaved, setDraftSaved] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [showSidePanel, setShowSidePanel] = useState(false);
+  const codeRef = useRef(code);
   const iframeRef = useRef(null);
   const consoleRef = useRef(null);
+  const editorContainerRef = useRef(null);
+
+  const context = getObjectsImagesExerciseContext(exerciseId);
+  const nextExercise = context?.flatExercises[context.currentIndex + 1] || null;
 
   // Initialize code from exercise
   useEffect(() => {
@@ -21,6 +30,19 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
       setConsoleOutput([]);
     }
   }, [exerciseId, exercise]);
+
+  useEffect(() => { codeRef.current = code; }, [code]);
+
+  useEffect(() => {
+    const save = () => {
+      if (codeRef.current) localStorage.setItem(`draft-${exerciseId}`, codeRef.current);
+    };
+    window.addEventListener('beforeunload', save);
+    return () => {
+      save();
+      window.removeEventListener('beforeunload', save);
+    };
+  }, [exerciseId]);
 
   // Listen for console messages from iframe
   useEffect(() => {
@@ -43,6 +65,55 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
       consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
     }
   }, [consoleOutput]);
+
+  // Auto-save draft (debounced 3s)
+  useEffect(() => {
+    if (!exerciseId || !code) return;
+    const timer = setTimeout(() => {
+      localStorage.setItem(`draft-${exerciseId}`, code);
+      setDraftSaved(true);
+      setTimeout(() => setDraftSaved(false), 2000);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [code, exerciseId]);
+
+  // Restore draft on mount
+  useEffect(() => {
+    const draft = localStorage.getItem(`draft-${exerciseId}`);
+    if (draft && draft !== exercise?.starterCode) {
+      if (window.confirm('You have a saved draft for this exercise. Restore it?')) {
+        setCode(draft);
+      } else {
+        localStorage.removeItem(`draft-${exerciseId}`);
+      }
+    }
+  }, [exerciseId]);
+
+  // Resize handle logic
+  const handleResizeStart = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+
+    const handleMouseMove = (moveEvent) => {
+      if (!editorContainerRef.current) return;
+      const rect = editorContainerRef.current.getBoundingClientRect();
+      const x = moveEvent.clientX - rect.left;
+      const totalWidth = rect.width;
+      const leftWidth = Math.max(200, Math.min(x - 4, totalWidth - 208));
+      const rightWidth = totalWidth - leftWidth - 8;
+      editorContainerRef.current.style.setProperty('--editor-split', `${leftWidth}px`);
+      editorContainerRef.current.style.setProperty('--output-split', `${rightWidth}px`);
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
 
   if (!exercise) {
     return (
@@ -167,6 +238,7 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
           exerciseTitle: exercise.title
         });
       }
+      localStorage.removeItem(`draft-${exerciseId}`);
       onComplete(exercise.id, exercise.points);
     }
   };
@@ -261,8 +333,33 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
   };
 
   return (
-    <div className="exercise-detail objects-images-exercise">
-      <button className="back-button" onClick={onBack}>← Back to Week</button>
+    <div className={`exercise-detail objects-images-exercise ${isExpanded ? 'expanded' : ''}`}>
+      <div className="editor-toolbar">
+        <button className="back-button" onClick={() => { localStorage.setItem(`draft-${exerciseId}`, code); onBack(); }}>← Back to Week</button>
+        <button onClick={() => {
+          const next = !isExpanded;
+          setIsExpanded(next);
+          localStorage.setItem('editor-expanded', next);
+        }} className="expand-btn">
+          {isExpanded ? '⇲ Collapse' : '⇱ Expand'}
+        </button>
+        <button onClick={() => {
+          localStorage.setItem(`draft-${exerciseId}`, code);
+          setDraftSaved(true);
+          setTimeout(() => setDraftSaved(false), 2000);
+        }} className="save-draft-btn">
+          Save Draft
+        </button>
+        {draftSaved && <span className="draft-indicator">Draft saved</span>}
+        {nextExercise && (
+          <button onClick={() => onNavigateExercise(nextExercise.id)} className="next-exercise-btn">
+            Next Activity →
+          </button>
+        )}
+        <button onClick={() => setShowSidePanel(!showSidePanel)} className="week-panel-btn">
+          {showSidePanel ? 'Close' : 'Activities'}
+        </button>
+      </div>
 
       <div className="exercise-header-detail">
         <div className="exercise-meta">
@@ -330,7 +427,7 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
         <pre>{exercise.prompt}</pre>
       </div>
 
-      <div className="editor-container">
+      <div className="editor-container" ref={editorContainerRef}>
         <div className="code-section">
           <div className="code-header">
             <h3>Your Code</h3>
@@ -349,6 +446,11 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
             spellCheck={false}
           />
         </div>
+
+        <div
+          className={`resize-handle ${isDragging ? 'dragging' : ''}`}
+          onMouseDown={handleResizeStart}
+        />
 
         <div className="canvas-section">
           <h3>Output</h3>
@@ -455,6 +557,32 @@ function ObjectsImagesExerciseDetail({ exerciseId, onBack, onComplete, isComplet
           </button>
         )}
       </div>
+
+      <div className={`week-side-panel ${showSidePanel ? 'open' : ''}`}>
+        <div className="side-panel-header">
+          <h3>{context?.weekTitle}</h3>
+          <button onClick={() => setShowSidePanel(false)}>✕</button>
+        </div>
+        <div className="side-panel-content">
+          {context?.days.map(day => (
+            <div key={day.day} className="side-panel-day">
+              <h4>Day {day.day}: {day.title}</h4>
+              {day.exercises.map(ex => (
+                <button
+                  key={ex.id}
+                  className={`side-panel-exercise ${ex.id === exerciseId ? 'current' : ''} ${completedExercises?.includes(ex.id) ? 'completed' : ''}`}
+                  onClick={() => { onNavigateExercise(ex.id); setShowSidePanel(false); }}
+                >
+                  <span className="sp-status">{completedExercises?.includes(ex.id) ? '✓' : '○'}</span>
+                  <span className="sp-title">{ex.title}</span>
+                  <span className="sp-meta">{ex.difficulty} · {ex.points}pts</span>
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+      {showSidePanel && <div className="side-panel-overlay" onClick={() => setShowSidePanel(false)} />}
     </div>
   );
 }

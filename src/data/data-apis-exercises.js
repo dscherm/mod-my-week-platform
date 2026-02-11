@@ -6556,6 +6556,16 @@ export function getDataApiExerciseById(id) {
   return null;
 }
 
+export function getDataApiExerciseContext(exerciseId) {
+  for (const [weekKey, week] of Object.entries(dataApiExercises)) {
+    const flat = [];
+    for (const day of week.days) flat.push(...day.exercises);
+    const idx = flat.findIndex(ex => ex.id === exerciseId);
+    if (idx !== -1) return { weekKey, weekTitle: week.title, days: week.days, flatExercises: flat, currentIndex: idx };
+  }
+  return null;
+}
+
 export function getAllDataApiExercises() {
   const all = [];
   for (const week of Object.values(dataApiExercises)) {

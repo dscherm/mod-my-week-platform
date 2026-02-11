@@ -3010,6 +3010,16 @@ export function getObjectsImagesExerciseById(exerciseId) {
   return null;
 }
 
+export function getObjectsImagesExerciseContext(exerciseId) {
+  for (const [weekKey, week] of Object.entries(objectsImagesExercises)) {
+    const flat = [];
+    for (const day of week.days) flat.push(...day.exercises);
+    const idx = flat.findIndex(ex => ex.id === exerciseId);
+    if (idx !== -1) return { weekKey, weekTitle: week.title, days: week.days, flatExercises: flat, currentIndex: idx };
+  }
+  return null;
+}
+
 // Helper to get week count
 export function getObjectsImagesWeekCount() {
   return Object.keys(objectsImagesExercises).length;
