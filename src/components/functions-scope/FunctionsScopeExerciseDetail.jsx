@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getFunctionsScopeExerciseById } from '../../data/functions-scope-exercises';
+import TeamModeModal from '../TeamModeModal';
 
-function FunctionsScopeExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit }) {
+function FunctionsScopeExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit, student }) {
   const exercise = getFunctionsScopeExerciseById(exerciseId);
   const [code, setCode] = useState('');
   const [showHints, setShowHints] = useState([]);
+  const [showTeamMode, setShowTeamMode] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [consoleOutput, setConsoleOutput] = useState([]);
@@ -262,7 +264,12 @@ function FunctionsScopeExerciseDetail({ exerciseId, onBack, onComplete, isComple
 
   return (
     <div className="exercise-detail functions-scope-exercise">
-      <button className="back-button" onClick={onBack}>← Back to Week</button>
+      <div className="editor-toolbar">
+        <button className="back-button" onClick={onBack}>← Back to Week</button>
+        <button onClick={() => setShowTeamMode(true)} className="team-mode-btn">
+          {'\u{1F465}'} Team Mode
+        </button>
+      </div>
 
       <div className="exercise-header-detail">
         <div className="exercise-meta">
@@ -456,6 +463,15 @@ function FunctionsScopeExerciseDetail({ exerciseId, onBack, onComplete, isComple
           </button>
         )}
       </div>
+      {showTeamMode && student && (
+        <TeamModeModal
+          exerciseId={exerciseId}
+          exerciseTitle={exercise.title}
+          moduleName="functions-scope"
+          student={student}
+          onClose={() => setShowTeamMode(false)}
+        />
+      )}
     </div>
   );
 }

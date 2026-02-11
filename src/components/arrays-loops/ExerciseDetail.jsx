@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getExerciseById, getExerciseContext } from '../../data/exercises';
 import { vocabulary } from '../../data/vocabulary';
+import TeamModeModal from '../TeamModeModal';
 
 // Helper to ensure p5.js is loaded
 const loadP5 = () => {
@@ -41,10 +42,11 @@ const loadP5 = () => {
   });
 };
 
-function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit, onNavigateExercise, completedExercises }) {
+function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit, onNavigateExercise, completedExercises, student }) {
   const exercise = getExerciseById(exerciseId);
   const [code, setCode] = useState(exercise?.starterCode || '');
   const [showHints, setShowHints] = useState([]);
+  const [showTeamMode, setShowTeamMode] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [selectedTerm, setSelectedTerm] = useState(null);
@@ -508,6 +510,9 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit,
           Save Draft
         </button>
         {draftSaved && <span className="draft-indicator">Draft saved</span>}
+        <button onClick={() => setShowTeamMode(true)} className="team-mode-btn">
+          {'\u{1F465}'} Team Mode
+        </button>
         {nextExercise && (
           <button onClick={() => onNavigateExercise(nextExercise.id)} className="next-exercise-btn">
             Next Activity →
@@ -790,6 +795,15 @@ function ExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit,
         </div>
       </div>
       {showSidePanel && <div className="side-panel-overlay" onClick={() => setShowSidePanel(false)} />}
+      {showTeamMode && student && (
+        <TeamModeModal
+          exerciseId={exerciseId}
+          exerciseTitle={exercise.title}
+          moduleName="arrays-loops"
+          student={student}
+          onClose={() => setShowTeamMode(false)}
+        />
+      )}
     </div>
   );
 }

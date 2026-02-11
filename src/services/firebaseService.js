@@ -65,9 +65,9 @@ const DEMO_STORAGE_KEY = 'cyberRangeDemo';
 const getDemoData = () => {
   try {
     const data = localStorage.getItem(DEMO_STORAGE_KEY);
-    return data ? JSON.parse(data) : { students: {}, classes: {}, assignments: {}, teachers: {} };
+    return data ? JSON.parse(data) : { students: {}, classes: {}, assignments: {}, teachers: {}, helpRequests: {} };
   } catch {
-    return { students: {}, classes: {}, assignments: {}, teachers: {} };
+    return { students: {}, classes: {}, assignments: {}, teachers: {}, helpRequests: {} };
   }
 };
 
@@ -99,6 +99,17 @@ const notifyDemoSubscribers = (key) => {
         createdAt: a.createdAt ? new Date(a.createdAt) : null,
         assignedAt: a.assignedAt ? new Date(a.assignedAt) : null
       })));
+    } else if (key.startsWith('helpRequests:')) {
+      const classCode = key.replace('helpRequests:', '');
+      const requests = Object.entries(data.helpRequests?.[classCode] || {})
+        .map(([id, r]) => ({
+          id,
+          ...r,
+          createdAt: r.createdAt ? new Date(r.createdAt) : null,
+          resolvedAt: r.resolvedAt ? new Date(r.resolvedAt) : null
+        }))
+        .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+      cb(requests);
     }
   });
 };
@@ -1004,6 +1015,266 @@ export const deleteClass = async (teacherId, classCode) => {
   await deleteDoc(classRef);
 
   return true;
+};
+
+// ============================================
+// TEAM MODE FUNCTIONS
+// ============================================
+
+// Save team mode data for a student on an exercise
+export const saveTeamModeData = async (studentId, exerciseId, data) => {
+  if (isDemoMode()) {
+    const demoData = getDemoData();
+    if (!demoData.students[studentId]) return;
+
+    if (!demoData.students[studentId].teamModeData) {
+      demoData.students[studentId].teamModeData = {};
+    }
+
+    demoData.students[studentId].teamModeData[exerciseId] = {
+      role: data.role,
+      teamMembers: data.teamMembers,
+      contributions: data.contributions,
+      lastSaved: new Date().toISOString()
+    };
+
+    demoData.students[studentId].lastActivity = new Date().toISOString();
+    saveDemoData(demoData);
+    return;
+  }
+
+  if (!db) return;
+
+  const studentRef = doc(db, STUDENTS_COLLECTION, studentId);
+  const updateData = {};
+  updateData[`teamModeData.${exerciseId}`] = {
+    role: data.role,
+    teamMembers: data.teamMembers,
+    contributions: data.contributions,
+    lastSaved: serverTimestamp()
+  };
+  updateData.lastActivity = serverTimestamp();
+
+  await updateDoc(studentRef, updateData);
+};
+
+// Get team mode data for a student on an exercise
+export const getTeamModeData = async (studentId, exerciseId) => {
+  if (isDemoMode()) {
+    const demoData = getDemoData();
+    if (!demoData.students[studentId]) return null;
+    const teamData = demoData.students[studentId].teamModeData || {};
+    return teamData[exerciseId] || null;
+  }
+
+  if (!db) return null;
+
+  const studentRef = doc(db, STUDENTS_COLLECTION, studentId);
+  const studentDoc = await getDoc(studentRef);
+
+  if (studentDoc.exists()) {
+    const teamData = studentDoc.data().teamModeData || {};
+    return teamData[exerciseId] || null;
+  }
+  return null;
+};
+
+// Get all team mode data for a class (teacher view)
+export const getClassTeamModeData = async (classCode) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    const results = [];
+
+    Object.entries(data.students)
+      .filter(([_, student]) => student.classCode === classCode)
+      .forEach(([studentId, student]) => {
+        if (student.teamModeData) {
+          Object.entries(student.teamModeData).forEach(([exerciseId, tmData]) => {
+            results.push({
+              studentId,
+              studentName: student.name,
+              exerciseId,
+              role: tmData.role,
+              teamMembers: tmData.teamMembers,
+              contributions: tmData.contributions,
+              lastSaved: tmData.lastSaved
+            });
+          });
+        }
+      });
+
+    return results;
+  }
+
+  if (!db) return [];
+
+  const studentsQuery = query(
+    collection(db, STUDENTS_COLLECTION),
+    where('classCode', '==', classCode)
+  );
+
+  const snapshot = await getDocs(studentsQuery);
+  const results = [];
+
+  snapshot.docs.forEach(docSnap => {
+    const student = docSnap.data();
+    if (student.teamModeData) {
+      Object.entries(student.teamModeData).forEach(([exerciseId, tmData]) => {
+        results.push({
+          studentId: docSnap.id,
+          studentName: student.name,
+          exerciseId,
+          role: tmData.role,
+          teamMembers: tmData.teamMembers,
+          contributions: tmData.contributions,
+          lastSaved: tmData.lastSaved?.toDate?.() || tmData.lastSaved || null
+        });
+      });
+    }
+  });
+
+  return results;
+};
+
+// ============================================
+// HELP REQUEST FUNCTIONS
+// ============================================
+
+// Create a help request
+export const createHelpRequest = async (classCode, requestData) => {
+  if (isDemoMode()) {
+    const demoData = getDemoData();
+    if (!demoData.helpRequests) demoData.helpRequests = {};
+    if (!demoData.helpRequests[classCode]) demoData.helpRequests[classCode] = {};
+
+    const requestId = `help_${Date.now()}`;
+    demoData.helpRequests[classCode][requestId] = {
+      studentId: requestData.studentId,
+      studentName: requestData.studentName,
+      exerciseId: requestData.exerciseId,
+      exerciseTitle: requestData.exerciseTitle,
+      moduleName: requestData.moduleName,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      resolvedAt: null,
+      resolvedBy: null
+    };
+
+    saveDemoData(demoData);
+    notifyDemoSubscribers(`helpRequests:${classCode}`);
+    return { id: requestId };
+  }
+
+  if (!db) return null;
+
+  const helpRef = collection(db, CLASSES_COLLECTION, classCode, 'helpRequests');
+  const newRequest = {
+    studentId: requestData.studentId,
+    studentName: requestData.studentName,
+    exerciseId: requestData.exerciseId,
+    exerciseTitle: requestData.exerciseTitle,
+    moduleName: requestData.moduleName,
+    status: 'pending',
+    createdAt: serverTimestamp(),
+    resolvedAt: null,
+    resolvedBy: null
+  };
+
+  const docRef = doc(helpRef);
+  await setDoc(docRef, newRequest);
+  return { id: docRef.id };
+};
+
+// Resolve a help request
+export const resolveHelpRequest = async (classCode, requestId, resolvedBy) => {
+  if (isDemoMode()) {
+    const demoData = getDemoData();
+    if (demoData.helpRequests?.[classCode]?.[requestId]) {
+      demoData.helpRequests[classCode][requestId].status = 'resolved';
+      demoData.helpRequests[classCode][requestId].resolvedAt = new Date().toISOString();
+      demoData.helpRequests[classCode][requestId].resolvedBy = resolvedBy;
+      saveDemoData(demoData);
+      notifyDemoSubscribers(`helpRequests:${classCode}`);
+    }
+    return;
+  }
+
+  if (!db) return;
+
+  const requestRef = doc(db, CLASSES_COLLECTION, classCode, 'helpRequests', requestId);
+  await updateDoc(requestRef, {
+    status: 'resolved',
+    resolvedAt: serverTimestamp(),
+    resolvedBy
+  });
+};
+
+// Subscribe to help requests for a class (real-time)
+export const subscribeToHelpRequests = (classCode, callback) => {
+  if (isDemoMode()) {
+    const key = `helpRequests:${classCode}`;
+    const callbacks = demoSubscriptions.get(key) || [];
+    callbacks.push(callback);
+    demoSubscriptions.set(key, callbacks);
+
+    // Initial call
+    const demoData = getDemoData();
+    const requests = Object.entries(demoData.helpRequests?.[classCode] || {})
+      .map(([id, r]) => ({
+        id,
+        ...r,
+        createdAt: r.createdAt ? new Date(r.createdAt) : null,
+        resolvedAt: r.resolvedAt ? new Date(r.resolvedAt) : null
+      }))
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+    callback(requests);
+
+    return () => {
+      const cbs = demoSubscriptions.get(key) || [];
+      demoSubscriptions.set(key, cbs.filter(cb => cb !== callback));
+    };
+  }
+
+  if (!db) {
+    callback([]);
+    return () => {};
+  }
+
+  const helpRef = collection(db, CLASSES_COLLECTION, classCode, 'helpRequests');
+  const helpQuery = query(helpRef, orderBy('createdAt', 'desc'));
+
+  return onSnapshot(helpQuery, (snapshot) => {
+    const requests = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate?.() || null,
+      resolvedAt: doc.data().resolvedAt?.toDate?.() || null
+    }));
+    callback(requests);
+  });
+};
+
+// Get pending help requests for a student on an exercise (to prevent spam)
+export const getStudentHelpRequests = async (classCode, studentId, exerciseId) => {
+  if (isDemoMode()) {
+    const demoData = getDemoData();
+    const requests = Object.values(demoData.helpRequests?.[classCode] || {})
+      .filter(r => r.studentId === studentId && r.exerciseId === exerciseId && r.status === 'pending');
+    return requests;
+  }
+
+  if (!db) return [];
+
+  const helpRef = collection(db, CLASSES_COLLECTION, classCode, 'helpRequests');
+  const helpQuery = query(
+    helpRef,
+    where('studentId', '==', studentId),
+    where('exerciseId', '==', exerciseId),
+    where('status', '==', 'pending')
+  );
+
+  const snapshot = await getDocs(helpQuery);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 
 // ============================================

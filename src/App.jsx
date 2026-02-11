@@ -754,6 +754,7 @@ function App() {
             onSubmit={handleSubmission}
             onNavigateExercise={handleSelectExercise}
             completedExercises={completedExercises}
+            student={currentUser}
           />
         )}
 
@@ -856,6 +857,7 @@ function App() {
             onSubmit={handleSubmission}
             onNavigateExercise={handleSelectDataApisExercise}
             completedExercises={completedDataApisExercises}
+            student={currentUser}
           />
         )}
 
@@ -884,6 +886,7 @@ function App() {
             onSubmit={handleSubmission}
             onNavigateExercise={handleSelectObjectsImagesExercise}
             completedExercises={completedObjectsImagesExercises}
+            student={currentUser}
           />
         )}
 
@@ -903,6 +906,7 @@ function App() {
             onBack={handleBackFromFunctionsScopeExercise}
             isCompleted={completedFunctionsScopeExercises.includes(selectedFunctionsScopeExercise)}
             onSubmit={handleSubmission}
+            student={currentUser}
           />
         )}
       </main>

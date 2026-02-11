@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { subscribeToClassProgress, getClassInfo, subscribeToAssignments } from '../services/firebaseService';
+import { subscribeToClassProgress, getClassInfo, subscribeToAssignments, subscribeToHelpRequests } from '../services/firebaseService';
 import { challenges } from '../data/challenges';
 import { scenarios } from '../data/networkScenarios';
 import AssignmentManager from './teacher/AssignmentManager';
@@ -7,6 +7,8 @@ import ActivityManager from './teacher/ActivityManager';
 import ModuleEditor from './teacher/ModuleEditor';
 import SubmissionViewer from './teacher/SubmissionViewer';
 import PlanningToolViewer from './teacher/PlanningToolViewer';
+import HelpRequestViewer from './teacher/HelpRequestViewer';
+import TeamModeViewer from './teacher/TeamModeViewer';
 import ThemeSwitcher, { useTheme } from './ThemeSwitcher';
 
 const TeacherDashboard = ({ classCode, onBack }) => {
@@ -20,6 +22,7 @@ const TeacherDashboard = ({ classCode, onBack }) => {
   const [sortBy, setSortBy] = useState('points'); // 'points', 'name', 'activity'
   const [activeTab, setActiveTab] = useState('students'); // 'students', 'assignments', 'activities', 'modules'
   const [showThemeSwitcher, setShowThemeSwitcher] = useState(false);
+  const [pendingHelpCount, setPendingHelpCount] = useState(0);
 
   const totalChallenges = Object.values(challenges).flat().length;
   const totalScenarios = scenarios.length;
@@ -43,9 +46,16 @@ const TeacherDashboard = ({ classCode, onBack }) => {
       setAssignments(assignmentData);
     });
 
+    // Subscribe to real-time help request updates
+    const unsubscribeHelp = subscribeToHelpRequests(classCode, (requests) => {
+      const pending = requests.filter(r => r.status === 'pending').length;
+      setPendingHelpCount(pending);
+    });
+
     return () => {
       unsubscribeStudents();
       unsubscribeAssignments();
+      unsubscribeHelp();
     };
   }, [classCode]);
 
@@ -186,6 +196,19 @@ const TeacherDashboard = ({ classCode, onBack }) => {
         >
           Modules
         </button>
+        <button
+          className={`td-tab ${activeTab === 'team-responses' ? 'active' : ''}`}
+          onClick={() => setActiveTab('team-responses')}
+        >
+          Team Responses
+        </button>
+        <button
+          className={`td-tab ${activeTab === 'help-requests' ? 'active' : ''}`}
+          onClick={() => setActiveTab('help-requests')}
+        >
+          Help Requests
+          {pendingHelpCount > 0 && <span className="help-request-badge">{pendingHelpCount}</span>}
+        </button>
       </div>
 
       {activeTab === 'submissions' && (
@@ -215,6 +238,18 @@ const TeacherDashboard = ({ classCode, onBack }) => {
 
       {activeTab === 'modules' && (
         <ModuleEditor
+          classCode={classCode}
+        />
+      )}
+
+      {activeTab === 'team-responses' && (
+        <TeamModeViewer
+          classCode={classCode}
+        />
+      )}
+
+      {activeTab === 'help-requests' && (
+        <HelpRequestViewer
           classCode={classCode}
         />
       )}

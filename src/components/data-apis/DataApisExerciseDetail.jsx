@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getDataApiExerciseById, getDataApiExerciseContext } from '../../data/data-apis-exercises';
 import { getDataApisVocabularyById } from '../../data/data-apis-vocabulary';
+import TeamModeModal from '../TeamModeModal';
 
-function DataApisExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit, onNavigateExercise, completedExercises }) {
+function DataApisExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit, onNavigateExercise, completedExercises, student }) {
   const exercise = getDataApiExerciseById(exerciseId);
   const [code, setCode] = useState('');
   const [serverCode, setServerCode] = useState('');
+  const [showTeamMode, setShowTeamMode] = useState(false);
   const [activeTab, setActiveTab] = useState('client'); // 'client' or 'server'
   const [showHints, setShowHints] = useState([]);
   const [showExplanation, setShowExplanation] = useState(false);
@@ -409,6 +411,9 @@ Your server code is ready in the "Server" tab.
           Save Draft
         </button>
         {draftSaved && <span className="draft-indicator">Draft saved</span>}
+        <button onClick={() => setShowTeamMode(true)} className="team-mode-btn">
+          {'\u{1F465}'} Team Mode
+        </button>
         {nextExercise && (
           <button onClick={() => onNavigateExercise(nextExercise.id)} className="next-exercise-btn">
             Next Activity →
@@ -695,6 +700,15 @@ Your server code is ready in the "Server" tab.
         </div>
       </div>
       {showSidePanel && <div className="side-panel-overlay" onClick={() => setShowSidePanel(false)} />}
+      {showTeamMode && student && (
+        <TeamModeModal
+          exerciseId={exerciseId}
+          exerciseTitle={exercise.title}
+          moduleName="data-apis"
+          student={student}
+          onClose={() => setShowTeamMode(false)}
+        />
+      )}
     </div>
   );
 }
