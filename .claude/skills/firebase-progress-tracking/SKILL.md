@@ -76,6 +76,8 @@ export async function loginStudent(name, classCode) {
       completedFlowcharts: [],
       completedDataApisExercises: [],
       completedObjectsImagesExercises: [],
+      completedFunctionsScopeExercises: [],
+      completedPlanningTools: [],
       // Add new module arrays here
       totalPoints: 0
     };
@@ -104,6 +106,8 @@ export async function loginStudent(name, classCode) {
     completedFlowcharts: [],
     completedDataApisExercises: [],
     completedObjectsImagesExercises: [],
+    completedFunctionsScopeExercises: [],
+    completedPlanningTools: [],
     totalPoints: 0,
     createdAt: serverTimestamp(),
     lastLogin: serverTimestamp()
@@ -214,6 +218,27 @@ export function subscribeToAssignments(classCode, callback) {
 export { isDemoMode };
 ```
 
+### Planning Tool Response Functions
+
+```javascript
+// Save a student's planning tool form response
+export async function savePlanningToolResponse(studentId, toolId, response) {
+  // response = { formData: {...}, toolTitle: "..." }
+  // Demo: stores in students[studentId].planningToolResponses[toolId]
+  // Firebase: uses dot notation updateDoc `planningToolResponses.${toolId}`
+}
+
+// Get a single planning tool response for a student
+export async function getPlanningToolResponse(studentId, toolId) {
+  // Returns { formData, toolTitle, lastSaved } or null
+}
+
+// Get all planning tool responses for a class (teacher view)
+export async function getClassPlanningToolResponses(classCode) {
+  // Returns array of { studentId, studentName, toolId, toolTitle, formData, lastSaved }
+}
+```
+
 ## Progress State in App.jsx
 
 ```jsx
@@ -224,6 +249,8 @@ const [completedPseudocode, setCompletedPseudocode] = useState([]);
 const [completedFlowcharts, setCompletedFlowcharts] = useState([]);
 const [completedDataApisExercises, setCompletedDataApisExercises] = useState([]);
 const [completedObjectsImagesExercises, setCompletedObjectsImagesExercises] = useState([]);
+const [completedFunctionsScopeExercises, setCompletedFunctionsScopeExercises] = useState([]);
+const [completedPlanningTools, setCompletedPlanningTools] = useState([]);
 const [totalPoints, setTotalPoints] = useState(0);
 
 // Load progress on login
@@ -290,6 +317,10 @@ const handleComplete = (exerciseId, points, moduleType) => {
   - completedFlowcharts: string[]
   - completedDataApisExercises: string[]
   - completedObjectsImagesExercises: string[]
+  - completedFunctionsScopeExercises: string[]
+  - completedPlanningTools: string[]
+  - planningToolResponses: map
+    - {toolId}: { formData: map, toolTitle: string, lastSaved: timestamp }
   - totalPoints: number
   - createdAt: timestamp
   - lastLogin: timestamp

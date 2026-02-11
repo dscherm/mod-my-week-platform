@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OOP: Building Bubbles</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0f1219;
+    --panel: #181d28;
+    --border: #2a3040;
+    --text: #c8cdd8;
+    --text-dim: #6b7280;
+    --accent: #5eead4;
+    --accent2: #818cf8;
+    --accent3: #f472b6;
+    --accent4: #fbbf24;
+    --code-bg: #121620;
+    --highlight: rgba(94, 234, 212, 0.08);
+    --highlight-border: rgba(94, 234, 212, 0.3);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Header */
+  .header {
+    padding: 28px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .header h1 {
+    font-size: 22px; font-weight: 700;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header p { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+
+  /* Step Navigation */
+  .step-nav {
+    display: flex;
+    gap: 0;
+    padding: 0 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  .step-tab {
+    padding: 16px 28px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--text-dim);
+    cursor: pointer;
+    border: none;
+    background: none;
+    border-bottom: 2px solid transparent;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+  }
+  .step-tab:hover { color: var(--text); background: var(--highlight); }
+  .step-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .step-num {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+    transition: all 0.25s;
+  }
+  .step-tab.active .step-num {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+  }
+
+  /* Main Layout */
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: calc(100vh - 140px);
+  }
+
+  /* Code Panel */
+  .code-panel {
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+  .code-panel-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #ef4444; }
+  .dot-y { background: #eab308; }
+  .dot-g { background: #22c55e; }
+
+  .code-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+  }
+
+  /* Code Blocks */
+  .code-section {
+    border-bottom: 1px solid var(--border);
+    transition: all 0.3s;
+  }
+  .code-section.dimmed { opacity: 0.25; }
+  .code-section.highlighted {
+    background: var(--highlight);
+    border-left: 3px solid var(--accent);
+  }
+  .code-section-label {
+    padding: 12px 20px 4px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .label-class { color: var(--accent); }
+  .label-constructor { color: var(--accent2); }
+  .label-method { color: var(--accent3); }
+  .label-array { color: var(--accent4); }
+
+  pre {
+    font-family: 'Space Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.85;
+    padding: 8px 20px 16px;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  /* Syntax Coloring */
+  .kw { color: #c084fc; }       /* keywords */
+  .fn { color: #5eead4; }       /* functions */
+  .prop { color: #818cf8; }     /* this.properties */
+  .str { color: #fbbf24; }      /* strings/values */
+  .num { color: #f472b6; }      /* numbers */
+  .cm { color: #4b5563; font-style: italic; }  /* comments */
+  .op { color: #94a3b8; }       /* operators, parens */
+  .this { color: #fb923c; }     /* this keyword */
+
+  /* Viz Panel */
+  .viz-panel {
+    display: flex;
+    flex-direction: column;
+    background: var(--panel);
+  }
+  .viz-panel-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  #canvas-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+  }
+  #canvas-container canvas {
+    border-radius: 12px;
+    box-shadow: 0 0 40px rgba(94, 234, 212, 0.06);
+  }
+
+  /* Explanation Card */
+  .explain-card {
+    margin: 0 20px 20px;
+    padding: 20px 24px;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .explain-card h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .explain-card .analogy {
+    margin-top: 12px;
+    padding: 12px 16px;
+    background: rgba(94, 234, 212, 0.05);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    font-size: 13px;
+    color: var(--accent);
+  }
+  .explain-card .analogy strong { color: #fff; }
+  .explain-card code {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    background: rgba(129, 140, 248, 0.12);
+    color: var(--accent2);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  /* Controls */
+  .controls {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--highlight);
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+    font-weight: 700;
+  }
+  .btn-primary:hover {
+    background: #2dd4bf;
+    border-color: #2dd4bf;
+    color: var(--bg);
+  }
+
+  /* Property Labels on Canvas */
+  .prop-label {
+    position: absolute;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    background: rgba(15, 18, 25, 0.9);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    color: var(--accent);
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 10;
+    transition: opacity 0.3s;
+  }
+  .prop-label::before {
+    content: '';
+    position: absolute;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    top: 50%; left: -12px;
+    transform: translateY(-50%);
+  }
+
+  @media (max-width: 1100px) {
+    .main { grid-template-columns: 1fr; }
+    .code-panel { border-right: none; border-bottom: 1px solid var(--border); max-height: 50vh; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">{ }</div>
+  <div>
+    <h1>Object-Oriented Programming: The Bubble Factory</h1>
+    <p>Learn how classes, objects, methods, arrays & loops work together</p>
+  </div>
+</div>
+
+<div class="step-nav">
+  <button class="step-tab active" onclick="setStep(0)">
+    <span class="step-num">1</span> The Blueprint
+  </button>
+  <button class="step-tab" onclick="setStep(1)">
+    <span class="step-num">2</span> Adding Behaviors
+  </button>
+  <button class="step-tab" onclick="setStep(2)">
+    <span class="step-num">3</span> The Factory Line
+  </button>
+  <button class="step-tab" onclick="setStep(3)">
+    <span class="step-num">4</span> Full Program
+  </button>
+</div>
+
+<div class="main">
+  <!-- CODE PANEL -->
+  <div class="code-panel">
+    <div class="code-panel-header">
+      <span class="dot dot-r"></span>
+      <span class="dot dot-y"></span>
+      <span class="dot dot-g"></span>
+      &nbsp; sketch.js
+    </div>
+    <div class="code-scroll" id="codeScroll"></div>
+  </div>
+
+  <!-- VIZ PANEL -->
+  <div class="viz-panel">
+    <div class="viz-panel-header">
+      <span>▶ Live Preview</span>
+      <span id="bubbleCount"></span>
+    </div>
+    <div id="canvas-container"></div>
+    <div id="explainCard" class="explain-card"></div>
+    <div class="controls">
+      <button class="btn" onclick="prevStep()">← Back</button>
+      <button class="btn-primary btn" onclick="nextStep()">Next Step →</button>
+      <div style="flex:1"></div>
+      <button class="btn" onclick="resetSketch()" title="Reset">↻ Reset</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──
+let currentStep = 0;
+let p5Instance = null;
+
+// ── Code Sections (with syntax highlighting) ──
+const codeSections = {
+  classOpen: {
+    label: 'Class Declaration', labelClass: 'label-class',
+    code: `<span class="kw">class</span> <span class="fn">Bubble</span> <span class="op">{</span>`
+  },
+  constructor: {
+    label: 'Constructor', labelClass: 'label-constructor',
+    code: `  <span class="kw">constructor</span><span class="op">(</span><span class="str">x</span>, <span class="str">y</span><span class="op">) {</span>
+    <span class="this">this</span>.<span class="prop">x</span> <span class="op">=</span> x<span class="op">;</span>          <span class="cm">// x position</span>
+    <span class="this">this</span>.<span class="prop">y</span> <span class="op">=</span> y<span class="op">;</span>          <span class="cm">// y position</span>
+    <span class="this">this</span>.<span class="prop">r</span> <span class="op">=</span> <span class="fn">random</span><span class="op">(</span><span class="num">15</span>, <span class="num">40</span><span class="op">);</span>  <span class="cm">// radius</span>
+    <span class="this">this</span>.<span class="prop">color</span> <span class="op">=</span> <span class="fn">color</span><span class="op">(</span><span class="fn">random</span><span class="op">(</span><span class="num">255</span><span class="op">)</span>, <span class="fn">random</span><span class="op">(</span><span class="num">255</span><span class="op">)</span>, <span class="fn">random</span><span class="op">(</span><span class="num">255</span><span class="op">)</span>, <span class="num">150</span><span class="op">);</span>
+    <span class="this">this</span>.<span class="prop">speed</span> <span class="op">=</span> <span class="fn">map</span><span class="op">(</span><span class="this">this</span>.<span class="prop">r</span>, <span class="num">15</span>, <span class="num">40</span>, <span class="num">3</span>, <span class="num">1</span><span class="op">);</span>
+  <span class="op">}</span>`
+  },
+  display: {
+    label: 'Method: display()', labelClass: 'label-method',
+    code: `  <span class="fn">display</span><span class="op">() {</span>
+    <span class="fn">fill</span><span class="op">(</span><span class="this">this</span>.<span class="prop">color</span><span class="op">);</span>
+    <span class="fn">noStroke</span><span class="op">();</span>
+    <span class="fn">circle</span><span class="op">(</span><span class="this">this</span>.<span class="prop">x</span>, <span class="this">this</span>.<span class="prop">y</span>, <span class="this">this</span>.<span class="prop">r</span> <span class="op">*</span> <span class="num">2</span><span class="op">);</span>
+  <span class="op">}</span>`
+  },
+  move: {
+    label: 'Method: move()', labelClass: 'label-method',
+    code: `  <span class="fn">move</span><span class="op">() {</span>
+    <span class="this">this</span>.<span class="prop">y</span> <span class="op">-=</span> <span class="this">this</span>.<span class="prop">speed</span><span class="op">;</span>          <span class="cm">// float up</span>
+    <span class="this">this</span>.<span class="prop">x</span> <span class="op">+=</span> <span class="fn">random</span><span class="op">(</span><span class="num">-0.5</span>, <span class="num">0.5</span><span class="op">);</span>  <span class="cm">// wobble</span>
+    <span class="kw">if</span> <span class="op">(</span><span class="this">this</span>.<span class="prop">y</span> <span class="op">&lt;</span> <span class="op">-</span><span class="this">this</span>.<span class="prop">r</span><span class="op">)</span> <span class="this">this</span>.<span class="prop">y</span> <span class="op">=</span> height <span class="op">+</span> <span class="this">this</span>.<span class="prop">r</span><span class="op">;</span>
+  <span class="op">}</span>`
+  },
+  classClose: {
+    label: null,
+    code: `<span class="op">}</span>`
+  },
+  array: {
+    label: 'Array Declaration', labelClass: 'label-array',
+    code: `<span class="kw">let</span> bubbles <span class="op">=</span> <span class="op">[];</span>  <span class="cm">// empty array to hold Bubble objects</span>`
+  },
+  setup: {
+    label: 'setup() — Build 30 Bubbles', labelClass: 'label-array',
+    code: `<span class="kw">function</span> <span class="fn">setup</span><span class="op">() {</span>
+  <span class="fn">createCanvas</span><span class="op">(</span><span class="num">800</span>, <span class="num">500</span><span class="op">);</span>
+  <span class="kw">for</span> <span class="op">(</span><span class="kw">let</span> i <span class="op">=</span> <span class="num">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="num">30</span><span class="op">;</span> i<span class="op">++) {</span>
+    bubbles.<span class="fn">push</span><span class="op">(</span><span class="kw">new</span> <span class="fn">Bubble</span><span class="op">(</span><span class="fn">random</span><span class="op">(</span>width<span class="op">)</span>, <span class="fn">random</span><span class="op">(</span>height<span class="op">)));</span>
+  <span class="op">}</span>
+<span class="op">}</span>`
+  },
+  draw: {
+    label: 'draw() — Loop Through All', labelClass: 'label-array',
+    code: `<span class="kw">function</span> <span class="fn">draw</span><span class="op">() {</span>
+  <span class="fn">background</span><span class="op">(</span><span class="num">200</span>, <span class="num">220</span>, <span class="num">255</span><span class="op">);</span>
+  <span class="kw">for</span> <span class="op">(</span><span class="kw">let</span> bubble <span class="kw">of</span> bubbles<span class="op">) {</span>
+    bubble.<span class="fn">display</span><span class="op">();</span>    <span class="cm">// call display on EACH bubble</span>
+    bubble.<span class="fn">move</span><span class="op">();</span>       <span class="cm">// call move on EACH bubble</span>
+  <span class="op">}</span>
+<span class="op">}</span>`
+  }
+};
+
+// ── Step Definitions ──
+const steps = [
+  {
+    // Step 1: Blueprint
+    highlighted: ['classOpen', 'constructor', 'classClose'],
+    dimmed: ['display', 'move', 'array', 'setup', 'draw'],
+    shown: ['classOpen', 'constructor', 'display', 'move', 'classClose', 'array', 'setup', 'draw'],
+    explain: {
+      title: '🏗️ Step 1: The Blueprint (Class & Constructor)',
+      body: `A <code>class</code> is a blueprint — it describes <em>what a Bubble is</em> and <em>what it can do</em>. The <code>constructor()</code> runs <strong>once</strong> when you create a new Bubble, setting up its starting properties.<br><br>
+      Each property uses <code>this.</code> which means "this specific bubble's" value. So <code>this.x</code> is <em>this particular bubble's</em> x position — not anyone else's.`,
+      analogy: `<strong>🍪 Analogy:</strong> A class is like a cookie cutter. The constructor is filling in the order form — "this cookie gets red sprinkles, that one gets blue." The cookie cutter shape is the same, but each cookie comes out unique.`
+    },
+    mode: 'single-labeled'
+  },
+  {
+    // Step 2: Methods
+    highlighted: ['display', 'move'],
+    dimmed: ['classOpen', 'constructor', 'classClose', 'array', 'setup', 'draw'],
+    shown: ['classOpen', 'constructor', 'display', 'move', 'classClose', 'array', 'setup', 'draw'],
+    explain: {
+      title: '⚡ Step 2: Adding Behaviors (Methods)',
+      body: `Methods are <strong>functions that live inside a class</strong>. They define what a Bubble <em>can do</em>.<br><br>
+      <code>display()</code> draws the bubble on screen using its own <code>this.x</code>, <code>this.y</code>, and <code>this.color</code>.<br>
+      <code>move()</code> updates position — floating up and wobbling side to side. When it goes off the top, it wraps to the bottom.`,
+      analogy: `<strong>🤖 Analogy:</strong> If the class is a robot blueprint, methods are the robot's <em>skills</em>. You're programming the robot to know how to "show yourself" and "move around." Every robot built from this blueprint inherits those same skills.`
+    },
+    mode: 'single-methods'
+  },
+  {
+    // Step 3: Array & Loop
+    highlighted: ['array', 'setup', 'draw'],
+    dimmed: ['classOpen', 'constructor', 'display', 'move', 'classClose'],
+    shown: ['classOpen', 'constructor', 'display', 'move', 'classClose', 'array', 'setup', 'draw'],
+    explain: {
+      title: '🏭 Step 3: The Factory Line (Arrays & Loops)',
+      body: `Now we mass-produce! <code>let bubbles = []</code> creates an empty <strong>array</strong> — a list to hold all our Bubble objects.<br><br>
+      In <code>setup()</code>, a <code>for</code> loop runs 30 times, each time creating a <code>new Bubble()</code> and <code>push</code>-ing it into the array.<br><br>
+      In <code>draw()</code>, a <code>for...of</code> loop visits <strong>every</strong> bubble in the array and calls <code>.display()</code> and <code>.move()</code> on each one — 60 frames per second!`,
+      analogy: `<strong>📋 Analogy:</strong> The array is a <em>class roster</em>. The for loop is the teacher doing roll call — going down the list and telling each student (bubble) to do the same activity. Same instructions, different students, different results.`
+    },
+    mode: 'all'
+  },
+  {
+    // Step 4: Full program
+    highlighted: ['classOpen', 'constructor', 'display', 'move', 'classClose', 'array', 'setup', 'draw'],
+    dimmed: [],
+    shown: ['classOpen', 'constructor', 'display', 'move', 'classClose', 'array', 'setup', 'draw'],
+    explain: {
+      title: '🎉 Full Program Running!',
+      body: `All the pieces working together:<br><br>
+      <strong>1.</strong> The <code>class Bubble</code> defines the blueprint with properties and methods.<br>
+      <strong>2.</strong> <code>setup()</code> uses a loop to create 30 unique Bubble objects and stores them in an array.<br>
+      <strong>3.</strong> <code>draw()</code> loops through every bubble 60× per second, calling each one's methods.<br><br>
+      <em>Click the canvas to add more bubbles!</em>`,
+      analogy: `<strong>🎯 Key Insight:</strong> OOP lets you write the code <em>once</em> (the class) and create <em>unlimited</em> independent objects from it. Each object tracks its own state. That's the power.`
+    },
+    mode: 'all'
+  }
+];
+
+// ── Render Code Panel ──
+function renderCode() {
+  const step = steps[currentStep];
+  const html = step.shown.map(key => {
+    const sec = codeSections[key];
+    const classes = ['code-section'];
+    if (step.highlighted.includes(key)) classes.push('highlighted');
+    else if (step.dimmed.includes(key)) classes.push('dimmed');
+
+    let labelHtml = '';
+    if (sec.label) {
+      labelHtml = `<div class="code-section-label ${sec.labelClass}">▸ ${sec.label}</div>`;
+    }
+    return `<div class="${classes.join(' ')}">${labelHtml}<pre>${sec.code}</pre></div>`;
+  }).join('');
+
+  document.getElementById('codeScroll').innerHTML = html;
+}
+
+// ── Render Explanation ──
+function renderExplain() {
+  const step = steps[currentStep];
+  const e = step.explain;
+  document.getElementById('explainCard').innerHTML = `
+    <h3>${e.title}</h3>
+    <div>${e.body}</div>
+    <div class="analogy">${e.analogy}</div>
+  `;
+}
+
+// ── Step Navigation ──
+function setStep(n) {
+  currentStep = n;
+  document.querySelectorAll('.step-tab').forEach((t, i) => {
+    t.classList.toggle('active', i === n);
+  });
+  renderCode();
+  renderExplain();
+  resetSketch();
+}
+function nextStep() { if (currentStep < 3) setStep(currentStep + 1); }
+function prevStep() { if (currentStep > 0) setStep(currentStep - 1); }
+
+// ── p5.js Sketch ──
+function resetSketch() {
+  if (p5Instance) p5Instance.remove();
+  const container = document.getElementById('canvas-container');
+  // Remove old labels
+  container.querySelectorAll('.prop-label').forEach(el => el.remove());
+
+  p5Instance = new p5(function(p) {
+    let bubbles = [];
+    const W = 520, H = 360;
+
+    class Bubble {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.r = p.random(15, 40);
+        this.col = p.color(p.random(255), p.random(255), p.random(255), 150);
+        this.speed = p.map(this.r, 15, 40, 3, 1);
+      }
+      display() {
+        p.fill(this.col);
+        p.noStroke();
+        p.circle(this.x, this.y, this.r * 2);
+      }
+      move() {
+        this.y -= this.speed;
+        this.x += p.random(-0.5, 0.5);
+        if (this.y < -this.r) this.y = H + this.r;
+      }
+    }
+
+    p.setup = function() {
+      let canvas = p.createCanvas(W, H);
+      canvas.parent('canvas-container');
+
+      const mode = steps[currentStep].mode;
+      if (mode === 'single-labeled' || mode === 'single-methods') {
+        bubbles.push(new Bubble(W / 2, H / 2));
+      } else {
+        for (let i = 0; i < 30; i++) {
+          bubbles.push(new Bubble(p.random(W), p.random(H)));
+        }
+      }
+    };
+
+    p.draw = function() {
+      // Gradient background
+      for (let y = 0; y < H; y++) {
+        let inter = p.map(y, 0, H, 0, 1);
+        let c = p.lerpColor(p.color(180, 210, 255), p.color(220, 235, 255), inter);
+        p.stroke(c);
+        p.line(0, y, W, y);
+      }
+
+      const mode = steps[currentStep].mode;
+
+      if (mode === 'single-labeled') {
+        // Step 1: just display, no move — show properties
+        let b = bubbles[0];
+        b.display();
+        updateLabels(b);
+        document.getElementById('bubbleCount').textContent = '1 object created';
+      } else if (mode === 'single-methods') {
+        // Step 2: one bubble, moving
+        let b = bubbles[0];
+        b.display();
+        b.move();
+        clearLabels();
+        // Show method call indicator
+        p.fill(0, 0, 0, 140);
+        p.noStroke();
+        p.rectMode(p.CENTER);
+        p.rect(b.x, b.y - b.r - 22, 120, 20, 6);
+        p.fill(94, 234, 212);
+        p.textAlign(p.CENTER, p.CENTER);
+        p.textSize(10);
+        p.textFont('monospace');
+        p.text('.display() .move()', b.x, b.y - b.r - 22);
+        document.getElementById('bubbleCount').textContent = '1 object — methods active';
+      } else {
+        // Steps 3 & 4: all bubbles
+        clearLabels();
+        for (let bubble of bubbles) {
+          bubble.display();
+          bubble.move();
+        }
+        document.getElementById('bubbleCount').textContent = 'Objects: ' + bubbles.length;
+      }
+    };
+
+    p.mousePressed = function() {
+      if (p.mouseX > 0 && p.mouseX < W && p.mouseY > 0 && p.mouseY < H) {
+        if (currentStep >= 2) {
+          bubbles.push(new Bubble(p.mouseX, p.mouseY));
+        }
+      }
+    };
+
+    function updateLabels(b) {
+      const container = document.getElementById('canvas-container');
+      const canvas = container.querySelector('canvas');
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+
+      const offX = rect.left - containerRect.left;
+      const offY = rect.top - containerRect.top;
+
+      setLabel(container, 'lbl-x', `this.x = ${Math.round(b.x)}`, offX + b.x + b.r + 14, offY + b.y - 36);
+      setLabel(container, 'lbl-y', `this.y = ${Math.round(b.y)}`, offX + b.x + b.r + 14, offY + b.y - 10);
+      setLabel(container, 'lbl-r', `this.r = ${Math.round(b.r)}`, offX + b.x + b.r + 14, offY + b.y + 16);
+      setLabel(container, 'lbl-speed', `this.speed = ${b.speed.toFixed(1)}`, offX + b.x + b.r + 14, offY + b.y + 42);
+    }
+
+    function setLabel(container, id, text, x, y) {
+      let el = document.getElementById(id);
+      if (!el) {
+        el = document.createElement('div');
+        el.id = id;
+        el.className = 'prop-label';
+        container.appendChild(el);
+      }
+      el.textContent = text;
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+    }
+
+    function clearLabels() {
+      ['lbl-x', 'lbl-y', 'lbl-r', 'lbl-speed'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+      });
+    }
+
+  }, document.createElement('div'));
+}
+
+// ── Keyboard Navigation ──
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight') nextStep();
+  if (e.key === 'ArrowLeft') prevStep();
+});
+
+// ── Init ──
+renderCode();
+renderExplain();
+resetSketch();
+</script>
+</body>
+</html>

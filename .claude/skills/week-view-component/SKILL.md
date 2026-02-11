@@ -11,10 +11,12 @@ Template for creating week overview components that display exercises organized 
 ## Base Structure
 
 ```jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { get{ModuleName}WeekExercises } from '../../data/{module-name}-exercises';
+import PlanningToolModal from '../PlanningToolModal';
 
-function {ModuleName}WeekView({ weekKey, onSelectExercise, onBack, completedExercises = [] }) {
+function {ModuleName}WeekView({ weekKey, onSelectExercise, onBack, completedExercises = [], student, completedPlanningTools = [], onPlanningToolSave }) {
+  const [activePlanningTool, setActivePlanningTool] = useState(null);
   const weekData = get{ModuleName}WeekExercises(weekKey);
 
   if (!weekData) {
@@ -71,6 +73,33 @@ function {ModuleName}WeekView({ weekKey, onSelectExercise, onBack, completedExer
               <p className="day-objective">{day.objective}</p>
             </div>
 
+            {/* Planning Tools */}
+            {day.planningTools && day.planningTools.length > 0 && (
+              <div className="planning-tools-strip">
+                {day.planningTools.map((tool) => {
+                  const isFilled = completedPlanningTools.includes(tool.id);
+                  return (
+                    <div
+                      key={tool.id}
+                      className={`planning-tool-card ${isFilled ? 'filled' : ''}`}
+                      onClick={() => setActivePlanningTool(tool)}
+                    >
+                      <span className="planning-tool-icon">{tool.icon}</span>
+                      <div className="planning-tool-content">
+                        <h4>{tool.title}</h4>
+                        <p>{tool.description}</p>
+                      </div>
+                      {isFilled ? (
+                        <span className="planning-tool-filled-badge">✓</span>
+                      ) : (
+                        <span className="planning-tool-open">↗</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             {/* Exercise Grid */}
             <div className="exercise-grid">
               {day.exercises.map((exercise) => (
@@ -114,6 +143,16 @@ function {ModuleName}WeekView({ weekKey, onSelectExercise, onBack, completedExer
           </div>
         ))}
       </div>
+      {activePlanningTool && student && (
+        <PlanningToolModal
+          tool={activePlanningTool}
+          student={student}
+          onClose={() => setActivePlanningTool(null)}
+          onSave={(toolId) => {
+            if (onPlanningToolSave) onPlanningToolSave(toolId);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -261,6 +300,9 @@ export default {ModuleName}WeekView;
 | `onSelectExercise` | function | Callback when exercise is clicked, receives exerciseId |
 | `onBack` | function | Callback for back button |
 | `completedExercises` | string[] | Array of completed exercise IDs |
+| `student` | object | Current user object (needed for planning tool save/load) |
+| `completedPlanningTools` | string[] | Array of planning tool IDs the student has saved |
+| `onPlanningToolSave` | function | Callback when a planning tool form is saved, receives toolId |
 
 ## Integration with Parent Component
 
@@ -287,6 +329,9 @@ if (selectedWeek) {
       onSelectExercise={setSelectedExercise}
       onBack={() => setSelectedWeek(null)}
       completedExercises={completedExercises}
+      student={currentUser}
+      completedPlanningTools={completedPlanningTools}
+      onPlanningToolSave={handlePlanningToolSave}
     />
   );
 }

@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { objectsImagesExercises, getObjectsImagesWeekExercises } from '../../data/objects-images-exercises';
+import PlanningToolModal from '../PlanningToolModal';
 
-function ObjectsImagesWeekView({ weekKey, onSelectExercise, onBack, completedExercises }) {
+function ObjectsImagesWeekView({ weekKey, onSelectExercise, onBack, completedExercises, student, completedPlanningTools, onPlanningToolSave }) {
   const week = objectsImagesExercises[weekKey];
   const weekNum = weekKey.replace('week', '');
   const visualizations = week?.visualizations || [];
+  const [activePlanningTool, setActivePlanningTool] = useState(null);
 
   const openVisualization = (vizFile) => {
     window.open(vizFile, '_blank', 'width=1200,height=800');
@@ -87,22 +89,27 @@ function ObjectsImagesWeekView({ weekKey, onSelectExercise, onBack, completedExe
 
             {day.planningTools && day.planningTools.length > 0 && (
               <div className="planning-tools-strip">
-                {day.planningTools.map((tool) => (
-                  <a
-                    key={tool.id}
-                    className="planning-tool-card"
-                    href={tool.file}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <span className="planning-tool-icon">{tool.icon}</span>
-                    <div className="planning-tool-content">
-                      <h4>{tool.title}</h4>
-                      <p>{tool.description}{tool.page ? ` (${tool.page})` : ''}</p>
+                {day.planningTools.map((tool) => {
+                  const isFilled = completedPlanningTools && completedPlanningTools.includes(tool.id);
+                  return (
+                    <div
+                      key={tool.id}
+                      className={`planning-tool-card ${isFilled ? 'filled' : ''}`}
+                      onClick={() => setActivePlanningTool(tool)}
+                    >
+                      <span className="planning-tool-icon">{tool.icon}</span>
+                      <div className="planning-tool-content">
+                        <h4>{tool.title}</h4>
+                        <p>{tool.description}{tool.page ? ` (${tool.page})` : ''}</p>
+                      </div>
+                      {isFilled ? (
+                        <span className="planning-tool-filled-badge">✓</span>
+                      ) : (
+                        <span className="planning-tool-open">↗</span>
+                      )}
                     </div>
-                    <span className="planning-tool-open">↗</span>
-                  </a>
-                ))}
+                  );
+                })}
               </div>
             )}
 
@@ -149,6 +156,17 @@ function ObjectsImagesWeekView({ weekKey, onSelectExercise, onBack, completedExe
           </div>
         ))}
       </div>
+
+      {activePlanningTool && student && (
+        <PlanningToolModal
+          tool={activePlanningTool}
+          student={student}
+          onClose={() => setActivePlanningTool(null)}
+          onSave={(toolId) => {
+            if (onPlanningToolSave) onPlanningToolSave(toolId);
+          }}
+        />
+      )}
     </div>
   );
 }

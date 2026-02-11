@@ -6,6 +6,7 @@ import AssignmentManager from './teacher/AssignmentManager';
 import ActivityManager from './teacher/ActivityManager';
 import ModuleEditor from './teacher/ModuleEditor';
 import SubmissionViewer from './teacher/SubmissionViewer';
+import PlanningToolViewer from './teacher/PlanningToolViewer';
 import ThemeSwitcher, { useTheme } from './ThemeSwitcher';
 
 const TeacherDashboard = ({ classCode, onBack }) => {
@@ -162,6 +163,12 @@ const TeacherDashboard = ({ classCode, onBack }) => {
           Submissions
         </button>
         <button
+          className={`td-tab ${activeTab === 'planning-tools' ? 'active' : ''}`}
+          onClick={() => setActiveTab('planning-tools')}
+        >
+          Planning Tools
+        </button>
+        <button
           className={`td-tab ${activeTab === 'assignments' ? 'active' : ''}`}
           onClick={() => setActiveTab('assignments')}
         >
@@ -183,6 +190,12 @@ const TeacherDashboard = ({ classCode, onBack }) => {
 
       {activeTab === 'submissions' && (
         <SubmissionViewer
+          classCode={classCode}
+        />
+      )}
+
+      {activeTab === 'planning-tools' && (
+        <PlanningToolViewer
           classCode={classCode}
         />
       )}

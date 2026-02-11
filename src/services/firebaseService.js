@@ -129,6 +129,7 @@ export const loginStudent = async (studentName, classCode) => {
         completedDataApisExercises: [],
         completedObjectsImagesExercises: [],
         completedFunctionsScopeExercises: [],
+        completedPlanningTools: [],
         totalPoints: 0,
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString(),
@@ -167,6 +168,7 @@ export const loginStudent = async (studentName, classCode) => {
       completedDataApisExercises: [],
       completedObjectsImagesExercises: [],
       completedFunctionsScopeExercises: [],
+      completedPlanningTools: [],
       totalPoints: 0,
       createdAt: serverTimestamp(),
       lastLogin: serverTimestamp(),
@@ -192,6 +194,7 @@ export const saveStudentProgress = async (studentId, progress) => {
         completedDataApisExercises: progress.completedDataApisExercises || [],
         completedObjectsImagesExercises: progress.completedObjectsImagesExercises || [],
         completedFunctionsScopeExercises: progress.completedFunctionsScopeExercises || [],
+        completedPlanningTools: progress.completedPlanningTools || [],
         totalPoints: progress.totalPoints || 0,
         lastActivity: new Date().toISOString()
       };
@@ -214,6 +217,7 @@ export const saveStudentProgress = async (studentId, progress) => {
     completedDataApisExercises: progress.completedDataApisExercises || [],
     completedObjectsImagesExercises: progress.completedObjectsImagesExercises || [],
     completedFunctionsScopeExercises: progress.completedFunctionsScopeExercises || [],
+    completedPlanningTools: progress.completedPlanningTools || [],
     totalPoints: progress.totalPoints || 0,
     lastActivity: serverTimestamp()
   });
@@ -374,6 +378,121 @@ export const getClassSubmissions = async (classCode) => {
   });
 
   return classSubmissions;
+};
+
+// ============================================
+// PLANNING TOOL RESPONSE FUNCTIONS
+// ============================================
+
+// Save a student's planning tool response
+export const savePlanningToolResponse = async (studentId, toolId, response) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    if (!data.students[studentId]) return;
+
+    if (!data.students[studentId].planningToolResponses) {
+      data.students[studentId].planningToolResponses = {};
+    }
+
+    data.students[studentId].planningToolResponses[toolId] = {
+      formData: response.formData,
+      toolTitle: response.toolTitle,
+      lastSaved: new Date().toISOString()
+    };
+
+    data.students[studentId].lastActivity = new Date().toISOString();
+    saveDemoData(data);
+    return;
+  }
+
+  if (!db) return;
+
+  const studentRef = doc(db, STUDENTS_COLLECTION, studentId);
+  const updateData = {};
+  updateData[`planningToolResponses.${toolId}`] = {
+    formData: response.formData,
+    toolTitle: response.toolTitle,
+    lastSaved: serverTimestamp()
+  };
+  updateData.lastActivity = serverTimestamp();
+
+  await updateDoc(studentRef, updateData);
+};
+
+// Get a student's planning tool response
+export const getPlanningToolResponse = async (studentId, toolId) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    if (!data.students[studentId]) return null;
+    const responses = data.students[studentId].planningToolResponses || {};
+    return responses[toolId] || null;
+  }
+
+  if (!db) return null;
+
+  const studentRef = doc(db, STUDENTS_COLLECTION, studentId);
+  const studentDoc = await getDoc(studentRef);
+
+  if (studentDoc.exists()) {
+    const responses = studentDoc.data().planningToolResponses || {};
+    return responses[toolId] || null;
+  }
+  return null;
+};
+
+// Get all planning tool responses for a class (teacher view)
+export const getClassPlanningToolResponses = async (classCode) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    const results = [];
+
+    Object.entries(data.students)
+      .filter(([_, student]) => student.classCode === classCode)
+      .forEach(([studentId, student]) => {
+        if (student.planningToolResponses) {
+          Object.entries(student.planningToolResponses).forEach(([toolId, response]) => {
+            results.push({
+              studentId,
+              studentName: student.name,
+              toolId,
+              toolTitle: response.toolTitle,
+              formData: response.formData,
+              lastSaved: response.lastSaved
+            });
+          });
+        }
+      });
+
+    return results;
+  }
+
+  if (!db) return [];
+
+  const studentsQuery = query(
+    collection(db, STUDENTS_COLLECTION),
+    where('classCode', '==', classCode)
+  );
+
+  const snapshot = await getDocs(studentsQuery);
+  const results = [];
+
+  snapshot.docs.forEach(docSnap => {
+    const student = docSnap.data();
+    if (student.planningToolResponses) {
+      Object.entries(student.planningToolResponses).forEach(([toolId, response]) => {
+        results.push({
+          studentId: docSnap.id,
+          studentName: student.name,
+          toolId,
+          toolTitle: response.toolTitle,
+          formData: response.formData,
+          lastSaved: response.lastSaved?.toDate?.() || null
+        });
+      });
+    }
+  });
+
+  return results;
 };
 
 // ============================================
