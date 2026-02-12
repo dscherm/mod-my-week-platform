@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OOP in Games — Class Hierarchy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;600;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #09090b; color: #e5e5e5; font-family: 'Segoe UI', 'Helvetica Neue', sans-serif; overflow-x: hidden; }
+
+  /* Top bar */
+  #top-bar { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: linear-gradient(90deg, #1a1a2e, #16213e); display: flex; align-items: center; padding: 0 24px; z-index: 50; border-bottom: 2px solid #8b5cf633; }
+  #top-bar h1 { font-size: 16px; font-weight: 700; color: #8b5cf6; letter-spacing: 1px; font-family: 'Space Grotesk', sans-serif; }
+  #top-bar .tag { background: #ec489933; color: #ec4899; font-size: 11px; padding: 2px 10px; border-radius: 20px; margin-left: 16px; font-weight: 700; }
+
+  /* Concept tabs */
+  #concept-tabs { display: flex; justify-content: center; gap: 8px; padding: 64px 16px 12px; flex-wrap: wrap; }
+  .concept-tab { background: transparent; border: 1px solid #ffffff08; color: #555; padding: 8px 16px; border-radius: 12px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Space Grotesk', sans-serif; transition: all 0.2s; }
+  .concept-tab:hover { border-color: #ffffff15; color: #888; }
+  .concept-tab.active { background: #ffffff10; border-color: #ffffff22; color: #fff; }
+  .tab-icon { margin-right: 4px; }
+
+  /* Description area */
+  #concept-desc { max-width: 640px; margin: 0 auto 16px; padding: 0 24px; }
+  #concept-desc .desc-box { background: #ffffff06; border: 1px solid #ffffff08; border-radius: 12px; padding: 12px 20px; }
+  #header-tagline { font-size: 14px; font-weight: 600; color: #ccc; margin-bottom: 2px; font-family: 'Space Grotesk', sans-serif; }
+  #header-description { font-size: 12px; color: #777; line-height: 1.5; }
+
+  /* Tab content areas */
+  .tab-content { display: none; }
+
+  /* =========== HIERARCHY TAB =========== */
+  #main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 1024px; margin: 0 auto; padding: 0 16px 48px; }
+  @media (max-width: 768px) { #main-grid { grid-template-columns: 1fr; } }
+
+  /* Tree area */
+  #tree-area { position: relative; min-height: 420px; background: #0a0a0f; border: 1px solid #1a1a22; border-radius: 16px; overflow: hidden; }
+  #tree-label { position: absolute; top: 12px; left: 16px; font-size: 10px; color: #333; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 2px; z-index: 5; }
+  #tree-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+
+  /* Class nodes */
+  .class-node { position: absolute; transform: translate(-50%, -50%); cursor: pointer; z-index: 10; transition: all 0.3s; }
+  .class-node:hover { z-index: 15; }
+  .class-node .node-inner { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 12px; border: 1px solid var(--node-glow); background: color-mix(in srgb, var(--node-color) 6%, transparent); transition: all 0.3s; }
+  .class-node:hover .node-inner { border-color: var(--node-color); box-shadow: 0 0 16px var(--node-glow); }
+  .class-node.selected .node-inner { border-color: var(--node-color); background: color-mix(in srgb, var(--node-color) 15%, transparent); box-shadow: 0 0 24px var(--node-glow), 0 4px 16px rgba(0,0,0,0.3); transform: scale(1.08); }
+  .node-icon { font-size: 18px; }
+  .node-name { font-weight: 600; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 14px; color: var(--node-color); letter-spacing: 0.5px; }
+  .node-you { display: block; font-size: 9px; color: #10b981; font-family: 'JetBrains Mono', monospace; letter-spacing: 2px; text-transform: uppercase; text-align: center; margin-top: 2px; }
+  .attack-badge { position: absolute; top: -8px; right: -8px; font-size: 10px; padding: 2px 6px; border-radius: 10px; color: #fff; font-family: 'JetBrains Mono', monospace; display: none; }
+
+  /* Detail panel */
+  #detail-panel { min-height: 200px; }
+  #detail-placeholder { color: #333; text-align: center; padding: 40px 20px; font-size: 13px; border: 1px dashed #222; border-radius: 12px; }
+  #detail-content { border-radius: 12px; padding: 20px; border: 1px solid #1a1a22; background: #0a0a0f; }
+  #detail-content h2 { font-size: 18px; margin-bottom: 2px; font-family: 'JetBrains Mono', monospace; }
+  .detail-desc { font-size: 13px; color: #aaa; line-height: 1.5; margin-bottom: 16px; margin-top: 8px; }
+  .detail-section { margin-bottom: 12px; }
+  .detail-section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #666; font-weight: 600; margin-bottom: 6px; }
+  .prop-tag { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-family: 'JetBrains Mono', monospace; margin: 2px 3px 2px 0; }
+  .prop-tag.own { background: var(--tag-bg); color: var(--tag-color); border: 1px solid color-mix(in srgb, var(--tag-color) 30%, transparent); }
+  .prop-tag.inherited { background: #ffffff08; color: #888; border: 1px solid #ffffff10; }
+  .from-label { font-size: 9px; color: #555; }
+  .stat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .stat-label { font-size: 11px; color: #888; font-family: 'JetBrains Mono', monospace; min-width: 90px; }
+  .stat-bar-bg { flex: 1; height: 6px; background: #1a1a22; border-radius: 3px; overflow: hidden; }
+  .stat-bar-fill { height: 100%; border-radius: 3px; transition: width 0.7s ease; }
+  .stat-value { font-size: 11px; font-weight: 700; font-family: 'JetBrains Mono', monospace; min-width: 30px; text-align: right; }
+
+  /* =========== ENCAPSULATION TAB =========== */
+  #encap-demo { max-width: 600px; margin: 0 auto; padding: 0 16px 48px; }
+  #encap-demo h3 { color: #f97316; font-size: 16px; margin-bottom: 4px; }
+  .health-bar-container { margin: 16px 0; }
+  .health-label { display: flex; justify-content: space-between; font-size: 12px; font-family: 'JetBrains Mono', monospace; color: #888; margin-bottom: 6px; }
+  .health-bar-outer { height: 24px; background: #1a1a22; border-radius: 6px; overflow: hidden; }
+  .health-bar-inner { height: 100%; border-radius: 6px; transition: all 0.3s; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: #fff; min-width: 20px; }
+  .demo-buttons { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .demo-btn { padding: 8px 14px; border-radius: 8px; font-size: 12px; font-family: 'JetBrains Mono', monospace; font-weight: 700; cursor: pointer; border: 1px solid; transition: all 0.2s; }
+  .demo-btn:hover { filter: brightness(1.3); }
+  .demo-btn.damage { background: #ef444422; border-color: #ef444444; color: #ef4444; }
+  .demo-btn.heal { background: #10b98122; border-color: #10b98144; color: #10b981; }
+  .demo-btn.reset { background: #6b728022; border-color: #6b728044; color: #6b7280; }
+  .demo-log { background: #0d1117; border: 1px solid #1a1a22; border-radius: 8px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; min-height: 80px; max-height: 160px; overflow-y: auto; margin-bottom: 16px; }
+  .log-damage { color: #ef4444; }
+  .log-heal { color: #10b981; }
+  .log-dead { color: #f97316; font-weight: 700; }
+  .log-info { color: #4a4a6a; }
+  .encap-note { background: #ffffff06; border: 1px solid #ffffff08; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #888; line-height: 1.6; }
+  .encap-note code { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+  /* =========== INHERITANCE TAB =========== */
+  #inheritance-view { max-width: 900px; margin: 0 auto; padding: 0 16px 48px; }
+  .inh-chain { display: flex; align-items: flex-start; gap: 4px; overflow-x: auto; padding: 8px 0 16px; }
+  .inh-arrow { color: #555; font-size: 20px; padding-top: 40px; flex-shrink: 0; }
+  .inh-class-card { background: #0a0a0f; border: 1px solid; border-radius: 12px; padding: 14px; min-width: 180px; flex-shrink: 0; }
+  .inh-class-card h4 { font-size: 14px; font-family: 'JetBrains Mono', monospace; margin-bottom: 2px; }
+  .extends-label { font-size: 10px; color: #555; font-family: 'JetBrains Mono', monospace; margin-bottom: 8px; }
+  .inh-section-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin: 8px 0 4px; }
+
+  /* =========== POLYMORPHISM TAB =========== */
+  #poly-demo { max-width: 700px; margin: 0 auto; padding: 0 16px 48px; }
+  #poly-demo h3 { color: #a78bfa; font-size: 16px; margin-bottom: 4px; }
+  .subtitle { font-size: 12px; color: #6b7280; margin-bottom: 16px; }
+  .poly-enemies { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  @media (max-width: 600px) { .poly-enemies { grid-template-columns: 1fr; } }
+  .poly-card { background: #0a0a0f; border: 1px solid; border-radius: 12px; padding: 14px; text-align: center; transition: all 0.3s; }
+  .poly-card.attacking { box-shadow: 0 0 20px var(--card-glow); transform: scale(1.03); }
+  .card-icon { font-size: 28px; margin-bottom: 4px; }
+  .card-name { font-size: 14px; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
+  .card-attack { font-size: 11px; font-family: 'JetBrains Mono', monospace; padding: 4px 8px; border-radius: 6px; margin-top: 4px; }
+  .poly-call-btn { display: block; width: 100%; padding: 12px; background: #8b5cf615; border: 1px solid #8b5cf644; color: #8b5cf6; font-size: 13px; font-family: 'JetBrains Mono', monospace; font-weight: 700; border-radius: 10px; cursor: pointer; margin-bottom: 12px; transition: all 0.2s; }
+  .poly-call-btn:hover { background: #8b5cf625; }
+  .poly-code { background: #0d1117; border: 1px solid #1a1a22; border-radius: 8px; padding: 14px; font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.6; min-height: 60px; white-space: pre-wrap; }
+  .code-dim { color: #4a4a6a; }
+  .code-kw { color: #e94560; }
+  .code-fn { color: #00d9ff; }
+  .code-hl { display: inline-block; padding: 1px 6px; border-left: 2px solid var(--hl-color, #8b5cf6); background: var(--hl-bg, #8b5cf610); }
+</style>
+</head>
+<body>
+
+<div id="top-bar">
+  <h1>OOP IN GAMES</h1>
+  <span class="tag">OBJECTS &amp; IMAGES</span>
+</div>
+
+<div id="concept-tabs"></div>
+
+<div id="concept-desc">
+  <div class="desc-box">
+    <div id="header-tagline"></div>
+    <p id="header-description"></p>
+  </div>
+</div>
+
+<!-- HIERARCHY TAB -->
+<div class="tab-content" id="tab-hierarchy">
+  <div id="main-grid">
+    <div id="tree-area">
+      <div id="tree-label">Class Hierarchy</div>
+      <svg id="tree-svg"></svg>
+    </div>
+    <div id="detail-panel">
+      <div id="detail-placeholder">Click a class node to inspect it</div>
+      <div id="detail-content" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ENCAPSULATION TAB -->
+<div class="tab-content" id="tab-encapsulation">
+  <div id="encap-demo"></div>
+</div>
+
+<!-- INHERITANCE TAB -->
+<div class="tab-content" id="tab-inheritance">
+  <div id="inheritance-view"></div>
+</div>
+
+<!-- POLYMORPHISM TAB -->
+<div class="tab-content" id="tab-polymorphism">
+  <div id="poly-demo"></div>
+</div>
+
+<script>
+/* ================================================================
+   DATA
+   ================================================================ */
+var CLASSES = {
+  Entity: {
+    color: "#6b7280", icon: "\u25C6",
+    description: "The root of everything in the game world. If it exists, it\u2019s an Entity.",
+    properties: ["name", "position {x, y}", "isActive"],
+    methods: ["spawn()", "destroy()", "update()"],
+    inherited: [], inheritedMethods: [],
+    level: 0, parent: null
+  },
+  Character: {
+    color: "#8b5cf6", icon: "\u265F",
+    description: "An Entity that can move, take damage, and interact with the world.",
+    properties: ["health", "speed", "direction"],
+    methods: ["move()", "takeDamage(amt)", "heal(amt)"],
+    inherited: ["name", "position {x, y}", "isActive"],
+    inheritedMethods: ["spawn()", "destroy()", "update()"],
+    level: 1, parent: "Entity"
+  },
+  Player: {
+    color: "#10b981", icon: "\u2694",
+    description: "The hero. Controlled by the human with input, inventory, and experience.",
+    properties: ["inventory[ ]", "experience", "level"],
+    methods: ["attack(target)", "useItem(item)", "gainXP(amt)"],
+    inherited: ["name", "position {x, y}", "isActive", "health", "speed", "direction"],
+    inheritedMethods: ["spawn()", "destroy()", "update()", "move()", "takeDamage(amt)", "heal(amt)"],
+    level: 2, parent: "Character", playerClass: true
+  },
+  HostileNPC: {
+    color: "#ef4444", icon: "\u2620",
+    description: "A Character that hunts the Player. Has AI behaviors like patrolling and chasing.",
+    properties: ["aggroRange", "attackPower", "state"],
+    methods: ["patrol()", "chasePlayer()", "attack()"],
+    inherited: ["name", "position {x, y}", "isActive", "health", "speed", "direction"],
+    inheritedMethods: ["spawn()", "destroy()", "update()", "move()", "takeDamage(amt)", "heal(amt)"],
+    level: 2, parent: "Character"
+  },
+  Grunt: {
+    color: "#f97316", icon: "\uD83D\uDC4A",
+    description: "Basic melee enemy. Low health, low range, but comes in groups.",
+    properties: ["swingSpeed"],
+    methods: ["attack() \u2192 meleeStrike"],
+    inherited: ["name", "position {x, y}", "isActive", "health", "speed", "direction", "aggroRange", "attackPower", "state"],
+    inheritedMethods: ["spawn()", "destroy()", "update()", "move()", "takeDamage(amt)", "heal(amt)", "patrol()", "chasePlayer()"],
+    level: 3, parent: "HostileNPC",
+    stats: { health: 30, speed: 4, aggroRange: 5, attackPower: 8 }
+  },
+  Sniper: {
+    color: "#3b82f6", icon: "\uD83C\uDFAF",
+    description: "Long-range, fragile. High aggro range but slow movement and low HP.",
+    properties: ["accuracy", "scopeZoom"],
+    methods: ["attack() \u2192 rangedShot"],
+    inherited: ["name", "position {x, y}", "isActive", "health", "speed", "direction", "aggroRange", "attackPower", "state"],
+    inheritedMethods: ["spawn()", "destroy()", "update()", "move()", "takeDamage(amt)", "heal(amt)", "patrol()", "chasePlayer()"],
+    level: 3, parent: "HostileNPC",
+    stats: { health: 15, speed: 2, aggroRange: 20, attackPower: 25 }
+  },
+  Boss: {
+    color: "#ec4899", icon: "\uD83D\uDC51",
+    description: "A unique, powerful enemy with phases and a special attack.",
+    properties: ["phase", "enrageTimer"],
+    methods: ["attack() \u2192 groundSlam", "specialAttack()", "enrage()"],
+    inherited: ["name", "position {x, y}", "isActive", "health", "speed", "direction", "aggroRange", "attackPower", "state"],
+    inheritedMethods: ["spawn()", "destroy()", "update()", "move()", "takeDamage(amt)", "heal(amt)", "patrol()", "chasePlayer()"],
+    level: 3, parent: "HostileNPC",
+    stats: { health: 200, speed: 3, aggroRange: 12, attackPower: 40 }
+  }
+};
+
+var OOP_CONCEPTS = {
+  hierarchy: {
+    label: "Class Hierarchy", icon: "\uD83C\uDF33",
+    tagline: "The family tree of game objects",
+    description: "Click any class to inspect it. Children inherit everything from their parents \u2014 properties, methods, all of it. Notice how each level adds specialization without repeating code."
+  },
+  encapsulation: {
+    label: "Encapsulation", icon: "\uD83D\uDD12",
+    tagline: "Each object is a self-contained machine",
+    description: "Like a vending machine \u2014 you push buttons on the outside, but the internal machinery is hidden. Each enemy manages its own health privately. You call takeDamage(), you don\u2019t reach in and change the number yourself."
+  },
+  inheritance: {
+    label: "Inheritance", icon: "\uD83E\uDDEC",
+    tagline: "Write once, reuse everywhere",
+    description: "A Sniper doesn\u2019t need its own move() code \u2014 it inherits it from Character. Each class only defines what\u2019s NEW or DIFFERENT. The colored tags show where each property originally comes from."
+  },
+  polymorphism: {
+    label: "Polymorphism", icon: "\uD83C\uDFAD",
+    tagline: "Same message, different behavior",
+    description: "Call attack() on any enemy and each does its own thing. The game loop doesn\u2019t need to know WHAT kind of enemy it is \u2014 it just says \u2018attack\u2019 and trusts each class to handle it. One interface, many forms."
+  }
+};
+
+var TREE_LAYOUT = {
+  Entity:     { x: 50, y: 6 },
+  Character:  { x: 50, y: 22 },
+  Player:     { x: 20, y: 42 },
+  HostileNPC: { x: 72, y: 42 },
+  Grunt:      { x: 52, y: 64 },
+  Sniper:     { x: 72, y: 64 },
+  Boss:       { x: 92, y: 64 }
+};
+
+var EDGES = [
+  ["Entity", "Character"],
+  ["Character", "Player"],
+  ["Character", "HostileNPC"],
+  ["HostileNPC", "Grunt"],
+  ["HostileNPC", "Sniper"],
+  ["HostileNPC", "Boss"]
+];
+
+/* ================================================================
+   STATE
+   ================================================================ */
+var activeTab = "hierarchy";
+var selectedClass = null;
+var encapHealth = 100;
+var encapMaxHealth = 100;
+var encapLog = [];
+var polyAttacking = null;
+var polyCode = "";
+
+/* ================================================================
+   INIT
+   ================================================================ */
+document.addEventListener("DOMContentLoaded", function () {
+  buildConceptTabs();
+  switchTab("hierarchy");
+});
+
+/* ================================================================
+   CONCEPT TABS
+   ================================================================ */
+function buildConceptTabs() {
+  var container = document.getElementById("concept-tabs");
+  container.innerHTML = "";
+  var keys = Object.keys(OOP_CONCEPTS);
+  for (var i = 0; i < keys.length; i++) {
+    (function (key) {
+      var c = OOP_CONCEPTS[key];
+      var btn = document.createElement("button");
+      btn.className = "concept-tab" + (key === activeTab ? " active" : "");
+      btn.setAttribute("data-tab", key);
+      btn.innerHTML = '<span class="tab-icon">' + c.icon + "</span>" + c.label;
+      btn.onclick = function () { switchTab(key); };
+      container.appendChild(btn);
+    })(keys[i]);
+  }
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  var tabs = document.querySelectorAll(".concept-tab");
+  for (var i = 0; i < tabs.length; i++) {
+    tabs[i].classList.toggle("active", tabs[i].getAttribute("data-tab") === tab);
+  }
+  var concept = OOP_CONCEPTS[tab];
+  document.getElementById("header-tagline").textContent = concept.icon + " " + concept.tagline;
+  document.getElementById("header-description").textContent = concept.description;
+
+  var contents = document.querySelectorAll(".tab-content");
+  for (var i = 0; i < contents.length; i++) contents[i].style.display = "none";
+  document.getElementById("tab-" + tab).style.display = "block";
+
+  if (tab === "hierarchy")       { buildTree(); updateDetail(); }
+  else if (tab === "encapsulation") { buildEncapsulationDemo(); }
+  else if (tab === "inheritance")   { buildInheritanceView(); }
+  else if (tab === "polymorphism")  { buildPolymorphismDemo(); }
+}
+
+/* ================================================================
+   HIERARCHY TAB — Tree + Detail
+   ================================================================ */
+function buildTree() {
+  var area = document.getElementById("tree-area");
+  var oldNodes = area.querySelectorAll(".class-node");
+  for (var i = 0; i < oldNodes.length; i++) oldNodes[i].remove();
+
+  var keys = Object.keys(TREE_LAYOUT);
+  for (var i = 0; i < keys.length; i++) {
+    (function (name) {
+      var cls = CLASSES[name];
+      var pos = TREE_LAYOUT[name];
+      var node = document.createElement("div");
+      node.className = "class-node" + (selectedClass === name ? " selected" : "");
+      node.style.setProperty("--node-color", cls.color);
+      node.style.setProperty("--node-glow", cls.color + "44");
+      node.style.left = pos.x + "%";
+      node.style.top = pos.y + "%";
+
+      var inner = '<div class="node-inner"><span class="node-icon">' + cls.icon + '</span><span class="node-name">' + name + "</span></div>";
+      if (cls.playerClass) inner += '<div class="node-you">you</div>';
+      node.innerHTML = inner;
+
+      node.onclick = function () {
+        selectedClass = selectedClass === name ? null : name;
+        buildTree();
+        updateDetail();
+      };
+      area.appendChild(node);
+    })(keys[i]);
+  }
+  requestAnimationFrame(function () { drawTreeLines(); });
+}
+
+function drawTreeLines() {
+  var svg = document.getElementById("tree-svg");
+  var area = document.getElementById("tree-area");
+  var w = area.offsetWidth;
+  var h = area.offsetHeight;
+  if (w === 0 || h === 0) return;
+  svg.setAttribute("viewBox", "0 0 " + w + " " + h);
+  svg.innerHTML = "";
+
+  for (var i = 0; i < EDGES.length; i++) {
+    var from = TREE_LAYOUT[EDGES[i][0]];
+    var to   = TREE_LAYOUT[EDGES[i][1]];
+    var parentCls = CLASSES[EDGES[i][0]];
+    var isOnPath = selectedClass && (EDGES[i][0] === selectedClass || EDGES[i][1] === selectedClass ||
+      CLASSES[selectedClass] && CLASSES[selectedClass].parent === EDGES[i][0] ||
+      CLASSES[EDGES[i][0]] && CLASSES[EDGES[i][0]].parent === selectedClass);
+
+    var x1 = from.x / 100 * w, y1 = from.y / 100 * h + 24;
+    var x2 = to.x / 100 * w,   y2 = to.y / 100 * h - 24;
+    var midY = (y1 + y2) / 2;
+
+    var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", "M " + x1 + " " + y1 + " C " + x1 + " " + midY + ", " + x2 + " " + midY + ", " + x2 + " " + y2);
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke", isOnPath ? parentCls.color : parentCls.color + "33");
+    path.setAttribute("stroke-width", isOnPath ? "2.5" : "1.5");
+    if (!isOnPath) path.setAttribute("stroke-dasharray", "6 4");
+    path.style.transition = "all 0.4s ease";
+    path.style.opacity = isOnPath ? "0.9" : "0.35";
+    svg.appendChild(path);
+
+    var sz = 5;
+    var arrow = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    arrow.setAttribute("points", (x2 - sz) + "," + (y2 - sz * 1.5) + " " + x2 + "," + y2 + " " + (x2 + sz) + "," + (y2 - sz * 1.5));
+    arrow.setAttribute("fill", isOnPath ? parentCls.color : parentCls.color + "44");
+    svg.appendChild(arrow);
+  }
+}
+
+function updateDetail() {
+  var placeholder = document.getElementById("detail-placeholder");
+  var content = document.getElementById("detail-content");
+  if (!selectedClass) { placeholder.style.display = ""; content.style.display = "none"; return; }
+  placeholder.style.display = "none";
+  content.style.display = "";
+
+  var cls = CLASSES[selectedClass];
+  var hex = cls.color;
+  var tagBg = hex + "20";
+
+  var html = '<h2 style="color:' + hex + '"><span style="font-size:24px">' + cls.icon + "</span> " + selectedClass + "</h2>";
+  if (cls.parent) {
+    html += '<div style="font-size:12px;color:#6b7280;font-family:JetBrains Mono,monospace;margin-bottom:4px">extends <span style="color:' + CLASSES[cls.parent].color + '">' + cls.parent + "</span></div>";
+  }
+  html += '<div class="detail-desc">' + cls.description + "</div>";
+
+  html += '<div class="detail-section"><div class="detail-section-title" style="color:' + hex + '">Own Properties</div>';
+  for (var i = 0; i < cls.properties.length; i++) html += '<span class="prop-tag own" style="--tag-bg:' + tagBg + ";--tag-color:" + hex + '">' + cls.properties[i] + "</span>";
+  html += "</div>";
+
+  html += '<div class="detail-section"><div class="detail-section-title" style="color:' + hex + '">Own Methods</div>';
+  for (var i = 0; i < cls.methods.length; i++) html += '<span class="prop-tag own" style="--tag-bg:' + tagBg + ";--tag-color:" + hex + '">' + cls.methods[i] + "</span>";
+  html += "</div>";
+
+  if (cls.inherited.length > 0) {
+    html += '<div class="detail-section"><div class="detail-section-title">Inherited Properties</div>';
+    for (var i = 0; i < cls.inherited.length; i++) {
+      var src = findOrigin(cls.inherited[i], selectedClass, "properties");
+      html += '<span class="prop-tag inherited">' + cls.inherited[i];
+      if (src) html += ' <span class="from-label" style="color:' + CLASSES[src].color + '">from ' + src + "</span>";
+      html += "</span>";
+    }
+    html += "</div>";
+  }
+
+  if (cls.inheritedMethods.length > 0) {
+    html += '<div class="detail-section"><div class="detail-section-title">Inherited Methods</div>';
+    for (var i = 0; i < cls.inheritedMethods.length; i++) {
+      var src = findOrigin(cls.inheritedMethods[i], selectedClass, "methods");
+      html += '<span class="prop-tag inherited">' + cls.inheritedMethods[i];
+      if (src) html += ' <span class="from-label" style="color:' + CLASSES[src].color + '">from ' + src + "</span>";
+      html += "</span>";
+    }
+    html += "</div>";
+  }
+
+  if (cls.stats) {
+    html += '<div class="detail-section"><div class="detail-section-title">Stats</div>';
+    var maxVals = { health: 200, speed: 10, aggroRange: 25, attackPower: 50 };
+    var statColors = { health: "#ef4444", speed: "#10b981", aggroRange: "#3b82f6", attackPower: "#f97316" };
+    var sk = Object.keys(cls.stats);
+    for (var i = 0; i < sk.length; i++) {
+      var pct = Math.min(100, cls.stats[sk[i]] / maxVals[sk[i]] * 100);
+      html += '<div class="stat-row"><div class="stat-label">' + sk[i] + '</div><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:' + pct + "%;background:" + statColors[sk[i]] + '"></div></div><div class="stat-value" style="color:' + statColors[sk[i]] + '">' + cls.stats[sk[i]] + "</div></div>";
+    }
+    html += "</div>";
+  }
+
+  content.innerHTML = html;
+}
+
+function findOrigin(propName, className, type) {
+  var cls = CLASSES[className];
+  if (!cls || !cls.parent) return null;
+  var parent = cls.parent;
+  while (parent) {
+    var p = CLASSES[parent];
+    if (p[type] && p[type].indexOf(propName) !== -1) return parent;
+    parent = p.parent;
+  }
+  return null;
+}
+
+/* ================================================================
+   ENCAPSULATION TAB
+   ================================================================ */
+function buildEncapsulationDemo() {
+  var container = document.getElementById("encap-demo");
+  var hpColor = getHealthColor(encapHealth, encapMaxHealth);
+
+  var html = "<h3>\u2620 HostileNPC: Grunt</h3>";
+  html += '<div style="font-size:12px;color:#6b7280;margin-bottom:12px">Internal state is <b>private</b>. You interact through methods only.</div>';
+  html += '<div class="health-bar-container">';
+  html += '<div class="health-label"><span>this._health</span><span>' + encapHealth + " / " + encapMaxHealth + "</span></div>";
+  html += '<div class="health-bar-outer"><div class="health-bar-inner" style="width:' + (encapHealth / encapMaxHealth * 100) + "%;background:" + hpColor + '">' + encapHealth + "</div></div></div>";
+  html += '<div class="demo-buttons">';
+  html += '<button class="demo-btn damage" onclick="encapTakeDamage(15)">takeDamage(15)</button>';
+  html += '<button class="demo-btn damage" onclick="encapTakeDamage(30)">takeDamage(30)</button>';
+  html += '<button class="demo-btn heal" onclick="encapHeal(20)">heal(20)</button>';
+  html += '<button class="demo-btn reset" onclick="encapReset()">Reset</button></div>';
+  html += '<div class="demo-log" id="encap-log">';
+  if (encapLog.length === 0) html += '<span class="log-info">// Call methods above to interact...</span>';
+  else for (var i = 0; i < encapLog.length; i++) html += encapLog[i];
+  html += "</div>";
+  html += '<div class="encap-note"><strong>Key insight:</strong> You never wrote <code style="color:#e94560">grunt._health = grunt._health - 15</code>. You called <code style="color:#10b981">grunt.takeDamage(15)</code> and the object handled the rest \u2014 including clamping, death checks, and logging. That\u2019s encapsulation.</div>';
+  container.innerHTML = html;
+}
+
+function getHealthColor(hp, max) {
+  var pct = hp / max;
+  if (pct > 0.5) return "#10b981";
+  if (pct > 0.25) return "#f59e0b";
+  return "#ef4444";
+}
+
+function encapTakeDamage(amt) {
+  var prev = encapHealth;
+  encapHealth = Math.max(0, encapHealth - amt);
+  var actual = prev - encapHealth;
+  encapLog.push('<div class="log-damage">&gt; grunt.takeDamage(' + amt + ")  // -" + actual + " HP  (" + prev + " \u2192 " + encapHealth + ")</div>");
+  if (encapHealth <= 0) encapLog.push('<div class="log-dead">&gt; grunt.destroy()  // health reached 0!</div>');
+  buildEncapsulationDemo();
+  scrollLog();
+}
+
+function encapHeal(amt) {
+  if (encapHealth <= 0) {
+    encapLog.push('<div class="log-info">&gt; grunt.heal(' + amt + ")  // cannot heal \u2014 already destroyed</div>");
+    buildEncapsulationDemo(); scrollLog(); return;
+  }
+  var prev = encapHealth;
+  encapHealth = Math.min(encapMaxHealth, encapHealth + amt);
+  var actual = encapHealth - prev;
+  encapLog.push('<div class="log-heal">&gt; grunt.heal(' + amt + ")  // +" + actual + " HP  (" + prev + " \u2192 " + encapHealth + ")</div>");
+  buildEncapsulationDemo(); scrollLog();
+}
+
+function encapReset() { encapHealth = encapMaxHealth; encapLog = []; buildEncapsulationDemo(); }
+
+function scrollLog() { var el = document.getElementById("encap-log"); if (el) el.scrollTop = el.scrollHeight; }
+
+/* ================================================================
+   INHERITANCE TAB
+   ================================================================ */
+function buildInheritanceView() {
+  var container = document.getElementById("inheritance-view");
+  var chain = ["Entity", "Character", "HostileNPC", "Boss"];
+  var html = '<div style="text-align:center;color:#6b7280;font-size:13px;margin-bottom:8px">Follow the inheritance chain \u2014 each level only adds what\u2019s new</div><div class="inh-chain">';
+
+  for (var i = 0; i < chain.length; i++) {
+    var name = chain[i], cls = CLASSES[name];
+    if (i > 0) html += '<div class="inh-arrow">\u2192</div>';
+    html += '<div class="inh-class-card" style="border-color:' + cls.color + '44"><h4 style="color:' + cls.color + '">' + cls.icon + " " + name + "</h4>";
+    if (cls.parent) html += '<div class="extends-label">extends ' + cls.parent + "</div>";
+
+    html += '<div class="inh-section-label" style="color:' + cls.color + '">NEW Properties</div>';
+    for (var p = 0; p < cls.properties.length; p++) html += '<span class="prop-tag own" style="--tag-bg:' + cls.color + "20;--tag-color:" + cls.color + '">' + cls.properties[p] + "</span>";
+
+    html += '<div class="inh-section-label" style="color:' + cls.color + '">NEW Methods</div>';
+    for (var m = 0; m < cls.methods.length; m++) html += '<span class="prop-tag own" style="--tag-bg:' + cls.color + "20;--tag-color:" + cls.color + '">' + cls.methods[m] + "</span>";
+
+    if (cls.inherited.length > 0) {
+      html += '<div class="inh-section-label" style="color:#555">Inherited (' + cls.inherited.length + " props, " + cls.inheritedMethods.length + " methods)</div>";
+      for (var q = 0; q < cls.inherited.length; q++) html += '<span class="prop-tag inherited">' + cls.inherited[q] + "</span>";
+      for (var q = 0; q < cls.inheritedMethods.length; q++) html += '<span class="prop-tag inherited">' + cls.inheritedMethods[q] + "</span>";
+    }
+    html += "</div>";
+  }
+  html += "</div>";
+  container.innerHTML = html;
+}
+
+/* ================================================================
+   POLYMORPHISM TAB
+   ================================================================ */
+function buildPolymorphismDemo() {
+  var container = document.getElementById("poly-demo");
+  var enemies = [
+    { name: "Grunt",  cls: CLASSES.Grunt,  attack: "meleeStrike", desc: "Swings fist at close range", dmg: 8 },
+    { name: "Sniper", cls: CLASSES.Sniper, attack: "rangedShot",  desc: "Fires a precise long-range bullet", dmg: 25 },
+    { name: "Boss",   cls: CLASSES.Boss,   attack: "groundSlam",  desc: "Slams the ground, AoE damage", dmg: 40 }
+  ];
+
+  var html = "<h3>\uD83C\uDFAD Polymorphism: attack()</h3>";
+  html += '<div class="subtitle">Each enemy type responds to the same method call differently.</div>';
+  html += '<div class="poly-enemies">';
+  for (var i = 0; i < enemies.length; i++) {
+    var e = enemies[i], isAtk = polyAttacking === e.name;
+    html += '<div class="poly-card' + (isAtk ? " attacking" : "") + '" style="border-color:' + e.cls.color + (isAtk ? "" : "44") + ";--card-glow:" + e.cls.color + '44">';
+    html += '<div class="card-icon">' + e.cls.icon + '</div><div class="card-name" style="color:' + e.cls.color + '">' + e.name + "</div>";
+    html += '<div style="font-size:11px;color:#6b7280;margin-bottom:6px">' + e.desc + "</div>";
+    if (isAtk) html += '<div class="card-attack" style="background:' + e.cls.color + "20;color:" + e.cls.color + ";border:1px solid " + e.cls.color + '44">' + e.attack + "! (-" + e.dmg + " dmg)</div>";
+    else html += '<div class="card-attack" style="color:#4a4a6a">waiting...</div>';
+    html += "</div>";
+  }
+  html += "</div>";
+
+  html += '<button class="poly-call-btn" onclick="polyAttackAll()">enemies.forEach(e =&gt; e.attack())</button>';
+  html += '<div class="demo-buttons" style="margin-bottom:16px">';
+  for (var i = 0; i < enemies.length; i++) {
+    var e = enemies[i];
+    html += '<button class="demo-btn" style="background:' + e.cls.color + "15;border-color:" + e.cls.color + "44;color:" + e.cls.color + '" onclick="polyAttackOne(\'' + e.name + "')\">" + e.name.toLowerCase() + ".attack()</button>";
+  }
+  html += "</div>";
+  html += '<div class="poly-code" id="poly-code-area">';
+  html += polyCode || '<span class="code-dim">// Click a button to see polymorphism in action...</span>';
+  html += "</div>";
+  container.innerHTML = html;
+}
+
+function polyAttackOne(name) {
+  var enemies = {
+    Grunt:  { attack: "meleeStrike", dmg: 8,  color: "#f97316" },
+    Sniper: { attack: "rangedShot",  dmg: 25, color: "#3b82f6" },
+    Boss:   { attack: "groundSlam",  dmg: 40, color: "#ec4899" }
+  };
+  var e = enemies[name];
+  polyAttacking = name;
+  polyCode = '<span class="code-dim">// The call:</span>\n<span class="code-kw">let</span> enemy = <span class="code-kw">new</span> <span style="color:' + e.color + '">' + name + "</span>();\nenemy.<span class=\"code-fn\">attack</span>();\n\n<span class=\"code-dim\">// What actually runs inside " + name + ':</span>\n<span class="code-hl" style="--hl-bg:' + e.color + "15;--hl-color:" + e.color + '"><span class="code-fn">attack</span>() { this.<span class="code-fn">' + e.attack + "</span>(); }  <span class=\"code-dim\">// " + e.dmg + " damage</span></span>";
+  buildPolymorphismDemo();
+  setTimeout(function () { polyAttacking = null; buildPolymorphismDemo(); }, 1500);
+}
+
+function polyAttackAll() {
+  var order = ["Grunt", "Sniper", "Boss"];
+  var enemies = {
+    Grunt:  { attack: "meleeStrike", dmg: 8,  color: "#f97316" },
+    Sniper: { attack: "rangedShot",  dmg: 25, color: "#3b82f6" },
+    Boss:   { attack: "groundSlam",  dmg: 40, color: "#ec4899" }
+  };
+  var delay = 0;
+  for (var i = 0; i < order.length; i++) {
+    (function (idx) {
+      setTimeout(function () {
+        polyAttacking = order[idx];
+        polyCode = '<span class="code-kw">const</span> enemies = [<span style="color:#f97316">grunt</span>, <span style="color:#3b82f6">sniper</span>, <span style="color:#ec4899">boss</span>];\nenemies.<span class="code-fn">forEach</span>(e =&gt; e.<span class="code-fn">attack</span>());\n\n<span class="code-dim">// Each resolves differently:</span>\n';
+        for (var j = 0; j <= idx; j++) {
+          var n = order[j], en = enemies[n];
+          var active = j === idx;
+          polyCode += '<span class="code-hl" style="--hl-bg:' + (active ? en.color + "15" : "transparent") + ";--hl-color:" + (active ? en.color : "#4a4a6a") + '">' + n.toLowerCase() + '.<span class="code-fn">attack</span>() \u2192 ' + en.attack + '  <span class="code-dim">// -' + en.dmg + "</span></span>\n";
+        }
+        buildPolymorphismDemo();
+      }, delay);
+      delay += 600;
+    })(i);
+  }
+  setTimeout(function () { polyAttacking = null; buildPolymorphismDemo(); }, delay + 800);
+}
+
+/* ================================================================
+   RESIZE
+   ================================================================ */
+window.addEventListener("resize", function () {
+  if (activeTab === "hierarchy") drawTreeLines();
+});
+</script>
+</body>
+</html>

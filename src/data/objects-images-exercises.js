@@ -41,6 +41,13 @@ export const objectsImagesExercises = {
         description: "Visualize why removing forward skips elements and how reverse iteration fixes it",
         file: "/visualizations/viz_obj_04_removal.html",
         icon: "🗑️"
+      },
+      {
+        id: "viz-oop-hierarchy",
+        title: "OOP in Games",
+        description: "Interactive class hierarchy: explore inheritance, encapsulation, and polymorphism through a game enemy tree",
+        file: "/visualizations/viz_07_oop_hierarchy.html",
+        icon: "🌳"
       }
     ],
     days: [
@@ -2122,6 +2129,13 @@ function keyPressed() {
         description: "Understand why we load images once and pass references instead of making copies",
         file: "/visualizations/viz_obj_07_image_refs.html",
         icon: "📸"
+      },
+      {
+        id: "viz-oop-hierarchy",
+        title: "OOP in Games",
+        description: "Interactive class hierarchy: explore inheritance, encapsulation, and polymorphism through a game enemy tree",
+        file: "/visualizations/viz_07_oop_hierarchy.html",
+        icon: "🌳"
       }
     ],
     days: [

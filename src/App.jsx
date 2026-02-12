@@ -32,6 +32,7 @@ import ObjectsImagesWeekView from './components/objects-images/ObjectsImagesWeek
 import ObjectsImagesExerciseDetail from './components/objects-images/ObjectsImagesExerciseDetail';
 import FunctionsScopeWeekView from './components/functions-scope/FunctionsScopeWeekView';
 import FunctionsScopeExerciseDetail from './components/functions-scope/FunctionsScopeExerciseDetail';
+import VisualizationsPage from './components/VisualizationsPage';
 import { saveStudentProgress, getStudentProgress, subscribeToAssignments, isFirebaseConfigured, saveStudentSubmission } from './services/firebaseService';
 
 function App() {
@@ -87,6 +88,9 @@ function App() {
 
   // Planning Tools state
   const [completedPlanningTools, setCompletedPlanningTools] = useState([]);
+
+  // Network Monitor simulation link state
+  const [initialScenario, setInitialScenario] = useState(null);
 
   // Check for existing session
   useEffect(() => {
@@ -351,6 +355,11 @@ function App() {
     setSelectedCategory(null);
     setSelectedChallenge(null);
     setCurrentView('dashboard');
+  };
+
+  const handleOpenSimulation = (scenarioId) => {
+    setInitialScenario(scenarioId);
+    setCurrentView('network-monitor');
   };
 
   const handleCompleteScenario = (scenarioId, points) => {
@@ -648,6 +657,12 @@ function App() {
               Tools
             </button>
             <button
+              className={`nav-btn ${currentView === 'visualizations' ? 'active' : ''}`}
+              onClick={() => setCurrentView('visualizations')}
+            >
+              Visualizations
+            </button>
+            <button
               className={`nav-btn ${currentView === 'vocabulary' ? 'active' : ''}`}
               onClick={() => setCurrentView('vocabulary')}
             >
@@ -728,6 +743,7 @@ function App() {
             onBack={handleBackFromChallenge}
             isCompleted={completedChallenges.includes(selectedChallenge)}
             onSubmit={handleSubmission}
+            onOpenSimulation={handleOpenSimulation}
           />
         )}
 
@@ -760,6 +776,10 @@ function App() {
 
         {currentView === 'vocabulary' && <VocabularyPage />}
 
+        {currentView === 'visualizations' && (
+          <VisualizationsPage onBack={handleBackToDashboard} />
+        )}
+
         {currentView === 'flashcards' && (
           <FlashcardPage onBack={handleBackToDashboard} />
         )}
@@ -770,7 +790,8 @@ function App() {
           <NetworkMonitor
             completedScenarios={completedScenarios}
             onCompleteScenario={handleCompleteScenario}
-            onBack={handleBackToDashboard}
+            onBack={() => { setInitialScenario(null); handleBackToDashboard(); }}
+            initialScenario={initialScenario}
           />
         )}
 

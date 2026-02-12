@@ -247,6 +247,214 @@ export const vocabulary = {
     term: "Visualization",
     definition: "Representing data visually using shapes, colors, and positions. Arrays become visible!",
     category: "Concepts"
+  },
+
+  // Cybersecurity
+  "caesar-cipher": {
+    term: "Caesar Cipher",
+    definition: "A simple substitution cipher that shifts each letter by a fixed number of positions in the alphabet. Named after Julius Caesar.",
+    category: "Cybersecurity",
+    example: "With shift 3: A→D, B→E, C→F. 'HELLO' becomes 'KHOOR'"
+  },
+  "cipher": {
+    term: "Cipher",
+    definition: "An algorithm for performing encryption or decryption — a series of well-defined steps that transform readable text into coded text and back.",
+    category: "Cybersecurity"
+  },
+  "encryption": {
+    term: "Encryption",
+    definition: "The process of converting readable data (plaintext) into an unreadable format (ciphertext) using a key, so only authorized parties can read it.",
+    category: "Cybersecurity",
+    example: "HTTPS encrypts web traffic so eavesdroppers can't read it"
+  },
+  "decryption": {
+    term: "Decryption",
+    definition: "The reverse of encryption — converting ciphertext back into readable plaintext using the correct key.",
+    category: "Cybersecurity"
+  },
+  "plaintext": {
+    term: "Plaintext",
+    definition: "The original, readable message before encryption. Also called cleartext.",
+    category: "Cybersecurity",
+    example: "'HELLO WORLD' is plaintext before being encrypted"
+  },
+  "ciphertext": {
+    term: "Ciphertext",
+    definition: "The scrambled, unreadable output after encryption. It looks like random characters without the key.",
+    category: "Cybersecurity",
+    example: "'KHOOR ZRUOG' is ciphertext (Caesar shift 3 of 'HELLO WORLD')"
+  },
+  "base64": {
+    term: "Base64",
+    definition: "An encoding scheme that converts binary data into 64 safe ASCII characters. It is NOT encryption — anyone can decode it.",
+    category: "Cybersecurity",
+    example: "'Hello' encoded in Base64 is 'SGVsbG8='"
+  },
+  "hash": {
+    term: "Hash",
+    definition: "A one-way function that converts input into a fixed-length fingerprint. You cannot reverse a hash to find the original input.",
+    category: "Cybersecurity",
+    example: "MD5 hash of 'hello' → 5d41402abc4b2a76b9719d911017c592"
+  },
+  "port": {
+    term: "Port",
+    definition: "A numbered endpoint (0–65535) on a computer that directs network traffic to specific services. Like an apartment number for programs.",
+    category: "Cybersecurity",
+    example: "HTTP uses port 80, HTTPS uses port 443, SSH uses port 22"
+  },
+  "protocol": {
+    term: "Protocol",
+    definition: "A set of rules that govern how data is transmitted over a network. Different protocols serve different purposes.",
+    category: "Cybersecurity",
+    example: "HTTP, HTTPS, FTP, SSH, DNS are all network protocols"
+  },
+  "ip-address": {
+    term: "IP Address",
+    definition: "A unique numerical label assigned to every device on a network, used to route traffic to the correct destination.",
+    category: "Cybersecurity",
+    example: "192.168.1.1 (private), 8.8.8.8 (Google's public DNS)"
+  },
+  "firewall": {
+    term: "Firewall",
+    definition: "A security system that monitors and controls incoming and outgoing network traffic based on a set of rules.",
+    category: "Cybersecurity",
+    example: "A firewall rule might block all traffic on port 23 (Telnet)"
+  },
+  "phishing": {
+    term: "Phishing",
+    definition: "A social engineering attack where attackers impersonate trusted entities to trick victims into revealing sensitive information.",
+    category: "Cybersecurity",
+    example: "A fake email from 'amaz0n.com' asking you to verify your password"
+  },
+  "social-engineering": {
+    term: "Social Engineering",
+    definition: "Manipulating people into breaking security procedures or revealing confidential information, rather than hacking technology directly.",
+    category: "Cybersecurity",
+    example: "Pretexting, phishing, tailgating, and USB baiting are all social engineering"
+  },
+  "malware": {
+    term: "Malware",
+    definition: "Malicious software designed to damage, disrupt, or gain unauthorized access to a computer system. Includes viruses, ransomware, and trojans.",
+    category: "Cybersecurity"
+  },
+  "brute-force": {
+    term: "Brute Force",
+    definition: "An attack that systematically tries every possible combination until the correct one is found. Effective against short or simple passwords.",
+    category: "Cybersecurity",
+    example: "Trying all 10,000 combinations of a 4-digit PIN"
+  },
+  "password-strength": {
+    term: "Password Strength",
+    definition: "A measure of how hard a password is to guess or crack. Determined by length, randomness, and character variety.",
+    category: "Cybersecurity"
+  },
+  "authentication": {
+    term: "Authentication",
+    definition: "Verifying that a user is who they claim to be, typically through passwords, biometrics, or security tokens.",
+    category: "Cybersecurity",
+    example: "Logging in with a username and password is authentication"
+  },
+  "authorization": {
+    term: "Authorization",
+    definition: "Determining what an authenticated user is allowed to do. Comes AFTER authentication.",
+    category: "Cybersecurity",
+    example: "A student can view grades (authorized) but not change them (unauthorized)"
+  },
+  "sql-injection": {
+    term: "SQL Injection",
+    definition: "A web attack where malicious SQL code is inserted into input fields to manipulate a database, potentially reading or deleting data.",
+    category: "Cybersecurity",
+    example: "Entering ' OR '1'='1 in a login field to bypass authentication"
+  },
+  "xss": {
+    term: "XSS (Cross-Site Scripting)",
+    definition: "A web vulnerability where attackers inject malicious scripts into pages viewed by other users, potentially stealing session cookies or data.",
+    category: "Cybersecurity",
+    example: "Posting <script>alert('XSS')</script> in a comment field"
+  },
+  "vulnerability": {
+    term: "Vulnerability",
+    definition: "A weakness in a system that can be exploited by an attacker to gain unauthorized access or cause damage.",
+    category: "Cybersecurity"
+  },
+  "exploit": {
+    term: "Exploit",
+    definition: "A piece of code or technique that takes advantage of a vulnerability to compromise a system.",
+    category: "Cybersecurity"
+  },
+  "packet": {
+    term: "Packet",
+    definition: "A small unit of data transmitted over a network. Contains a header (source/destination info) and a payload (the actual data).",
+    category: "Cybersecurity",
+    example: "Every web page you visit is delivered as hundreds of packets"
+  },
+  "wireshark": {
+    term: "Wireshark",
+    definition: "A free, open-source network protocol analyzer that captures and inspects packets flowing over a network in real time.",
+    category: "Cybersecurity",
+    example: "Security analysts use Wireshark to detect suspicious network activity"
+  },
+
+  // Objects & OOP
+  "class": {
+    term: "Class",
+    definition: "A blueprint for creating objects. Defines what properties (data) and methods (behavior) every instance will have.",
+    category: "Objects & OOP",
+    example: "class Bubble { constructor(x, y) { this.x = x; this.y = y; } }"
+  },
+  "constructor": {
+    term: "Constructor",
+    definition: "A special method inside a class that runs automatically when you create a new object. Sets up initial property values.",
+    category: "Objects & OOP",
+    example: "constructor(x, y) { this.x = x; this.y = y; }"
+  },
+  "instance": {
+    term: "Instance",
+    definition: "A specific object created from a class using the 'new' keyword. Each instance has its own copy of properties.",
+    category: "Objects & OOP",
+    example: "let b = new Bubble(200, 300); // b is an instance of Bubble"
+  },
+  "class-hierarchy": {
+    term: "Class Hierarchy",
+    definition: "A family tree of classes where child classes inherit from parent classes. Each level adds specialization without repeating code.",
+    category: "Objects & OOP",
+    example: "Entity → Character → Player (Player inherits from Character, which inherits from Entity)"
+  },
+  "encapsulation": {
+    term: "Encapsulation",
+    definition: "Bundling data and the methods that operate on it inside an object, hiding internal state from the outside. You interact through public methods, not by reaching in directly.",
+    category: "Objects & OOP",
+    example: "grunt.takeDamage(15) instead of grunt._health = grunt._health - 15"
+  },
+  "inheritance": {
+    term: "Inheritance",
+    definition: "A mechanism where a child class automatically receives all properties and methods from its parent class. Write once, reuse everywhere — each class only defines what's new or different.",
+    category: "Objects & OOP",
+    example: "class Player extends Character { } // Player inherits move(), health, speed from Character"
+  },
+  "polymorphism": {
+    term: "Polymorphism",
+    definition: "The ability for different classes to respond to the same method call in their own way. One interface, many forms — the caller doesn't need to know what type of object it's dealing with.",
+    category: "Objects & OOP",
+    example: "enemies.forEach(e => e.attack()) // Grunt punches, Sniper shoots, Boss slams — same call, different behavior"
+  },
+  "method": {
+    term: "Method",
+    definition: "A function defined inside a class that describes a behavior the object can perform.",
+    category: "Objects & OOP",
+    example: "display() { circle(this.x, this.y, this.r); }"
+  },
+  "property": {
+    term: "Property",
+    definition: "A variable that belongs to an object, storing a piece of data about it. Accessed with dot notation.",
+    category: "Objects & OOP",
+    example: "this.x, this.health, this.speed"
+  },
+  "array of objects": {
+    term: "Array of Objects",
+    definition: "An array where each element is an object instance. Lets you manage many independent entities with a single loop.",
+    category: "Objects & OOP",
+    example: "let bubbles = []; for (let i = 0; i < 20; i++) bubbles.push(new Bubble(random(width), random(height)));"
   }
 };
 
@@ -286,7 +494,9 @@ export const categories = [
   "Loops",
   "Traversal",
   "p5.js",
-  "Concepts"
+  "Concepts",
+  "Cybersecurity",
+  "Objects & OOP"
 ];
 
 export function getTermsByCategory(category) {
