@@ -332,6 +332,7 @@ export const pseudocodeExercises = [
     prompt: 'What values do x, y, and z have after this code runs?',
     given: 'x ← 10\ny ← x\nx ← 20\nz ← x + y',
     answer: 'x = 20, y = 10, z = 30',
+    acceptableAnswers: ['x=20, y=10, z=30', '20, 10, 30', 'x = 20 y = 10 z = 30', '20 10 30'],
     hints: ['y gets a COPY of x\'s value', 'Changing x later doesn\'t affect y'],
     explanation: 'When y ← x runs, y gets a copy of 10. Later x changes to 20, but y stays 10. So z = 20 + 10 = 30.'
   },
@@ -508,6 +509,9 @@ export const pseudocodeExercises = [
     prompt: 'Convert this pseudocode to JavaScript:',
     given: 'REPEAT 3 TIMES\n{\n   DISPLAY("Hello")\n}',
     answer: 'for (let i = 0; i < 3; i++) {\n   console.log("Hello");\n}',
+    alternativeSolutions: [
+      'let i = 0;\nwhile (i < 3) {\n   console.log("Hello");\n   i++;\n}'
+    ],
     hints: ['Use a for loop', 'Loop runs while i < 3, starting from 0'],
     explanation: 'REPEAT n TIMES becomes for (let i = 0; i < n; i++). The loop variable i counts from 0 to n-1.'
   },
@@ -541,6 +545,9 @@ export const pseudocodeExercises = [
     prompt: 'Convert this pseudocode to JavaScript:',
     given: 'REPEAT UNTIL (count = 0)\n{\n   DISPLAY(count)\n   count ← count - 1\n}',
     answer: 'while (count !== 0) {\n   console.log(count);\n   count = count - 1;\n}',
+    alternativeSolutions: [
+      'while (true) {\n   if (count === 0) {\n      break;\n   }\n   console.log(count);\n   count = count - 1;\n}'
+    ],
     hints: ['REPEAT UNTIL becomes while with opposite condition', 'UNTIL (x = 0) → while (x !== 0)'],
     explanation: 'REPEAT UNTIL (condition) → while (NOT condition). The loop continues UNTIL condition is true, meaning it runs WHILE condition is false.'
   },
@@ -552,6 +559,7 @@ export const pseudocodeExercises = [
     prompt: 'What is displayed?',
     given: 'nums ← [2, 4, 6]\nFOR EACH n IN nums\n{\n   DISPLAY(n)\n}',
     answer: '2\n4\n6',
+    acceptableAnswers: ['2, 4, 6', '2 4 6', '2,4,6'],
     hints: ['Loop processes each item in order', 'Three items means three displays'],
     explanation: 'The loop iterates through each element: first 2, then 4, then 6.'
   },
@@ -609,6 +617,7 @@ export const pseudocodeExercises = [
     prompt: 'What does the list look like after this code?',
     given: 'items ← ["a", "b", "c"]\nAPPEND(items, "d")\nINSERT(items, 2, "x")',
     answer: '["a", "x", "b", "c", "d"]',
+    acceptableAnswers: ['a, x, b, c, d', '[a, x, b, c, d]', '["a","x","b","c","d"]', 'a x b c d'],
     hints: ['APPEND adds to end', 'INSERT puts item at position, shifts others right'],
     explanation: 'After APPEND: ["a","b","c","d"]. Then INSERT at position 2: ["a","x","b","c","d"]. "x" goes in position 2, pushing everything else right.'
   },
@@ -750,6 +759,9 @@ export const pseudocodeExercises = [
     prompt: 'Convert this complete program to JavaScript:',
     given: 'scores ← [85, 92, 78, 90, 88]\ntotal ← 0\nFOR EACH s IN scores\n{\n   total ← total + s\n}\naverage ← total / LENGTH(scores)\nIF (average ≥ 80)\n{\n   DISPLAY("Good job!")\n}\nELSE\n{\n   DISPLAY("Keep trying")\n}',
     answer: 'let scores = [85, 92, 78, 90, 88];\nlet total = 0;\nfor (let s of scores) {\n   total = total + s;\n}\nlet average = total / scores.length;\nif (average >= 80) {\n   console.log("Good job!");\n} else {\n   console.log("Keep trying");\n}',
+    alternativeSolutions: [
+      'let scores = [85, 92, 78, 90, 88];\nlet total = 0;\nscores.forEach(s => {\n   total = total + s;\n});\nlet average = total / scores.length;\nif (average >= 80) {\n   console.log("Good job!");\n} else {\n   console.log("Keep trying");\n}'
+    ],
     hints: ['Convert each construct one at a time', 'LENGTH(x) becomes x.length', 'FOR EACH becomes for...of'],
     explanation: 'This program calculates the average of scores and displays a message based on whether it\'s above 80.'
   },

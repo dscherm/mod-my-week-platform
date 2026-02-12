@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { getChallengeById } from '../data/challenges';
 import { vocabulary } from '../data/vocabulary';
 
-const ChallengeDetail = ({ challengeId, onComplete, onBack, isCompleted, onSubmit }) => {
+const ChallengeDetail = ({ challengeId, onComplete, onBack, isCompleted, onSubmit, onOpenSimulation }) => {
   const [userAnswer, setUserAnswer] = useState('');
   const [showHints, setShowHints] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [showExplanation, setShowExplanation] = useState(isCompleted);
   const [showLearnSection, setShowLearnSection] = useState(false);
   const [selectedVocab, setSelectedVocab] = useState(null);
+  const [attemptCount, setAttemptCount] = useState(0);
 
   const challenge = getChallengeById(challengeId);
 
@@ -16,15 +17,51 @@ const ChallengeDetail = ({ challengeId, onComplete, onBack, isCompleted, onSubmi
     return <div>Challenge not found</div>;
   }
 
+  // Normalize a challenge answer to canonical form for comparison
+  const normalizeChallengeAnswer = (input) => {
+    let s = input.trim().toUpperCase();
+    // Strip FLAG{...} wrapper → extract inner value
+    const flagMatch = s.match(/^FLAG\{(.+)\}$/);
+    if (flagMatch) {
+      s = flagMatch[1];
+    }
+    // Normalize separators: underscores/spaces/dashes all become underscores
+    s = s.replace(/[\s\-]+/g, '_');
+    // Remove common punctuation
+    s = s.replace(/[.!?,;:'"()]/g, '');
+    return s;
+  };
+
+  // Compare user input against a correct answer with flexible matching
+  const matchesChallengeAnswer = (userInput, correctAnswer) => {
+    const normUser = normalizeChallengeAnswer(userInput);
+    const normCorrect = normalizeChallengeAnswer(correctAnswer);
+
+    // Exact match after normalization
+    if (normUser === normCorrect) return true;
+
+    // Multiple-choice: accept "A", "A)", "A.", "(A)", "a" when correct is single letter A-D
+    const singleLetterMatch = correctAnswer.trim().match(/^[A-Da-d]$/);
+    if (singleLetterMatch) {
+      const correctLetter = correctAnswer.trim().toUpperCase();
+      const cleaned = userInput.trim().toUpperCase().replace(/[().,:;\s]/g, '');
+      if (cleaned === correctLetter) return true;
+    }
+
+    return false;
+  };
+
   const handleSubmit = () => {
-    const normalizedAnswer = userAnswer.trim().toUpperCase();
-    const correctAnswers = [
-      challenge.answer?.toUpperCase(),
-      challenge.flag?.toUpperCase()
-    ].filter(Boolean);
+    // Build correct-answer list from answer, flag inner value, and acceptableAnswers
+    const correctAnswers = [];
+    if (challenge.answer) correctAnswers.push(challenge.answer);
+    if (challenge.flag) correctAnswers.push(challenge.flag);
+    if (challenge.acceptableAnswers) {
+      correctAnswers.push(...challenge.acceptableAnswers);
+    }
 
     const isCorrect = correctAnswers.some(ans =>
-      normalizedAnswer === ans || normalizedAnswer.includes(ans)
+      matchesChallengeAnswer(userAnswer, ans)
     );
 
     // Save submission for teacher review
@@ -43,10 +80,19 @@ const ChallengeDetail = ({ challengeId, onComplete, onBack, isCompleted, onSubmi
       setShowExplanation(true);
       onComplete(challengeId, challenge.points);
     } else {
-      setFeedback({
-        type: 'error',
-        message: 'Incorrect. Try again or check the hints!'
-      });
+      const newAttemptCount = attemptCount + 1;
+      setAttemptCount(newAttemptCount);
+
+      let message;
+      if (newAttemptCount === 1) {
+        message = 'Not quite. Give it another try!';
+      } else if (newAttemptCount === 2) {
+        message = 'Incorrect. Try checking the hints for guidance.';
+      } else {
+        message = `Keep trying! You've made ${newAttemptCount} attempts. The hints can help.`;
+      }
+
+      setFeedback({ type: 'error', message });
     }
   };
 
@@ -167,6 +213,42 @@ const ChallengeDetail = ({ challengeId, onComplete, onBack, isCompleted, onSubmi
           {challenge.prompt}
         </div>
       </div>
+
+      {challenge.relatedSimulation && (
+        <div className="simulation-link" style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+          background: 'rgba(0, 150, 255, 0.1)',
+          border: '1px solid rgba(0, 150, 255, 0.3)',
+          borderRadius: '8px',
+          padding: '1rem',
+          marginTop: '1rem'
+        }}>
+          <span style={{ fontSize: '1.5rem' }}>🔍</span>
+          <div style={{ flex: 1 }}>
+            <strong style={{ color: '#0096ff' }}>Related Simulation Available</strong>
+            <p style={{ margin: '0.25rem 0 0', fontSize: '0.9rem', opacity: 0.8 }}>
+              Practice detecting this attack type in the Network Monitor.
+            </p>
+          </div>
+          <button
+            onClick={() => onOpenSimulation?.(challenge.relatedSimulation)}
+            style={{
+              background: 'rgba(0, 150, 255, 0.2)',
+              border: '1px solid #0096ff',
+              color: '#0096ff',
+              padding: '0.5rem 1rem',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              fontWeight: 'bold'
+            }}
+          >
+            Try the Simulation →
+          </button>
+        </div>
+      )}
 
       {challenge.hints && challenge.hints.length > 0 && (
         <div className="hints-section">

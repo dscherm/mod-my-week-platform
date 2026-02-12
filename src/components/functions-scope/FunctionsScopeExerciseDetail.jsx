@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getFunctionsScopeExerciseById } from '../../data/functions-scope-exercises';
+import { getFunctionsScopeVocabularyById } from '../../data/functions-scope-vocabulary';
 import TeamModeModal from '../TeamModeModal';
 
 function FunctionsScopeExerciseDetail({ exerciseId, onBack, onComplete, isCompleted, onSubmit, student }) {
@@ -7,6 +8,7 @@ function FunctionsScopeExerciseDetail({ exerciseId, onBack, onComplete, isComple
   const [code, setCode] = useState('');
   const [showHints, setShowHints] = useState([]);
   const [showTeamMode, setShowTeamMode] = useState(false);
+  const [selectedTerm, setSelectedTerm] = useState(null);
   const [showExplanation, setShowExplanation] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [consoleOutput, setConsoleOutput] = useState([]);
@@ -327,9 +329,32 @@ function FunctionsScopeExerciseDetail({ exerciseId, onBack, onComplete, isComple
       {exercise.vocabularyTerms && exercise.vocabularyTerms.length > 0 && (
         <div className="vocab-tags">
           <span className="vocab-label">Key Terms:</span>
-          {exercise.vocabularyTerms.map((term, index) => (
-            <span key={index} className="vocab-tag">{term}</span>
-          ))}
+          {exercise.vocabularyTerms.map((termId) => {
+            const term = getFunctionsScopeVocabularyById(termId);
+            if (!term) return null;
+            return (
+              <button
+                key={termId}
+                className="vocab-tag"
+                onClick={() => setSelectedTerm(term)}
+              >
+                {term.term}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {selectedTerm && (
+        <div className="vocab-popup" onClick={() => setSelectedTerm(null)}>
+          <div className="vocab-popup-content" onClick={(e) => e.stopPropagation()}>
+            <h3>{selectedTerm.term}</h3>
+            <p>{selectedTerm.definition}</p>
+            {selectedTerm.example && (
+              <code className="vocab-example">{selectedTerm.example}</code>
+            )}
+            <button onClick={() => setSelectedTerm(null)}>Close</button>
+          </div>
         </div>
       )}
 

@@ -10998,3 +10998,84 @@ a:hover {
   white-space: pre-wrap;
   margin: 0;
 }
+
+/* ==========================================
+   PARTIAL CREDIT & SHOW ANSWER STYLES
+   ========================================== */
+
+.score-display {
+  font-family: 'Orbitron', sans-serif;
+  color: var(--neon-cyan, #00e5ff);
+  font-size: 1.1rem;
+  margin: 0.5rem 0;
+}
+
+.score-display .score-fraction {
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.feedback-details {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.feedback-detail-item {
+  font-size: 0.9rem;
+  padding: 0.25rem 0;
+  color: var(--text-secondary, #aaa);
+}
+
+.feedback-detail-item.correct {
+  color: var(--neon-green, #00ff88);
+}
+
+.feedback-detail-item.wrong {
+  color: #f44336;
+}
+
+.show-answer-btn {
+  background: transparent !important;
+  border: 1px solid var(--neon-orange, #ff9800) !important;
+  color: var(--neon-orange, #ff9800) !important;
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.show-answer-btn:hover {
+  background: rgba(255, 152, 0, 0.15) !important;
+}
+
+.answer-reveal-section {
+  margin-top: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--neon-cyan, #00e5ff);
+  border-left: 4px solid var(--neon-cyan, #00e5ff);
+  border-radius: 6px;
+  background: rgba(0, 229, 255, 0.05);
+}
+
+.answer-reveal-section h4 {
+  color: var(--neon-cyan, #00e5ff);
+  margin: 0 0 0.75rem 0;
+}
+
+.revealed-answer {
+  font-family: 'Fira Code', 'Monaco', monospace;
+  color: var(--neon-green, #00ff88);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 1rem;
+  border-radius: 4px;
+  white-space: pre-wrap;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.answer-reveal-note {
+  font-style: italic;
+  color: var(--text-secondary, #aaa);
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+}

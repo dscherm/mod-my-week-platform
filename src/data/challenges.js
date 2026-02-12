@@ -44,6 +44,7 @@ Result: "IFMMP"`,
       ],
       answer: 'CYBER RANGE IS FUN!',
       flag: 'FLAG{CYBER_RANGE_IS_FUN}',
+      acceptableAnswers: ['CYBER RANGE IS FUN', 'CYBER RANGE IS FUN!', 'CYBER_RANGE_IS_FUN'],
       explanation: 'In a Caesar cipher with shift 3, F→C, B→Y, E→B, H→E, U→R, and so on. By shifting each letter back 3 positions, we decrypt the message.'
     },
     {
@@ -221,7 +222,105 @@ Example MD5:
       ],
       answer: 'FLAG{MD5_SHA1_SHA256}',
       flag: 'FLAG{MD5_SHA1_SHA256}',
+      acceptableAnswers: ['MD5 SHA1 SHA256', 'MD5, SHA-1, SHA-256', 'MD5, SHA1, SHA256', 'MD5_SHA1_SHA256'],
       explanation: 'Hash functions produce fixed-length outputs. By counting characters, you can identify: 32=MD5, 40=SHA-1, 64=SHA-256. MD5 and SHA-1 are now considered insecure.'
+    },
+    {
+      id: 'crypto-6',
+      title: 'Symmetric vs Asymmetric Encryption',
+      difficulty: 'Medium',
+      points: 20,
+      description: 'Modern encryption uses two fundamentally different approaches: symmetric (one shared key) and asymmetric (public/private key pairs).',
+      learningObjective: 'Distinguish between symmetric and asymmetric encryption and understand when each is used.',
+      vocabularyTerms: ['encryption', 'decryption', 'plaintext', 'ciphertext'],
+      learn: {
+        title: 'Symmetric vs Asymmetric Encryption',
+        concept: `Symmetric encryption uses ONE key for both encryption and decryption. Both sender and receiver must share the same secret key.
+
+Asymmetric encryption uses TWO keys:
+- Public key: shared openly, used to ENCRYPT
+- Private key: kept secret, used to DECRYPT
+
+Analogy: Symmetric is like a shared locker combination. Asymmetric is like a mailbox — anyone can drop mail in (public key), but only the owner can open it (private key).`,
+        example: `Symmetric (AES):
+Key: "MySecret123"
+Encrypt("Hello", key) → "X#@!..."
+Decrypt("X#@!...", key) → "Hello"
+Same key for both!
+
+Asymmetric (RSA):
+Public key: used by anyone to encrypt
+Private key: only you can decrypt
+Encrypt("Hello", publicKey) → "A1B2C3..."
+Decrypt("A1B2C3...", privateKey) → "Hello"`,
+        keyPoints: [
+          'Symmetric: one shared key, fast, used for bulk data (AES)',
+          'Asymmetric: two keys (public + private), slower, used for key exchange (RSA)',
+          'HTTPS uses BOTH: asymmetric to exchange a symmetric key, then symmetric for speed',
+          'Never share your private key with anyone',
+          'Public keys can be freely distributed'
+        ]
+      },
+      prompt: 'Which scenario correctly uses public/private key encryption?\n\nA) Alice and Bob both use the same password to encrypt/decrypt messages\nB) Alice encrypts with Bob\'s PUBLIC key; Bob decrypts with his PRIVATE key\nC) Alice encrypts with her PRIVATE key; Bob decrypts with Alice\'s PRIVATE key\nD) Alice encrypts with Bob\'s PRIVATE key; Bob decrypts with his PUBLIC key',
+      hints: [
+        'In asymmetric encryption, the PUBLIC key encrypts',
+        'The PRIVATE key decrypts — only the owner has it',
+        'You encrypt with the RECIPIENT\'s public key',
+        'Option A describes symmetric encryption, not asymmetric',
+        'The flag is FLAG{B}'
+      ],
+      answer: 'B',
+      flag: 'FLAG{B}',
+      explanation: 'In asymmetric encryption, Alice encrypts with Bob\'s PUBLIC key (anyone can do this), and only Bob can decrypt with his PRIVATE key. This solves the key-sharing problem of symmetric encryption.'
+    },
+    {
+      id: 'crypto-7',
+      title: 'Multi-Layer Encoding',
+      difficulty: 'Hard',
+      points: 35,
+      description: 'Real-world data is sometimes encoded in multiple layers. You need to identify and peel back each layer to reveal the original message.',
+      learningObjective: 'Practice identifying and decoding multiple encoding layers (hex + ROT13).',
+      vocabularyTerms: ['cipher', 'encryption', 'decryption', 'plaintext'],
+      learn: {
+        title: 'Multi-Layer Encoding & Decoding',
+        concept: `In cybersecurity, data is sometimes encoded or encrypted in multiple layers. To reveal the original message, you must identify each layer and decode them in the correct order — outermost first.
+
+Common layers you might encounter:
+1. Hex encoding (pairs of 0-9, A-F characters)
+2. Base64 encoding (A-Z, a-z, 0-9, +, / with = padding)
+3. ROT13 (letters shifted 13 positions)
+4. URL encoding (%20, %3D, etc.)
+
+The key skill is RECOGNIZING which encoding you're looking at.`,
+        example: `Start: "4647595a7b5148504f4445445f464259465f464c415448457d"
+
+Step 1 — Recognize hex (all chars are 0-9, A-F):
+Decode hex → "FGYZ{QHPODED_FBYF_FLATHE}"
+
+Step 2 — Recognize ROT13 (text looks like shifted letters):
+Decode ROT13 → "FLAG{DECODED_SOLO_SYNGAR}"
+
+Each layer peels away to reveal the next!`,
+        keyPoints: [
+          'Always examine the outer layer first',
+          'Hex: characters are only 0-9 and A-F, always even length',
+          'Base64: A-Z, a-z, 0-9, +, / and often ends with =',
+          'ROT13: text looks almost readable but letters are wrong',
+          'Keep decoding until you get readable plaintext or a flag'
+        ]
+      },
+      prompt: 'Decode this multi-layered message. The OUTER layer is hex encoding, and the INNER layer is ROT13.\n\n534c4e547b4445434f44455f4d41535445527d\n\nStep 1: Convert hex pairs to ASCII characters.\nStep 2: Apply ROT13 to the result.\n\nWhat is the final decoded flag?',
+      hints: [
+        'Step 1: Convert each hex pair to an ASCII character',
+        '53=S, 4c=L, 4e=N, 54=T, 7b={, 44=D, 45=E, 43=C, 4f=O, 44=D, 45=E, 5f=_, 4d=M, 41=A, 53=S, 54=T, 45=E, 52=R, 7d=}',
+        'After hex decode: SLNT{DECODE_MASTER}',
+        'Step 2: Apply ROT13 — S→F, L→Y, N→A, T→G',
+        'The final flag is FLAG{DECODE_MASTER}'
+      ],
+      answer: 'FLAG{DECODE_MASTER}',
+      flag: 'FLAG{DECODE_MASTER}',
+      acceptableAnswers: ['DECODE_MASTER', 'DECODE MASTER', 'FLAG{DECODE_MASTER}'],
+      explanation: 'Layer 1 (hex → ASCII): Each hex pair maps to a character, giving "SLNT{DECODE_MASTER}". Layer 2 (ROT13): S→F, L→Y, N→A, T→G, producing "FLAG{DECODE_MASTER}". The letters inside the braces don\'t change because D↔Q, E↔R etc. happen to round-trip in this case. Multi-layer decoding is a common CTF skill!'
     }
   ],
   network: [
@@ -322,6 +421,7 @@ Internet ↔ Router (Public: 73.45.123.89)
       description: 'Different protocols serve different purposes in network communication. Understanding them is key to network security.',
       learningObjective: 'Identify network protocols and understand their security implications.',
       vocabularyTerms: ['protocol', 'port', 'encryption'],
+      relatedSimulation: 'port-scan-basic',
       learn: {
         title: 'Encrypted vs Unencrypted Protocols',
         concept: `Network protocols can transmit data in two ways:
@@ -359,6 +459,7 @@ SECURE (encrypted):
       ],
       answer: 'FLAG{23_80}',
       flag: 'FLAG{23_80}',
+      acceptableAnswers: ['23, 80', '23 80', '23 AND 80', '23_80'],
       explanation: 'Telnet and HTTP transmit data in plaintext, making them vulnerable to eavesdropping. Always use encrypted alternatives: SSH instead of Telnet, HTTPS instead of HTTP.'
     },
     {
@@ -369,6 +470,7 @@ SECURE (encrypted):
       description: 'Firewalls use rules to control network traffic. Understanding firewall rules helps protect networks from threats.',
       learningObjective: 'Learn how firewall rules work to protect networks.',
       vocabularyTerms: ['firewall', 'port', 'protocol', 'ip-address'],
+      relatedSimulation: 'data-exfiltration',
       learn: {
         title: 'How Firewalls Process Rules',
         concept: `A firewall is like a security guard that checks every packet entering or leaving a network. It uses a list of rules to decide what traffic to allow or deny.
@@ -408,6 +510,171 @@ A packet to port 23 from 192.168.1.50:
       answer: 'FLAG{YES_YES}',
       flag: 'FLAG{YES_YES}',
       explanation: 'Firewalls process rules in order. 192.168.1.50 matches rule 1 (ALLOW all ports) first. 10.0.0.5 skips rule 1, but matches rule 3 (ALLOW port 80).'
+    },
+    {
+      id: 'network-5',
+      title: 'What is Wireshark? Understanding Packets',
+      difficulty: 'Easy',
+      points: 15,
+      description: 'Wireshark is the world\'s most popular network protocol analyzer. Security professionals use it to capture and inspect packets flowing over a network.',
+      learningObjective: 'Understand packet anatomy, what Wireshark does, and how to identify suspicious network traffic.',
+      vocabularyTerms: ['packet', 'wireshark', 'protocol', 'port', 'ip-address'],
+      relatedSimulation: 'ssh-brute-force',
+      learn: {
+        title: 'Packets and Wireshark',
+        concept: `Every piece of data sent over a network is broken into small units called PACKETS. Think of them like envelopes in the mail system.
+
+Each packet contains:
+1. SOURCE IP — who sent it (return address)
+2. DESTINATION IP — who receives it (delivery address)
+3. PROTOCOL — the type of communication (TCP, UDP, HTTP, etc.)
+4. SOURCE PORT — the sender's port number
+5. DESTINATION PORT — which service it's for (80=HTTP, 22=SSH, etc.)
+6. PAYLOAD — the actual data being transmitted
+
+Wireshark captures these packets in real time and lets you inspect every field. Security analysts use it to:
+- Detect attacks (brute force, port scans, data theft)
+- Troubleshoot network issues
+- Verify encrypted connections are working`,
+        example: `Sample packet captured by Wireshark:
+Source IP:    10.0.0.50
+Dest IP:     192.168.1.10
+Protocol:    TCP
+Source Port: 48291
+Dest Port:   22 (SSH)
+Payload:     [SSH login attempt]
+
+If you see HUNDREDS of packets from the same source IP
+to port 22 in a short time → SSH brute force attack!`,
+        keyPoints: [
+          'Packets are the fundamental unit of network communication',
+          'Every packet has a source IP, destination IP, ports, and payload',
+          'Wireshark is free and open-source — used by professionals worldwide',
+          'Unusual traffic patterns (many connections, large transfers) signal attacks',
+          'The destination port tells you which SERVICE is being targeted'
+        ]
+      },
+      prompt: 'You\'re analyzing network traffic in Wireshark and see this pattern:\n\n10:00:01  10.0.0.50 → 192.168.1.10  TCP  Port 22  "SSH login attempt"\n10:00:01  10.0.0.50 → 192.168.1.10  TCP  Port 22  "SSH login attempt"\n10:00:02  10.0.0.50 → 192.168.1.10  TCP  Port 22  "SSH login attempt"\n10:00:02  10.0.0.50 → 192.168.1.10  TCP  Port 22  "SSH login attempt"\n10:00:03  10.0.0.50 → 192.168.1.10  TCP  Port 22  "SSH login attempt"\n... (200+ more attempts)\n\n1. What is the attacker\'s IP address?\n2. What port/service is being targeted?\n3. What type of attack is this?\n\nFormat: FLAG{IP_PORT_ATTACK}',
+      hints: [
+        'The attacker is the SOURCE IP — who is sending the packets',
+        'Port 22 is used by SSH (Secure Shell)',
+        'Hundreds of rapid login attempts = brute force attack',
+        'The flag format is FLAG{IP_PORT_ATTACKTYPE}',
+        'FLAG{10.0.0.50_22_BRUTE_FORCE}'
+      ],
+      answer: 'FLAG{10.0.0.50_22_BRUTE_FORCE}',
+      flag: 'FLAG{10.0.0.50_22_BRUTE_FORCE}',
+      acceptableAnswers: ['10.0.0.50_22_BRUTE_FORCE', '10.0.0.50 22 BRUTE FORCE', '10.0.0.50, 22, brute force'],
+      explanation: 'The source IP 10.0.0.50 is sending hundreds of SSH login attempts (port 22) to 192.168.1.10 in rapid succession. This is an SSH brute force attack — the attacker is trying many passwords hoping one works. In Wireshark, this pattern is unmistakable. Try detecting it yourself in the Network Monitor simulation!'
+    },
+    {
+      id: 'network-6',
+      title: 'Detecting a Port Scan',
+      difficulty: 'Medium',
+      points: 25,
+      description: 'Port scanning is a reconnaissance technique where attackers probe many ports on a target to discover which services are running.',
+      learningObjective: 'Identify port scan patterns in network traffic and distinguish them from normal traffic.',
+      vocabularyTerms: ['port', 'protocol', 'ip-address', 'firewall', 'wireshark'],
+      relatedSimulation: 'port-scan-basic',
+      learn: {
+        title: 'Port Scanning and Reconnaissance',
+        concept: `A port scan sends connection attempts to many different ports on a target machine. It's like a burglar checking every door and window on a house.
+
+Types of port scans:
+- TCP Connect scan: completes the full connection (easily detected)
+- SYN scan: sends only the first part of a connection (stealthier)
+- UDP scan: checks for open UDP services
+
+Normal traffic connects to 1-2 ports (e.g., 80 and 443 for web browsing).
+A port scan connects to dozens or hundreds of ports rapidly.
+
+Defenders detect port scans by watching for:
+- One IP connecting to many different ports on the same target
+- Many connection attempts in a very short time window
+- Sequential port numbers (21, 22, 23, 25, 80, 443...)`,
+        example: `Normal web traffic:
+User → Server port 443 (HTTPS) ✓ Normal
+
+Port scan traffic:
+Attacker → Server port 21  (FTP)
+Attacker → Server port 22  (SSH)
+Attacker → Server port 23  (Telnet)
+Attacker → Server port 25  (SMTP)
+Attacker → Server port 80  (HTTP)
+Attacker → Server port 443 (HTTPS)
+... hitting every port in seconds!`,
+        keyPoints: [
+          'Port scans probe multiple ports to find running services',
+          'Normal users connect to 1-2 specific ports',
+          'Scanning dozens of ports from one IP is a red flag',
+          'Port scans are often the FIRST step before an attack',
+          'Firewalls and IDS systems can detect and block port scans'
+        ]
+      },
+      prompt: 'You captured traffic from two IP addresses. Which one is performing a port scan?\n\nIP 172.16.0.100:\n  → 10.0.0.1:443 (HTTPS)\n  → 10.0.0.1:443 (HTTPS)\n  → 10.0.0.1:80 (HTTP redirect)\n  → 10.0.0.1:443 (HTTPS)\n\nIP 172.16.0.200:\n  → 10.0.0.1:21 (FTP)\n  → 10.0.0.1:22 (SSH)\n  → 10.0.0.1:23 (Telnet)\n  → 10.0.0.1:25 (SMTP)\n  → 10.0.0.1:80 (HTTP)\n  → 10.0.0.1:110 (POP3)\n  → 10.0.0.1:443 (HTTPS)\n  → 10.0.0.1:3306 (MySQL)\n  → 10.0.0.1:3389 (RDP)\n\nWhich IP is the scanner? Enter: FLAG{IP_ADDRESS}',
+      hints: [
+        'Normal traffic connects to one or two services repeatedly',
+        '172.16.0.100 connects mostly to port 443 — normal HTTPS browsing',
+        '172.16.0.200 connects to 9 different ports across many services',
+        'Scanning many sequential ports is a classic port scan signature',
+        'The flag is FLAG{172.16.0.200}'
+      ],
+      answer: 'FLAG{172.16.0.200}',
+      flag: 'FLAG{172.16.0.200}',
+      acceptableAnswers: ['172.16.0.200'],
+      explanation: '172.16.0.200 is scanning — it connects to 9 different ports across diverse services (FTP, SSH, Telnet, SMTP, HTTP, POP3, HTTPS, MySQL, RDP). Normal users don\'t connect to Telnet, MySQL, and RDP on the same server. 172.16.0.100 shows normal HTTPS browsing (repeated connections to port 443).'
+    },
+    {
+      id: 'network-7',
+      title: 'Detecting Data Exfiltration',
+      difficulty: 'Hard',
+      points: 35,
+      description: 'Data exfiltration is when an attacker secretly transfers stolen data out of a network. Detecting it requires analyzing traffic volume and patterns.',
+      learningObjective: 'Identify data exfiltration by analyzing outbound traffic volumes and unusual transfer patterns.',
+      vocabularyTerms: ['packet', 'ip-address', 'protocol', 'firewall', 'wireshark'],
+      relatedSimulation: 'data-exfiltration',
+      learn: {
+        title: 'Data Exfiltration Detection',
+        concept: `Data exfiltration is the unauthorized transfer of data OUT of a network. It's often the final stage of a cyberattack — after gaining access, the attacker steals data.
+
+Signs of data exfiltration:
+1. Unusually LARGE outbound transfers from internal IPs
+2. Transfers to UNKNOWN external IP addresses
+3. Transfers at ODD HOURS (3 AM data uploads)
+4. Using unusual PROTOCOLS or PORTS to hide traffic
+5. One machine sending far more data than others
+
+Normal workstation: sends ~50-200 MB/day (emails, web browsing)
+Compromised workstation: might send 5-50 GB (stealing databases, files)`,
+        example: `Outbound traffic summary (last hour):
+192.168.1.10 → External: 45 MB  (normal browsing)
+192.168.1.11 → External: 38 MB  (normal email)
+192.168.1.12 → External: 12 MB  (light usage)
+192.168.1.15 → External: 4,700 MB  ⚠️ SUSPICIOUS!
+
+192.168.1.15 sent 100x more data than peers.
+Destination: 45.33.49.100 (unknown external server)
+This strongly suggests data exfiltration!`,
+        keyPoints: [
+          'Compare each machine\'s traffic to its peers — outliers are suspicious',
+          'Large outbound transfers to unknown IPs are a major red flag',
+          'Exfiltration often uses encrypted channels to hide the content',
+          'Check WHEN transfers happen — late-night bulk uploads are suspicious',
+          'DNS tunneling can be used to exfiltrate data through DNS queries'
+        ]
+      },
+      prompt: 'Review this outbound traffic log for the last hour:\n\n| Source IP      | Destination        | Data Sent | Protocol |\n|----------------|--------------------|-----------|----------|\n| 192.168.1.10   | cdn.googleapis.com | 120 MB    | HTTPS    |\n| 192.168.1.11   | smtp.office365.com | 45 MB     | SMTP     |\n| 192.168.1.12   | github.com         | 200 MB    | HTTPS    |\n| 192.168.1.15   | 45.33.49.100       | 4,800 MB  | HTTPS    |\n| 192.168.1.20   | zoom.us            | 85 MB     | UDP      |\n\n1. Which internal IP is likely compromised?\n2. How many MB did it send?\n\nFormat: FLAG{IP_MB}',
+      hints: [
+        'Look for the IP sending dramatically more data than others',
+        'Normal traffic is under 200 MB per hour',
+        'One machine sent 4,800 MB — that\'s nearly 5 GB in one hour!',
+        'The destination is a raw IP address, not a known service',
+        'The flag is FLAG{192.168.1.15_4800}'
+      ],
+      answer: 'FLAG{192.168.1.15_4800}',
+      flag: 'FLAG{192.168.1.15_4800}',
+      acceptableAnswers: ['192.168.1.15_4800', '192.168.1.15, 4800', '192.168.1.15 4800'],
+      explanation: '192.168.1.15 sent 4,800 MB (nearly 5 GB) to an unknown IP address (45.33.49.100) in one hour — approximately 24-40x more than any other machine. The destination is a raw IP (not a recognized service like Google or Office365). This is a classic data exfiltration pattern.'
     }
   ],
   password: [
@@ -503,6 +770,7 @@ Modern computers can try billions per second!`,
       ],
       answer: 'FLAG{10000_10}',
       flag: 'FLAG{10000_10}',
+      acceptableAnswers: ['10000, 10', '10000 10', '10,000 and 10', '10000_10'],
       explanation: '4-digit PINs have only 10,000 combinations (10^4). At 1000 guesses/second, all combinations can be tried in 10 seconds. This shows why longer passwords are crucial!'
     },
     {
@@ -607,6 +875,112 @@ Attackers can exploit this - that's why we add "salt".`,
       answer: 'B',
       flag: 'FLAG{B}',
       explanation: 'Identical hashes mean identical passwords. This is why modern systems use "salting" - adding random data before hashing so identical passwords produce different hashes.'
+    },
+    {
+      id: 'password-5',
+      title: 'Two-Factor Authentication',
+      difficulty: 'Medium',
+      points: 20,
+      description: 'Two-factor authentication (2FA) adds a second layer of security beyond just a password. It requires something you KNOW and something you HAVE.',
+      learningObjective: 'Understand the three authentication factors and identify true two-factor authentication.',
+      vocabularyTerms: ['authentication', 'password-strength', 'brute-force'],
+      learn: {
+        title: 'Authentication Factors',
+        concept: `Authentication factors fall into three categories:
+
+1. Something you KNOW — password, PIN, security question
+2. Something you HAVE — phone, security key, smart card
+3. Something you ARE — fingerprint, face scan, iris scan
+
+TRUE two-factor authentication (2FA) requires factors from TWO DIFFERENT categories. Using two passwords is NOT 2FA — that's just two of the same factor.
+
+Common 2FA combinations:
+- Password (know) + SMS code (have)
+- Password (know) + authenticator app (have)
+- Password (know) + fingerprint (are)
+- Badge (have) + PIN (know)`,
+        example: `TRUE 2FA:
+✓ Password + phone SMS code (know + have)
+✓ Password + fingerprint (know + are)
+✓ Badge swipe + PIN (have + know)
+
+NOT TRUE 2FA (same factor twice):
+✗ Password + security question (know + know)
+✗ Password + PIN (know + know)
+✗ Two different passwords (know + know)`,
+        keyPoints: [
+          'Three factors: Know, Have, Are',
+          'True 2FA uses factors from TWO DIFFERENT categories',
+          'A password + security question is NOT 2FA (both are "know")',
+          '2FA dramatically reduces account compromise risk',
+          'Hardware security keys (YubiKey) are the strongest "have" factor'
+        ]
+      },
+      prompt: 'Which of the following is TRUE two-factor authentication (2FA)?\n\nA) Password + security question\nB) Password + phone authenticator app code\nC) Password + a second, different password\nD) PIN + mother\'s maiden name\n\nRemember: 2FA requires factors from TWO DIFFERENT categories (know/have/are).',
+      hints: [
+        'The three authentication factor categories are: Know, Have, Are',
+        'A security question is something you KNOW (same as a password)',
+        'A phone authenticator app is something you HAVE',
+        'Two passwords or two PINs are both "something you know"',
+        'The flag is FLAG{B}'
+      ],
+      answer: 'B',
+      flag: 'FLAG{B}',
+      explanation: 'Option B is true 2FA: a password (something you KNOW) + authenticator app code (something you HAVE — your phone generates it). Options A, C, and D all combine two "know" factors, which is not real 2FA.'
+    },
+    {
+      id: 'password-6',
+      title: 'Rainbow Table vs Salted Hashes',
+      difficulty: 'Hard',
+      points: 30,
+      description: 'Rainbow tables are precomputed hash databases that attackers use to crack passwords. Salting is the defense against them.',
+      learningObjective: 'Understand rainbow table attacks and how salting prevents them.',
+      vocabularyTerms: ['hash', 'password-strength', 'brute-force', 'authentication'],
+      learn: {
+        title: 'Rainbow Tables and Salting',
+        concept: `A rainbow table is a PRECOMPUTED dictionary of hashes. Instead of hashing every guess in real time, attackers look up hashes instantly.
+
+Without salt:
+hash("password") → 5f4dcc3b... (same every time, everywhere)
+Attacker looks up "5f4dcc3b..." in rainbow table → "password" found!
+
+With salt (random data added before hashing):
+hash("a9x2" + "password") → 7b3f91e4... (unique per user)
+hash("k4m8" + "password") → d2c1a5b7... (different salt = different hash!)
+
+The salt makes rainbow tables useless because every user's hash is unique, even if they use the same password. Each salt would require its own complete rainbow table.`,
+        example: `Unsalted database (vulnerable):
+User   | Hash
+-------|-----------------------------------
+alice  | 5f4dcc3b5aa765d61d8327deb882cf99
+bob    | 5f4dcc3b5aa765d61d8327deb882cf99
+(Same hash = same password! Rainbow table cracks both)
+
+Salted database (secure):
+User   | Salt  | Hash
+-------|-------|-----------------------------------
+alice  | a9x2  | 7b3f91e4c8d2a1b5f0e3d6c9a2b5e8f1
+bob    | k4m8  | d2c1a5b7e9f3a6d8c1b4e7f0a3d6c9b2
+(Different hashes even for the same password!)`,
+        keyPoints: [
+          'Rainbow tables are precomputed hash → password lookup tables',
+          'Without salt, identical passwords produce identical hashes',
+          'A salt is random data added to the password BEFORE hashing',
+          'Each user should have a UNIQUE salt stored alongside their hash',
+          'Salts can be stored in plaintext — their purpose is to make hashes unique, not secret'
+        ]
+      },
+      prompt: 'Examine this password database:\n\n| User  | Salt   | Hash                             |\n|-------|--------|----------------------------------|\n| alice | f7a3b1 | 9c2d4e6f8a0b1c3d5e7f9a2b4c6d8e0f |\n| bob   | f7a3b1 | 9c2d4e6f8a0b1c3d5e7f9a2b4c6d8e0f |\n| carol | x9k2m4 | 3a1b5c7d9e2f4a6b8c0d2e4f6a8b0c2d |\n| dave  | p5n8q1 | a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6 |\n\nWhat security problem do you see?\n\nA) Carol\'s salt is too short\nB) Alice and Bob share the same salt AND have identical hashes\nC) Dave\'s hash is different from everyone else\nD) The salts are stored in plaintext',
+      hints: [
+        'Each user should have a UNIQUE salt',
+        'Alice and Bob have the exact same salt: f7a3b1',
+        'Since they have the same salt AND hash, they have the same password',
+        'Reusing salts defeats the entire purpose of salting',
+        'The flag is FLAG{B}'
+      ],
+      answer: 'B',
+      flag: 'FLAG{B}',
+      explanation: 'Alice and Bob share the same salt (f7a3b1), which means their identical hashes reveal they have the same password. Each user MUST have a unique salt. Storing salts in plaintext (option D) is actually normal and expected — salts aren\'t meant to be secret, just unique.'
     }
   ],
   web: [
@@ -808,6 +1182,160 @@ Look for:
       answer: 'D',
       flag: 'FLAG{D}',
       explanation: 'HTTP sends data in plaintext (including passwords), and doesn\'t authenticate the server. Real banks use HTTPS. Always check for HTTPS and the padlock icon!'
+    },
+    {
+      id: 'web-5',
+      title: 'Reading HTTP Status Codes',
+      difficulty: 'Easy',
+      points: 10,
+      description: 'HTTP status codes tell you what happened when a browser made a request. Some codes can reveal security issues or attack attempts.',
+      learningObjective: 'Understand HTTP status codes and identify codes that suggest attack activity.',
+      vocabularyTerms: ['protocol', 'vulnerability'],
+      learn: {
+        title: 'HTTP Status Codes for Security',
+        concept: `Every HTTP response includes a status code:
+
+1xx - Informational
+2xx - Success (200 = OK)
+3xx - Redirect (301 = Moved, 302 = Found)
+4xx - Client Error (403 = Forbidden, 404 = Not Found)
+5xx - Server Error (500 = Internal Server Error)
+
+Security-relevant codes:
+- 401 Unauthorized: authentication required/failed
+- 403 Forbidden: access denied (permissions)
+- 500 Internal Server Error: may indicate injection attacks
+- 200 on login with wrong creds: might mean login bypass!`,
+        example: `Normal web browsing:
+GET /index.html → 200 OK ✓
+GET /missing.html → 404 Not Found ✓
+
+Suspicious patterns:
+GET /admin → 200 OK (from non-admin user?!)
+POST /login → 500 Internal Server Error
+  (SQL injection might cause a server error)
+GET /../../etc/passwd → 200 OK
+  (path traversal succeeded — very bad!)`,
+        keyPoints: [
+          '200 = Success, 404 = Not Found, 500 = Server Error',
+          'A 500 error on a form submission may indicate SQL injection',
+          'Repeated 401/403 errors may indicate brute force attempts',
+          'A 200 response to a known-bad input is very suspicious',
+          'Status codes help both developers and attackers understand a site'
+        ]
+      },
+      prompt: 'A web application firewall logged these requests:\n\nGET /products → 200 OK\nGET /about → 200 OK\nPOST /login → 200 OK\nGET /admin → 403 Forbidden\nPOST /search?q=\' OR 1=1-- → 500 Internal Server Error\nGET /contact → 200 OK\n\nWhich request and status code suggests a SQL injection attempt that caused a server error?\n\nA) GET /admin → 403\nB) POST /search?q=\' OR 1=1-- → 500\nC) POST /login → 200\nD) GET /products → 200',
+      hints: [
+        'SQL injection uses special characters like \' and OR 1=1',
+        'A 500 Internal Server Error means something broke on the server',
+        'The search query contains \' OR 1=1-- which is classic SQL injection',
+        'When SQL injection hits the database, it often causes a 500 error',
+        'The flag is FLAG{B}'
+      ],
+      answer: 'B',
+      flag: 'FLAG{B}',
+      explanation: 'The request POST /search?q=\' OR 1=1-- contains a classic SQL injection payload (\' OR 1=1--). The 500 Internal Server Error response suggests the malicious SQL was passed to the database and caused an error — confirming the application is vulnerable to SQL injection.'
+    },
+    {
+      id: 'web-6',
+      title: 'Cookie Security',
+      difficulty: 'Medium',
+      points: 25,
+      description: 'Cookies store session data in your browser, but without proper security flags, they can be stolen or manipulated by attackers.',
+      learningObjective: 'Identify missing cookie security flags and understand their importance.',
+      vocabularyTerms: ['xss', 'vulnerability', 'authentication', 'protocol'],
+      learn: {
+        title: 'Cookie Security Flags',
+        concept: `Cookies carry sensitive data like session IDs. Three critical security flags protect them:
+
+1. HttpOnly — Cookie CANNOT be accessed by JavaScript
+   Without it: XSS can steal cookies with document.cookie
+   With it: Browser blocks JavaScript from reading the cookie
+
+2. Secure — Cookie only sent over HTTPS
+   Without it: Cookie sent in plaintext over HTTP (eavesdroppers can steal it)
+   With it: Browser only includes cookie in encrypted HTTPS requests
+
+3. SameSite — Controls when cookies are sent cross-site
+   None: sent everywhere (vulnerable to CSRF)
+   Lax: sent on top-level navigations only
+   Strict: never sent cross-site (most secure)`,
+        example: `INSECURE cookie:
+Set-Cookie: session=abc123
+
+SECURE cookie:
+Set-Cookie: session=abc123; HttpOnly; Secure; SameSite=Strict
+
+Missing HttpOnly → XSS can steal session
+Missing Secure → Session exposed on HTTP
+Missing SameSite → Vulnerable to CSRF attacks`,
+        keyPoints: [
+          'HttpOnly prevents JavaScript from reading cookies (blocks XSS theft)',
+          'Secure ensures cookies are only sent over HTTPS',
+          'SameSite=Strict prevents cross-site request forgery (CSRF)',
+          'ALL THREE flags should be set on session cookies',
+          'Check cookies in browser DevTools → Application → Cookies'
+        ]
+      },
+      prompt: 'A website sets this session cookie:\n\nSet-Cookie: sessionId=a1b2c3d4e5; path=/\n\nWhich security flags are MISSING that should be added?\n\nA) Only HttpOnly is missing\nB) Only Secure is missing\nC) HttpOnly, Secure, and SameSite are all missing\nD) No flags are missing — the cookie is secure',
+      hints: [
+        'Check for HttpOnly (blocks JavaScript access)',
+        'Check for Secure (HTTPS only)',
+        'Check for SameSite (cross-site protection)',
+        'The cookie only has path=/ set — no security flags at all',
+        'The flag is FLAG{C}'
+      ],
+      answer: 'C',
+      flag: 'FLAG{C}',
+      explanation: 'The cookie has NO security flags — HttpOnly, Secure, and SameSite are all missing. Without HttpOnly, XSS can steal the session. Without Secure, the session is sent over HTTP in plaintext. Without SameSite, the cookie is vulnerable to CSRF attacks.'
+    },
+    {
+      id: 'web-7',
+      title: 'OWASP Top 10 Classification',
+      difficulty: 'Hard',
+      points: 30,
+      description: 'The OWASP Top 10 is the most important list of web application security risks. Security professionals use it as a standard reference.',
+      learningObjective: 'Match real-world vulnerabilities to OWASP Top 10 categories.',
+      vocabularyTerms: ['sql-injection', 'xss', 'vulnerability', 'exploit', 'authentication'],
+      learn: {
+        title: 'OWASP Top 10 Web Vulnerabilities',
+        concept: `OWASP (Open Web Application Security Project) publishes a list of the top 10 most critical web security risks. Key categories:
+
+A01: Broken Access Control — Users can access data or functions they shouldn't
+A02: Cryptographic Failures — Sensitive data not properly encrypted
+A03: Injection — SQL injection, XSS, command injection
+A04: Insecure Design — Flawed architecture decisions
+A05: Security Misconfiguration — Default passwords, open cloud storage
+A06: Vulnerable Components — Using libraries with known vulnerabilities
+A07: Authentication Failures — Weak login, no 2FA, credential stuffing
+A08: Data Integrity Failures — Untrusted deserialization, unsigned updates
+A09: Logging Failures — Not detecting or logging breaches
+A10: Server-Side Request Forgery (SSRF) — Server makes requests to unintended locations`,
+        example: `Real-world examples:
+- SQL injection on a login page → A03 (Injection)
+- Admin page accessible without login → A01 (Broken Access Control)
+- Passwords stored in plaintext → A02 (Cryptographic Failures)
+- Using an old jQuery with known XSS bugs → A06 (Vulnerable Components)`,
+        keyPoints: [
+          'OWASP Top 10 is updated every few years (latest: 2021)',
+          'Injection (A03) includes SQL injection AND XSS',
+          'Broken Access Control (A01) is the #1 risk',
+          'Many breaches involve multiple OWASP categories',
+          'The OWASP Top 10 is used in security audits and compliance'
+        ]
+      },
+      prompt: 'Match each vulnerability to its OWASP Top 10 category:\n\n1. A user can access other users\' profiles by changing the ID in the URL\n2. An attacker injects \' OR 1=1-- into a search field\n3. The website uses a JavaScript library from 2018 with known XSS vulnerabilities\n4. Admin passwords are stored in a database as plaintext\n\nCategories:\nA01: Broken Access Control\nA02: Cryptographic Failures\nA03: Injection\nA06: Vulnerable Components\n\nFormat: FLAG{1_2_3_4} using category numbers (e.g., FLAG{A01_A03_A06_A02})',
+      hints: [
+        'Accessing other users\' data by changing URL = access control issue',
+        'SQL injection (\' OR 1=1--) = injection attack',
+        'Using an old library with known bugs = vulnerable component',
+        'Storing passwords in plaintext = cryptographic failure',
+        'The flag is FLAG{A01_A03_A06_A02}'
+      ],
+      answer: 'FLAG{A01_A03_A06_A02}',
+      flag: 'FLAG{A01_A03_A06_A02}',
+      acceptableAnswers: ['A01_A03_A06_A02', 'A01 A03 A06 A02', 'A01, A03, A06, A02'],
+      explanation: '1→A01 (Broken Access Control): changing URL IDs to access others\' data. 2→A03 (Injection): SQL injection payload. 3→A06 (Vulnerable Components): outdated library with known bugs. 4→A02 (Cryptographic Failures): plaintext password storage. These are among the most common real-world vulnerabilities.'
     }
   ],
   social: [
@@ -861,6 +1389,7 @@ Click here: http://bit.ly/a1b2c3
       ],
       answer: 'FLAG{4}',
       flag: 'FLAG{4}',
+      acceptableAnswers: ['4', 'FOUR', '4 RED FLAGS'],
       explanation: 'Red flags: (1) Fake domain (amaz0n), (2) Creates urgency, (3) Suspicious URL, (4) Generic greeting. Legitimate companies don\'t threaten account closure via email.'
     },
     {
@@ -1013,6 +1542,119 @@ nuclear facilities via infected USB drives.`,
       answer: 'C',
       flag: 'FLAG{C}',
       explanation: 'This is "USB baiting". The label exploits curiosity. Never plug unknown USB drives into any computer. Report to IT/Security who can safely examine it in an isolated environment.'
+    },
+    {
+      id: 'social-5',
+      title: 'Shoulder Surfing Awareness',
+      difficulty: 'Easy',
+      points: 10,
+      description: 'Shoulder surfing is observing someone\'s screen or keyboard to steal information. It\'s one of the simplest yet most effective physical attacks.',
+      learningObjective: 'Recognize shoulder surfing risks and identify countermeasures.',
+      vocabularyTerms: ['social-engineering', 'authentication', 'password-strength'],
+      learn: {
+        title: 'Shoulder Surfing and Physical Observation',
+        concept: `Shoulder surfing is when an attacker watches someone enter sensitive information — passwords, PINs, credit card numbers — by looking over their shoulder or from nearby.
+
+Where it happens:
+- ATMs (watching PIN entry)
+- Coffee shops (reading laptop screens)
+- Offices (watching login passwords)
+- Airports (viewing boarding passes with personal info)
+- Phone use in public (reading texts, emails)
+
+It requires zero technical skill — just observation. It's surprisingly effective because people rarely check their surroundings.`,
+        example: `Countermeasures:
+✓ Privacy screen filter on laptop (blocks side views)
+✓ Shield keypad when entering PINs at ATMs
+✓ Use biometrics (fingerprint) instead of typing passwords in public
+✓ Sit with your back to a wall in public spaces
+✓ Be aware of security cameras pointed at your screen
+✗ Typing slowly and carefully (makes it EASIER to observe!)`,
+        keyPoints: [
+          'Shoulder surfing needs no technology — just eyes',
+          'Privacy screen filters block side-angle viewing',
+          'Shield your PIN entry at ATMs and payment terminals',
+          'Biometric login avoids typing passwords in public',
+          'Situational awareness is your best defense'
+        ]
+      },
+      prompt: 'You\'re working on your laptop at a coffee shop and need to log into your bank account. Which countermeasure is LEAST effective against shoulder surfing?\n\nA) Using a privacy screen filter on your laptop\nB) Typing your password very slowly and carefully\nC) Using fingerprint login instead of typing a password\nD) Sitting with your back against a wall',
+      hints: [
+        'Think about which option makes it EASIER for an observer',
+        'Privacy screens block side-angle viewing — effective',
+        'Fingerprint login means no password to observe — effective',
+        'Back to wall means nobody behind you — effective',
+        'Typing slowly gives observers MORE time to watch each keystroke',
+        'The flag is FLAG{B}'
+      ],
+      answer: 'B',
+      flag: 'FLAG{B}',
+      explanation: 'Typing slowly and carefully actually makes shoulder surfing EASIER — it gives observers more time to see each keystroke. Privacy screens, biometric login, and positioning awareness are all effective countermeasures.'
+    },
+    {
+      id: 'social-6',
+      title: 'Spear Phishing Analysis',
+      difficulty: 'Hard',
+      points: 30,
+      description: 'Spear phishing targets specific individuals using personalized information to appear more convincing than generic phishing.',
+      learningObjective: 'Analyze a targeted phishing email and identify subtle red flags that distinguish spear phishing from legitimate communication.',
+      vocabularyTerms: ['phishing', 'social-engineering', 'malware'],
+      learn: {
+        title: 'Spear Phishing: Targeted Attacks',
+        concept: `Spear phishing is a TARGETED phishing attack aimed at a specific person, using personal details to appear legitimate.
+
+Unlike generic phishing (sent to millions), spear phishing:
+- Uses the victim's real name
+- References their actual employer, role, or projects
+- Mimics real colleagues or business partners
+- Includes context-appropriate content
+- May reference real events or deadlines
+
+Attackers research targets via:
+- LinkedIn profiles (job title, coworkers)
+- Social media (interests, activities)
+- Company websites (projects, press releases)
+- Previous data breaches (email, personal info)`,
+        example: `Generic phishing:
+"Dear Customer, your account is compromised..."
+
+Spear phishing:
+"Hi Sarah,
+
+Great presentation at the Q3 sales meeting yesterday!
+I wanted to share the updated budget spreadsheet
+that Mike from Finance mentioned.
+
+Please review: http://docs-sharepoint.com/budget.xlsx
+
+Thanks,
+Jennifer (VP Marketing)"
+
+Red flags:
+- Domain is docs-sharepoint.com, not sharepoint.com
+- Creates urgency around real events
+- Impersonates a real person in the company`,
+        keyPoints: [
+          'Spear phishing is personalized — generic phishing is mass-sent',
+          'Personal details make spear phishing much more convincing',
+          'ALWAYS verify unexpected attachments or links, even from "colleagues"',
+          'Check the sender\'s actual email address, not just the display name',
+          'When in doubt, contact the sender through a separate channel to verify'
+        ]
+      },
+      prompt: 'You (Alex, a software developer at TechCorp) receive this email:\n\nFrom: David Chen <d.chen@techc0rp.com>\nSubject: Code Review Needed - Sprint 14 Release\n\n"Hi Alex,\n\nI need you to review the security patches for the Sprint 14 release before Friday\'s deadline. The changes are in this branch:\n\nhttps://github-techcorp.dev/sprint14-patches\n\nI already got approval from Sarah in QA. Let me know if you have questions.\n\nThanks,\nDavid Chen\nEngineering Manager, TechCorp"\n\nIdentify the red flags. How many can you find? (At least 3 exist)',
+      hints: [
+        'Check the sender\'s email domain very carefully',
+        'techc0rp.com uses a ZERO instead of the letter O',
+        'The link goes to github-techcorp.dev, not github.com',
+        'The email creates urgency with "before Friday\'s deadline"',
+        'The flag format is FLAG{NUMBER}',
+        'There are at least 3 red flags: spoofed domain, fake URL, urgency'
+      ],
+      answer: 'FLAG{3}',
+      flag: 'FLAG{3}',
+      acceptableAnswers: ['3', 'THREE', '3 RED FLAGS', '4', 'FOUR', '5'],
+      explanation: 'Red flags: (1) Sender domain is techc0rp.com (zero, not letter O) — impersonating TechCorp. (2) Link goes to github-techcorp.dev (fake domain), not github.com. (3) Creates urgency with a Friday deadline. This is textbook spear phishing — it uses your name, real project context (Sprint 14), and references real colleagues (Sarah in QA) to appear legitimate.'
     }
   ]
 };

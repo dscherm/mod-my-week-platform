@@ -13,6 +13,8 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted, onNe
   const [currentHintIndex, setCurrentHintIndex] = useState(0);
   const [showErrorHighlight, setShowErrorHighlight] = useState(false);
   const [attemptCount, setAttemptCount] = useState(0);
+  const [feedbackData, setFeedbackData] = useState(null);
+  const [showAnswer, setShowAnswer] = useState(false);
 
   // Reset state when exerciseId changes (e.g., when clicking "Next Activity")
   useEffect(() => {
@@ -24,6 +26,8 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted, onNe
     setCurrentHintIndex(0);
     setShowErrorHighlight(false);
     setAttemptCount(0);
+    setFeedbackData(null);
+    setShowAnswer(false);
   }, [exerciseId]);
 
   // Get the next exercise ID
@@ -86,12 +90,28 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted, onNe
       .replace(/<>/g, '≠')
       .replace(/>=/g, '≥')
       .replace(/<=/g, '≤')
+      // Normalize output synonyms → DISPLAY
+      .replace(/\bPRINT\s*\(/gi, 'DISPLAY(')
+      .replace(/\bOUTPUT\s*\(/gi, 'DISPLAY(')
+      .replace(/\bWRITE\s*\(/gi, 'DISPLAY(')
+      .replace(/\bPRINT\s+([^(\n]+)/gi, 'DISPLAY($1)')
       // Normalize DISPLAY - accept with or without parentheses
       .replace(/DISPLAY\s*\(\s*/gi, 'DISPLAY(')
       .replace(/DISPLAY\s+([^(\n]+)/gi, 'DISPLAY($1)')
       .replace(/\)\s*\)/g, ')')  // Fix double closing parens
-      // Normalize INPUT
+      // Normalize input synonyms → INPUT
+      .replace(/\bREAD\s*\(\s*\)/gi, 'INPUT()')
       .replace(/INPUT\s*\(\s*\)/gi, 'INPUT()')
+      // Normalize boolean operators
+      .replace(/&&/g, 'AND')
+      .replace(/\|\|/g, 'OR')
+      // Normalize block delimiters
+      .replace(/\bBEGIN\b/gi, '{')
+      .replace(/\bEND\b/gi, '}')
+      .replace(/\bTHEN\b/gi, '{')
+      .replace(/\bENDIF\b/gi, '}')
+      .replace(/\bENDWHILE\b/gi, '}')
+      .replace(/\bENDFOR\b/gi, '}')
       // Normalize whitespace
       .replace(/\s+/g, ' ')
       .replace(/\s*\(\s*/g, '(')
@@ -309,21 +329,136 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted, onNe
     return false;
   };
 
+  // Analyze answer for partial credit scoring
+  const analyzeAnswer = () => {
+    const isPseudocodeAnswer = exercise.type === 'js-to-pseudocode';
+
+    if (exercise.type === 'fill-blank' && exercise.blankAnswers) {
+      const entries = Object.entries(exercise.blankAnswers);
+      const total = entries.length;
+      let earned = 0;
+      const details = [];
+
+      entries.forEach(([key, acceptableAnswers]) => {
+        const userValue = (fillBlanks[key] || '').trim().toLowerCase();
+        const isMatch = Array.isArray(acceptableAnswers)
+          ? acceptableAnswers.some(ans => ans.toLowerCase() === userValue)
+          : acceptableAnswers.toLowerCase() === userValue;
+
+        if (isMatch) {
+          earned++;
+          details.push({ key, correct: true });
+        } else {
+          details.push({ key, correct: false, userValue });
+        }
+      });
+
+      const allCorrect = earned === total;
+      return {
+        correct: allCorrect,
+        score: { earned, total },
+        feedback: allCorrect
+          ? 'All blanks correct!'
+          : `${earned} of ${total} blanks correct. ${earned > 0 ? "You're making progress!" : 'Review the hints and try again.'}`,
+        details
+      };
+    }
+
+    if (exercise.type === 'trace') {
+      const correctAnswer = exercise.answer;
+      const normalizedCorrect = correctAnswer.toString().toLowerCase().trim();
+
+      // Check if variable-assignment format (contains =)
+      if (normalizedCorrect.includes('=')) {
+        const parseVars = (str) => {
+          const pairs = {};
+          str.replace(/\s+/g, ' ').split(/[,;\n]+/).forEach(part => {
+            const m = part.trim().match(/^(\w+)\s*=\s*(.+)$/);
+            if (m) pairs[m[1].toLowerCase()] = m[2].trim().toLowerCase();
+          });
+          return pairs;
+        };
+
+        const correctVars = parseVars(correctAnswer);
+        const userVars = parseVars(userAnswer);
+        const varNames = Object.keys(correctVars);
+        const total = varNames.length;
+        let earned = 0;
+        const details = [];
+
+        varNames.forEach(name => {
+          const userVal = userVars[name];
+          if (userVal !== undefined && userVal === correctVars[name]) {
+            earned++;
+            details.push({ key: name, correct: true });
+          } else {
+            details.push({ key: name, correct: false, expected: correctVars[name], got: userVal || '(missing)' });
+          }
+        });
+
+        return {
+          correct: earned === total,
+          score: { earned, total },
+          feedback: earned === total
+            ? 'All variables correct!'
+            : `${earned} of ${total} variables correct.`,
+          details
+        };
+      }
+
+      // Simple trace — no partial credit structure
+      return { correct: false, score: { earned: 0, total: 1 }, feedback: 'Check your answer and try again.', details: [] };
+    }
+
+    // Code translation exercises
+    if (exercise.type === 'pseudocode-to-js' || exercise.type === 'js-to-pseudocode') {
+      const normalize = isPseudocodeAnswer ? normalizePseudocode : normalizeJavaScript;
+      const correctLines = exercise.answer.split('\n').map(l => l.trim()).filter(l => l);
+      const userLines = userAnswer.split('\n').map(l => l.trim()).filter(l => l);
+      const total = correctLines.length;
+      let earned = 0;
+      const details = [];
+
+      for (let i = 0; i < total; i++) {
+        const correctLine = correctLines[i] || '';
+        const userLine = userLines[i] || '';
+        const normUser = normalize(userLine);
+        const normCorrect = normalize(correctLine);
+
+        if (normUser === normCorrect) {
+          earned++;
+          details.push({ line: i + 1, correct: true });
+        } else {
+          const issues = findLineIssues(userLine, correctLine, isPseudocodeAnswer);
+          details.push({ line: i + 1, correct: false, expected: correctLine, got: userLine, issues });
+        }
+      }
+
+      return {
+        correct: earned === total && userLines.length === correctLines.length,
+        score: { earned, total },
+        feedback: earned === total
+          ? 'All lines correct!'
+          : `${earned} of ${total} lines correct. ${earned > 0 ? 'Getting closer!' : 'Review the hints.'}`,
+        details
+      };
+    }
+
+    return { correct: false, score: { earned: 0, total: 1 }, feedback: 'Check your answer and try again.', details: [] };
+  };
+
   const checkAnswer = () => {
     let correct = false;
     const isPseudocodeAnswer = exercise.type === 'js-to-pseudocode';
 
+    // Run partial credit analysis
+    const analysis = analyzeAnswer();
+    setFeedbackData(analysis);
+
     if (exercise.type === 'fill-blank') {
       // Check fill-in-the-blank answers
       if (exercise.blankAnswers) {
-        // Multiple named blanks with template
-        correct = Object.entries(exercise.blankAnswers).every(([key, acceptableAnswers]) => {
-          const userValue = (fillBlanks[key] || '').trim().toLowerCase();
-          if (Array.isArray(acceptableAnswers)) {
-            return acceptableAnswers.some(ans => ans.toLowerCase() === userValue);
-          }
-          return acceptableAnswers.toLowerCase() === userValue;
-        });
+        correct = analysis.correct;
       } else if (exercise.answer) {
         // Simple single blank with 'given' field - use userAnswer
         const userValue = userAnswer.trim().toLowerCase();
@@ -357,6 +492,13 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted, onNe
           alt => compareCode(userAnswer, alt, isPseudocodeAnswer)
         );
       }
+
+      // Check alternativeSolutions
+      if (!correct && exercise.alternativeSolutions) {
+        correct = exercise.alternativeSolutions.some(
+          alt => compareCode(userAnswer, alt, isPseudocodeAnswer)
+        );
+      }
     }
 
     setIsCorrect(correct);
@@ -381,7 +523,7 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted, onNe
       });
     }
 
-    if (correct && !isCompleted) {
+    if (correct && !isCompleted && !showAnswer) {
       onComplete(exercise.id, 10);
     }
   };
@@ -607,12 +749,20 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted, onNe
                 <button className="action-btn" onClick={handleTryAgain}>
                   Try Again
                 </button>
-                {(exercise.type === 'pseudocode-to-js' || exercise.type === 'js-to-pseudocode') && (
+                {(exercise.type === 'pseudocode-to-js' || exercise.type === 'js-to-pseudocode') && attemptCount >= 2 && (
                   <button
                     className="action-btn highlight-btn"
                     onClick={() => setShowErrorHighlight(!showErrorHighlight)}
                   >
                     {showErrorHighlight ? 'Hide Errors' : 'Highlight Errors'}
+                  </button>
+                )}
+                {attemptCount >= 3 && (exercise.type === 'pseudocode-to-js' || exercise.type === 'js-to-pseudocode') && !showAnswer && (
+                  <button
+                    className="action-btn show-answer-btn"
+                    onClick={() => setShowAnswer(true)}
+                  >
+                    Show Answer (no points)
                   </button>
                 )}
                 {attemptCount >= 5 && (
@@ -663,10 +813,44 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted, onNe
           ) : (
             <>
               <h3>✗ Not Quite</h3>
-              <p>Check your answer and try again.</p>
+              {attemptCount === 1 && (
+                <p>Check your answer and try again.</p>
+              )}
+              {attemptCount === 2 && feedbackData && (
+                <>
+                  <p>{feedbackData.feedback}</p>
+                  {feedbackData.score && feedbackData.score.total > 1 && (
+                    <p className="score-display">
+                      Score: <span className="score-fraction">{feedbackData.score.earned}/{feedbackData.score.total}</span>
+                    </p>
+                  )}
+                </>
+              )}
+              {attemptCount >= 3 && feedbackData && (
+                <>
+                  {feedbackData.score && feedbackData.score.total > 1 && (
+                    <p className="score-display">
+                      Score: <span className="score-fraction">{feedbackData.score.earned}/{feedbackData.score.total}</span>
+                    </p>
+                  )}
+                  <p>{feedbackData.feedback}</p>
+                  {feedbackData.details && feedbackData.details.length > 0 && (
+                    <div className="feedback-details">
+                      {feedbackData.details.map((d, i) => (
+                        <p key={i} className={`feedback-detail-item ${d.correct ? 'correct' : 'wrong'}`}>
+                          {d.line != null
+                            ? `Line ${d.line}: ${d.correct ? '✓ Correct' : `✗ Needs fixing${d.issues && d.issues.length > 0 ? ' — ' + d.issues[0] : ''}`}`
+                            : `${d.key}: ${d.correct ? '✓ Correct' : '✗ Incorrect'}`
+                          }
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
               <p className="attempt-counter">
                 Attempt {attemptCount} of 5
-                {attemptCount >= 5 && ' - You can now skip this activity'}
+                {attemptCount >= 5 && ' — You can now skip this activity'}
               </p>
             </>
           )}
@@ -680,7 +864,58 @@ function TranslationExercise({ exerciseId, onComplete, onBack, isCompleted, onNe
         </div>
       )}
 
-      {/* Error analysis section hidden - teachers can view student submissions in the dashboard */}
+      {/* Error highlight diff section - shown after 2+ attempts on code translation */}
+      {isSubmitted && !isCorrect && showErrorHighlight && attemptCount >= 2 &&
+        (exercise.type === 'pseudocode-to-js' || exercise.type === 'js-to-pseudocode') && (
+        <div className="error-highlight-section">
+          <h4>Line-by-Line Comparison</h4>
+          <div className="diff-legend">
+            <span className="legend-item"><span className="legend-color match"></span> Correct</span>
+            <span className="legend-item"><span className="legend-color different"></span> Needs fixing</span>
+            <span className="legend-item"><span className="legend-color missing"></span> Missing line</span>
+          </div>
+          <div className="diff-container">
+            {generateDiff()?.map((line, i) => (
+              <div key={i} className={`diff-line ${line.type}`}>
+                <span className="diff-line-num">{line.line}</span>
+                <div className="diff-content">
+                  {line.type === 'match' ? (
+                    <span className="diff-text match">{line.user}</span>
+                  ) : line.type === 'missing' ? (
+                    <div className="diff-comparison">
+                      <div className="diff-expected"><span className="diff-label">Expected:</span> <span className="diff-text missing">{line.correct}</span></div>
+                    </div>
+                  ) : (
+                    <div className="diff-comparison">
+                      <div className="diff-yours"><span className="diff-label">Yours:</span> <span className="diff-text">{line.user}</span></div>
+                      <div className="diff-expected"><span className="diff-label">Expected:</span> <span className="diff-text correct">{line.correct}</span></div>
+                      {findLineIssues(line.user, line.correct, exercise.type === 'js-to-pseudocode').length > 0 && (
+                        <div className="diff-issues">
+                          {findLineIssues(line.user, line.correct, exercise.type === 'js-to-pseudocode').map((issue, j) => (
+                            <span key={j} className="diff-issue">{issue}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Show Answer reveal section */}
+      {showAnswer && (
+        <div className="answer-reveal-section">
+          <h4>Correct Answer</h4>
+          <pre className="revealed-answer">{exercise.answer}</pre>
+          <p className="answer-reveal-note">
+            Study this answer carefully. Points are not awarded when the answer is revealed.
+            Try a similar exercise next to test your understanding!
+          </p>
+        </div>
+      )}
     </div>
   );
 }

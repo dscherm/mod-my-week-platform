@@ -9,7 +9,7 @@ import PacketDetail from './PacketDetail';
 import AlertPanel from './AlertPanel';
 import ActionPanel from './ActionPanel';
 
-const NetworkMonitor = ({ completedScenarios, onCompleteScenario, onBack }) => {
+const NetworkMonitor = ({ completedScenarios, onCompleteScenario, onBack, initialScenario }) => {
   // Scenario state
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
@@ -59,6 +59,16 @@ const NetworkMonitor = ({ completedScenarios, onCompleteScenario, onBack }) => {
     setIsRunning(true);
     lastTickRef.current = Date.now();
   }, []);
+
+  // Auto-select scenario from initialScenario prop
+  useEffect(() => {
+    if (initialScenario && !selectedScenario) {
+      const match = scenarios.find(s => s.id === initialScenario);
+      if (match) {
+        startScenario(match);
+      }
+    }
+  }, [initialScenario, selectedScenario, startScenario]);
 
   // Stop scenario
   const stopScenario = useCallback(() => {
