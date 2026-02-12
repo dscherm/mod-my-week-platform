@@ -9,6 +9,7 @@ skills:
   - firebase-progress-tracking
   - common-ui-patterns
   - create-exercise-module
+  - add-visualization
 memory: project
 ---
 

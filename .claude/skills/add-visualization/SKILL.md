@@ -68,16 +68,48 @@ Open the module's exercise data file and find the target week's `visualizations`
 
 **Placement:** Add at the beginning of the array if it's an introductory/overview visualization, or at the end if it supplements existing content. Match the position to the pedagogical flow.
 
-### 6. Verify
+### 6. Add to multiple weeks (optional)
+
+If the visualization applies to more than one week, add the same entry to each week's `visualizations` array. Use the same `id` — the VisualizationsPage deduplicates by `id`.
+
+### 7. JSX/React source files
+
+If the source file is a `.jsx` or React component (not a self-contained HTML file), convert it to a standalone HTML file before placing it in `public/visualizations/`:
+
+- Replace all React hooks (`useState`, `useEffect`) with vanilla JS state variables and DOM manipulation
+- Replace JSX components with functions that build/update DOM elements via `document.createElement()` or `innerHTML`
+- Replace Tailwind CSS utility classes with equivalent inline styles or a `<style>` block
+- Keep all data objects (constants, config) identical
+- Load fonts from Google Fonts CDN
+- The result must be a single self-contained `.html` file with no external dependencies (except CDN fonts/libraries)
+
+### 8. Verify
 
 - Confirm the file exists in `public/visualizations/`
 - Confirm the data file has the new entry with correct `file` path
 - Report the visualization title, target location, and how students will access it
 
+### 9. Add vocabulary terms (if applicable)
+
+If the visualization introduces new concepts, add corresponding terms to `src/data/vocabulary.js`:
+
+```javascript
+"term-id": {
+  term: "Term Name",
+  definition: "Clear, student-friendly definition",
+  category: "Category Name",
+  example: "// Code example if applicable"
+}
+```
+
+Also add the category to the `categories` export array if it's new.
+
 ## Notes
 
-- Visualizations are rendered as clickable cards in the WeekView component
-- They open in a new browser window (1200x800) via `window.open()`
-- The `visualizations` array is optional per week -- if the week doesn't have one yet, add the key
-- All existing visualizations use p5.js, but any self-contained HTML file works
+- Visualizations are rendered as clickable cards in the WeekView component (both `arrays-loops/WeekView.jsx` and `objects-images/ObjectsImagesWeekView.jsx`)
+- They also appear in the global **Visualizations** page (`src/components/VisualizationsPage.jsx`), accessible from the nav banner — this page auto-collects all `visualizations` arrays from all module data files
+- They open in a new browser window (1200×800) via `window.open()`
+- The `visualizations` array is optional per week — if the week doesn't have one yet, add the key
+- All existing visualizations use p5.js or vanilla JS, but any self-contained HTML file works
 - The `icon` field accepts any emoji; pick one that represents the visualization's concept
+- When adding a new module, ensure its WeekView component includes the visualization rendering block (see `ObjectsImagesWeekView.jsx` for the pattern) and that `VisualizationsPage.jsx` imports the module's exercise data
