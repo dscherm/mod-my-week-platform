@@ -160,18 +160,46 @@ function FunctionsScopeExerciseDetail({ exerciseId, onBack, onComplete, isComple
     }
   };
 
+  const [submissionStatus, setSubmissionStatus] = useState(null); // null | 'pending' | 'approved' | 'rejected'
+  const [submissionFeedback, setSubmissionFeedback] = useState(null);
+
+  // Check submission status on mount
+  useEffect(() => {
+    if (!isCompleted && exercise) {
+      import('../../services/firebaseService').then(({ getSubmissionStatus }) => {
+        const studentId = student?.id;
+        if (studentId) {
+          getSubmissionStatus(studentId, exercise.id).then(status => {
+            if (status?.submitted) {
+              if (status.graded && status.approved) {
+                setSubmissionStatus('approved');
+              } else if (status.graded && !status.approved) {
+                setSubmissionStatus('rejected');
+                setSubmissionFeedback(status.feedback);
+              } else {
+                setSubmissionStatus('pending');
+              }
+            }
+          });
+        }
+      });
+    }
+  }, [exercise, isCompleted, student]);
+
   const handleComplete = () => {
-    if (!isCompleted) {
+    if (!isCompleted && submissionStatus !== 'pending') {
       if (onSubmit) {
         onSubmit({
           exerciseId: exercise.id,
           answer: code,
-          isCorrect: true,
+          isCorrect: null,
+          needsReview: true,
           exerciseType: 'functions-scope',
-          exerciseTitle: exercise.title
+          exerciseTitle: exercise.title,
+          points: exercise.points
         });
       }
-      onComplete(exercise.id, exercise.points);
+      setSubmissionStatus('pending');
     }
   };
 
@@ -480,11 +508,23 @@ function FunctionsScopeExerciseDetail({ exerciseId, onBack, onComplete, isComple
       <div className="complete-section">
         {isCompleted ? (
           <div className="already-completed">
-            ✓ You've completed this exercise! ({exercise.points} points earned)
+            Completed! ({exercise.points} points earned)
+          </div>
+        ) : submissionStatus === 'pending' ? (
+          <div className="submission-pending">
+            Submitted — awaiting teacher review
+          </div>
+        ) : submissionStatus === 'rejected' ? (
+          <div className="submission-rejected">
+            <div>Teacher returned this for revision</div>
+            {submissionFeedback && <div className="teacher-feedback">Feedback: {submissionFeedback}</div>}
+            <button className="complete-button" onClick={handleComplete}>
+              Resubmit for Review
+            </button>
           </div>
         ) : (
           <button className="complete-button" onClick={handleComplete}>
-            Mark as Complete (+{exercise.points} points)
+            Submit for Review (+{exercise.points} points)
           </button>
         )}
       </div>

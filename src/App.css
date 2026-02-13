@@ -164,7 +164,7 @@ a:hover {
 /* Header Styles - 80s Neon */
 .header {
   background: linear-gradient(180deg, rgba(26, 10, 46, 0.95) 0%, rgba(10, 10, 15, 0.98) 100%);
-  padding: 1rem 2rem;
+  padding: clamp(0.5rem, 1.5vw, 1rem) clamp(0.75rem, 2vw, 2rem);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -192,8 +192,9 @@ a:hover {
 
 .nav {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .nav-btn {
@@ -250,7 +251,8 @@ a:hover {
 .main-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: clamp(0.5rem, 2vw, 2rem);
+  overflow-x: hidden;
 }
 
 /* Dashboard Styles - 80s Grid */
@@ -5425,10 +5427,11 @@ a:hover {
    ============================================ */
 
 .exercise-detail {
-  padding: 1.5rem 2rem;
+  padding: clamp(0.5rem, 2vw, 1.5rem) clamp(0.5rem, 2vw, 2rem);
   max-width: 1400px;
   margin: 0 auto;
   transition: max-width 0.3s ease;
+  overflow-x: hidden;
 }
 
 .exercise-detail.expanded {
@@ -5445,8 +5448,9 @@ a:hover {
 
 .exercise-header-detail h1 {
   color: #00d4ff;
-  font-size: 1.75rem;
+  font-size: clamp(1.1rem, 3vw, 1.75rem);
   margin: 0.5rem 0;
+  word-break: break-word;
 }
 
 .exercise-detail .exercise-meta {
@@ -6217,6 +6221,243 @@ a:hover {
   font-size: 1.1rem;
   font-weight: 600;
 }
+
+/* Submission status badges (teacher grading flow) */
+.submission-pending {
+  color: #ff9800;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 152, 0, 0.1);
+  border: 1px solid rgba(255, 152, 0, 0.3);
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.submission-rejected {
+  color: #ff6b6b;
+  font-size: 1rem;
+  padding: 1rem;
+  background: rgba(255, 107, 107, 0.08);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.submission-rejected .teacher-feedback {
+  color: #ccc;
+  font-style: italic;
+  margin: 0.5rem 0 1rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 3px solid #ff9800;
+  border-radius: 0 6px 6px 0;
+  text-align: left;
+}
+
+/* Submission Viewer grading UI */
+.submission-viewer { padding: 1rem; }
+
+.sv-header h3 { margin: 0 0 0.25rem; }
+.sv-subtitle { color: #aaa; margin: 0; }
+.sv-pending-count { color: #ff9800; font-weight: 600; }
+
+.sv-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  margin: 1rem 0;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+}
+
+.sv-filter-group { display: flex; flex-direction: column; gap: 0.25rem; }
+.sv-filter-group label { font-size: 0.75rem; color: #888; text-transform: uppercase; }
+.sv-filter-group select,
+.sv-filter-group input {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+.sv-refresh-btn {
+  background: rgba(0, 212, 255, 0.15);
+  color: #00d4ff;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: 6px;
+  padding: 0.4rem 1rem;
+  cursor: pointer;
+  margin-left: auto;
+}
+.sv-refresh-btn:hover { background: rgba(0, 212, 255, 0.25); }
+
+.sv-stats { color: #888; font-size: 0.85rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; }
+
+.sv-pending-btn {
+  background: rgba(255, 152, 0, 0.15);
+  color: #ff9800;
+  border: 1px solid rgba(255, 152, 0, 0.3);
+  border-radius: 6px;
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.sv-empty { text-align: center; padding: 2rem; color: #888; }
+.sv-empty-icon { font-size: 1.2rem; font-family: monospace; color: #555; margin-bottom: 0.5rem; }
+
+.sv-submission-card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.sv-submission-card.pending { border-color: rgba(255, 152, 0, 0.4); }
+.sv-submission-card.correct { border-color: rgba(76, 175, 80, 0.3); }
+.sv-submission-card.incorrect { border-color: rgba(255, 107, 107, 0.3); }
+
+.sv-submission-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.03);
+  gap: 0.75rem;
+}
+.sv-submission-header:hover { background: rgba(255, 255, 255, 0.06); }
+
+.sv-submission-info { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+.sv-student-name { font-weight: 600; color: #fff; }
+
+.sv-type-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  color: #000;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sv-status-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.sv-status-badge.pending { background: rgba(255, 152, 0, 0.2); color: #ff9800; }
+.sv-status-badge.correct { background: rgba(76, 175, 80, 0.2); color: #4caf50; }
+.sv-status-badge.incorrect { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
+
+.sv-submission-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
+  min-width: 0;
+}
+.sv-exercise-title { font-size: 0.85rem; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sv-date { font-size: 0.75rem; color: #888; }
+.sv-expand-icon { color: #888; font-size: 0.75rem; }
+
+.sv-submission-content {
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sv-answer-section h4 { margin: 0 0 0.5rem; color: #aaa; font-size: 0.85rem; }
+
+.sv-answer-code {
+  background: rgba(0, 0, 0, 0.4);
+  color: #00d4ff;
+  padding: 1rem;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.sv-feedback-display {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(255, 152, 0, 0.08);
+  border-left: 3px solid #ff9800;
+  border-radius: 0 6px 6px 0;
+}
+.sv-feedback-display h4 { margin: 0 0 0.25rem; color: #ff9800; font-size: 0.8rem; }
+.sv-feedback-display p { margin: 0; color: #ccc; font-size: 0.9rem; }
+
+.sv-grade-section {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sv-feedback-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 0.5rem;
+  font-size: 0.85rem;
+  resize: vertical;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.sv-grade-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.sv-approve-btn {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+  border: 1px solid rgba(76, 175, 80, 0.4);
+  border-radius: 6px;
+  padding: 0.4rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+.sv-approve-btn:hover { background: rgba(76, 175, 80, 0.35); }
+.sv-approve-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.sv-reject-btn {
+  background: rgba(255, 107, 107, 0.2);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 107, 107, 0.4);
+  border-radius: 6px;
+  padding: 0.4rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+.sv-reject-btn:hover { background: rgba(255, 107, 107, 0.35); }
+.sv-reject-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.sv-graded-badge {
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+}
+.sv-graded-badge.approved { background: rgba(76, 175, 80, 0.15); color: #4caf50; }
+.sv-graded-badge.rejected { background: rgba(255, 107, 107, 0.15); color: #ff6b6b; }
 
 /* ============================================
    TRANSLATION EXERCISE STYLES (Pseudocode)
@@ -12976,5 +13217,91 @@ a:hover {
 
   .sort-controls select {
     flex: 1;
+  }
+}
+
+/* ============================================
+   STUDENT VIEW — FIT-TO-SCREEN RESPONSIVE
+   ============================================ */
+@media (max-width: 900px) {
+  .header {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .header-content {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .logo {
+    font-size: clamp(1rem, 4vw, 1.8rem);
+  }
+
+  .nav {
+    gap: 0.35rem;
+    justify-content: center;
+  }
+
+  .nav-btn {
+    padding: 0.35rem 0.6rem;
+    font-size: clamp(0.6rem, 1.5vw, 0.8rem);
+    clip-path: none;
+  }
+
+  .user-info {
+    border-left: none;
+    padding-left: 0;
+    margin-left: 0;
+    gap: 0.5rem;
+  }
+
+  .user-name { font-size: 0.85rem; }
+  .user-class { font-size: 0.75rem; padding: 0.15rem 0.4rem; }
+}
+
+@media (max-width: 600px) {
+  .main-content {
+    padding: 0.5rem;
+  }
+
+  .exercise-detail {
+    padding: 0.5rem;
+  }
+
+  .editor-container {
+    grid-template-columns: 1fr !important;
+  }
+
+  .resize-handle { display: none; }
+
+  .code-editor {
+    min-height: 200px;
+    font-size: 0.8rem;
+  }
+
+  .code-preview-iframe {
+    min-height: 200px;
+  }
+
+  .prompt-box pre {
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .explanation-content pre {
+    font-size: 0.8rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .sv-filters {
+    flex-direction: column;
+  }
+
+  .sv-submission-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
   }
 }

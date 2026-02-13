@@ -577,7 +577,9 @@ function App() {
         answer: submission.answer,
         isCorrect: submission.isCorrect,
         exerciseType: submission.exerciseType,
-        exerciseTitle: submission.exerciseTitle
+        exerciseTitle: submission.exerciseTitle,
+        needsReview: submission.needsReview || false,
+        points: submission.points || 0
       });
     } catch (e) {
       console.error('Error saving submission:', e);

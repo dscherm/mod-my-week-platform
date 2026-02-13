@@ -313,6 +313,11 @@ export const saveStudentSubmission = async (studentId, exerciseId, submission) =
       isCorrect: submission.isCorrect,
       exerciseType: submission.exerciseType,
       exerciseTitle: submission.exerciseTitle,
+      needsReview: submission.needsReview || false,
+      points: submission.points || 0,
+      graded: false,
+      approved: false,
+      feedback: null,
       submittedAt: new Date().toISOString()
     };
 
@@ -332,6 +337,11 @@ export const saveStudentSubmission = async (studentId, exerciseId, submission) =
     isCorrect: submission.isCorrect,
     exerciseType: submission.exerciseType,
     exerciseTitle: submission.exerciseTitle,
+    needsReview: submission.needsReview || false,
+    points: submission.points || 0,
+    graded: false,
+    approved: false,
+    feedback: null,
     submittedAt: serverTimestamp()
   };
   updateData.lastActivity = serverTimestamp();
@@ -408,6 +418,117 @@ export const getClassSubmissions = async (classCode) => {
   });
 
   return classSubmissions;
+};
+
+// ============================================
+// TEACHER GRADING FUNCTIONS
+// ============================================
+
+// Grade a student submission (teacher action)
+// approved=true → marks exercise complete, awards points
+// approved=false → adds feedback for student to revise
+export const gradeSubmission = async (studentId, exerciseId, { approved, feedback, points, exerciseModule }) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    const student = data.students[studentId];
+    if (!student) return;
+
+    // Update submission status
+    if (!student.submissions) student.submissions = {};
+    if (student.submissions[exerciseId]) {
+      student.submissions[exerciseId].graded = true;
+      student.submissions[exerciseId].approved = approved;
+      student.submissions[exerciseId].feedback = feedback || null;
+      student.submissions[exerciseId].gradedAt = new Date().toISOString();
+    }
+
+    if (approved) {
+      // Award points
+      student.totalPoints = (student.totalPoints || 0) + (points || 0);
+
+      // Mark exercise complete in the correct module array
+      const moduleMap = {
+        'programming': 'completedExercises',
+        'data-apis': 'completedDataApisExercises',
+        'objects-images': 'completedObjectsImagesExercises',
+        'functions-scope': 'completedFunctionsScopeExercises',
+      };
+      const field = moduleMap[exerciseModule] || 'completedExercises';
+      if (!student[field]) student[field] = [];
+      if (!student[field].includes(exerciseId)) {
+        student[field].push(exerciseId);
+      }
+    }
+
+    saveDemoData(data);
+    const classCode = student.classCode;
+    notifyDemoSubscribers(`class:${classCode}`);
+    return;
+  }
+
+  if (!db) return;
+
+  const studentRef = doc(db, STUDENTS_COLLECTION, studentId);
+  const updateData = {};
+
+  // Update submission status
+  updateData[`submissions.${exerciseId}.graded`] = true;
+  updateData[`submissions.${exerciseId}.approved`] = approved;
+  updateData[`submissions.${exerciseId}.feedback`] = feedback || null;
+  updateData[`submissions.${exerciseId}.gradedAt`] = serverTimestamp();
+
+  if (approved) {
+    // Award points
+    updateData.totalPoints = increment(points || 0);
+
+    // Mark exercise complete — we need to read the doc first to append to the array
+    const studentDoc = await getDoc(studentRef);
+    if (studentDoc.exists()) {
+      const moduleMap = {
+        'programming': 'completedExercises',
+        'data-apis': 'completedDataApisExercises',
+        'objects-images': 'completedObjectsImagesExercises',
+        'functions-scope': 'completedFunctionsScopeExercises',
+      };
+      const field = moduleMap[studentDoc.data().submissions?.[exerciseId]?.exerciseType] || 'completedExercises';
+      const current = studentDoc.data()[field] || [];
+      if (!current.includes(exerciseId)) {
+        updateData[field] = [...current, exerciseId];
+      }
+    }
+  }
+
+  await updateDoc(studentRef, updateData);
+};
+
+// Get submission status for a specific exercise (student checks if pending/approved/rejected)
+export const getSubmissionStatus = async (studentId, exerciseId) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    const sub = data.students?.[studentId]?.submissions?.[exerciseId];
+    if (!sub) return null;
+    return {
+      submitted: true,
+      graded: sub.graded || false,
+      approved: sub.approved || false,
+      feedback: sub.feedback || null,
+    };
+  }
+
+  if (!db) return null;
+
+  const studentRef = doc(db, STUDENTS_COLLECTION, studentId);
+  const studentDoc = await getDoc(studentRef);
+  if (!studentDoc.exists()) return null;
+
+  const sub = studentDoc.data().submissions?.[exerciseId];
+  if (!sub) return null;
+  return {
+    submitted: true,
+    graded: sub.graded || false,
+    approved: sub.approved || false,
+    feedback: sub.feedback || null,
+  };
 };
 
 // ============================================
