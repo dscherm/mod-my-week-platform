@@ -43,8 +43,20 @@ const NetworkMonitor = ({ completedScenarios, onCompleteScenario, onBack, initia
 
   // Start scenario
   const startScenario = useCallback((scenario) => {
-    setSelectedScenario(scenario);
-    setTimeRemaining(scenario.duration);
+    let resolvedScenario = scenario;
+
+    // For mystery scenarios, randomly pick an attack from the pool
+    if (scenario.mystery && scenario.attackPool) {
+      const randomAttack = scenario.attackPool[Math.floor(Math.random() * scenario.attackPool.length)];
+      resolvedScenario = {
+        ...scenario,
+        attackType: randomAttack.attackType,
+        attackConfig: randomAttack.attackConfig,
+      };
+    }
+
+    setSelectedScenario(resolvedScenario);
+    setTimeRemaining(resolvedScenario.noTimer ? 0 : resolvedScenario.duration);
     setPackets([]);
     setFlaggedPackets([]);
     setBlockedIPs([]);
@@ -54,7 +66,7 @@ const NetworkMonitor = ({ completedScenarios, onCompleteScenario, onBack, initia
     setResults(null);
     setScenarioComplete(false);
 
-    generatorRef.current = new ScenarioPacketGenerator(scenario);
+    generatorRef.current = new ScenarioPacketGenerator(resolvedScenario);
     generatorRef.current.start();
     setIsRunning(true);
     lastTickRef.current = Date.now();
@@ -137,13 +149,16 @@ const NetworkMonitor = ({ completedScenarios, onCompleteScenario, onBack, initia
       });
 
       // Update time (timer runs at normal speed even if packets are slow)
-      setTimeRemaining(prev => {
-        const newTime = Math.max(0, prev - deltaSeconds);
-        if (newTime <= 0) {
-          completeScenario();
-        }
-        return newTime;
-      });
+      // Skip timer for no-timer scenarios (mystery challenges)
+      if (!selectedScenario?.noTimer) {
+        setTimeRemaining(prev => {
+          const newTime = Math.max(0, prev - deltaSeconds);
+          if (newTime <= 0) {
+            completeScenario();
+          }
+          return newTime;
+        });
+      }
 
       // Update stats
       setPacketStats(prev => ({
@@ -310,10 +325,12 @@ const NetworkMonitor = ({ completedScenarios, onCompleteScenario, onBack, initia
           </span>
         </div>
         <div className="nm-stats">
-          <div className="stat">
-            <span className="stat-value">{Math.ceil(timeRemaining)}</span>
-            <span className="stat-label">Time Left</span>
-          </div>
+          {!selectedScenario.noTimer && (
+            <div className="stat">
+              <span className="stat-value">{Math.ceil(timeRemaining)}</span>
+              <span className="stat-label">Time Left</span>
+            </div>
+          )}
           <div className="stat">
             <span className="stat-value">{packetStats.total}</span>
             <span className="stat-label">Packets</span>

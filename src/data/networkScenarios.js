@@ -126,6 +126,68 @@ export const scenarios = [
       maxPacketSize: 15000,
     },
   },
+  {
+    id: 'mystery-attack',
+    name: 'Mystery Attack',
+    difficulty: 'Hard',
+    points: 50,
+    description: 'Something suspicious is happening on the network. Analyze the traffic, identify the threat, and neutralize it. No hints this time — you\'re on your own.',
+    learningObjective: 'Apply all learned skills to independently identify and respond to an unknown attack without guidance.',
+    mystery: true,
+    noTimer: true,
+    duration: 0,
+    hints: [],
+    successCriteria: {
+      mustBlockAttacker: true,
+      mustIdentifyAttackType: true,
+      minMaliciousPacketsFlagged: 5,
+    },
+    backgroundTraffic: {
+      packetsPerSecond: 2,
+      protocols: ['HTTP', 'HTTPS', 'DNS', 'TCP'],
+    },
+    attackPool: [
+      {
+        attackType: attackTypes.PORT_SCAN,
+        attackConfig: {
+          startDelay: 10,
+          packetsPerSecond: 1.5,
+          attackerIP: '91.240.118.50',
+          targetPorts: [21, 22, 23, 25, 80, 110, 143, 443, 445, 3389, 8080, 8443],
+        },
+      },
+      {
+        attackType: attackTypes.BRUTE_FORCE_SSH,
+        attackConfig: {
+          startDelay: 12,
+          packetsPerSecond: 1,
+          attackerIP: '103.25.61.88',
+          targetPort: 22,
+          usernames: ['root', 'admin', 'administrator', 'user', 'guest', 'test', 'ubuntu', 'deploy'],
+        },
+      },
+      {
+        attackType: attackTypes.SQL_INJECTION,
+        attackConfig: {
+          startDelay: 10,
+          packetsPerSecond: 0.75,
+          attackerIP: '178.62.19.201',
+          targetPort: 80,
+        },
+      },
+      {
+        attackType: attackTypes.DATA_EXFILTRATION,
+        attackConfig: {
+          startDelay: 15,
+          packetsPerSecond: 1,
+          attackerIP: '45.77.65.211',
+          sourceIP: '192.168.1.42',
+          minPacketSize: 5000,
+          maxPacketSize: 15000,
+        },
+      },
+    ],
+  },
 ];
 
 // Get scenario by ID

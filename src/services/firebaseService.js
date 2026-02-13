@@ -15,8 +15,10 @@ import {
   serverTimestamp,
   query,
   where,
-  orderBy
+  orderBy,
+  increment
 } from 'firebase/firestore';
+import defaultShopItems from '../data/defaultShopItems';
 import firebaseConfig from '../config/firebase';
 
 // Check if we're in demo mode
@@ -110,6 +112,21 @@ const notifyDemoSubscribers = (key) => {
         }))
         .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
       cb(requests);
+    } else if (key.startsWith('shopItems:')) {
+      const classCode = key.replace('shopItems:', '');
+      const items = Object.entries(data.shopItems?.[classCode] || {}).map(([id, item]) => ({ id, ...item }));
+      cb(items);
+    } else if (key.startsWith('purchases:')) {
+      const classCode = key.replace('purchases:', '');
+      const purchases = Object.entries(data.purchases?.[classCode] || {})
+        .map(([id, p]) => ({
+          id,
+          ...p,
+          createdAt: p.createdAt ? new Date(p.createdAt) : null,
+          resolvedAt: p.resolvedAt ? new Date(p.resolvedAt) : null
+        }))
+        .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+      cb(purchases);
     }
   });
 };
@@ -207,6 +224,7 @@ export const saveStudentProgress = async (studentId, progress) => {
         completedFunctionsScopeExercises: progress.completedFunctionsScopeExercises || [],
         completedPlanningTools: progress.completedPlanningTools || [],
         totalPoints: progress.totalPoints || 0,
+        spentPoints: progress.spentPoints || 0,
         lastActivity: new Date().toISOString()
       };
       saveDemoData(data);
@@ -230,6 +248,7 @@ export const saveStudentProgress = async (studentId, progress) => {
     completedFunctionsScopeExercises: progress.completedFunctionsScopeExercises || [],
     completedPlanningTools: progress.completedPlanningTools || [],
     totalPoints: progress.totalPoints || 0,
+    spentPoints: progress.spentPoints || 0,
     lastActivity: serverTimestamp()
   });
 };
@@ -1275,6 +1294,875 @@ export const getStudentHelpRequests = async (classCode, studentId, exerciseId) =
 
   const snapshot = await getDocs(helpQuery);
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+};
+
+// ============================================
+// REWARD SHOP FUNCTIONS
+// ============================================
+
+// Seed default shop items if the class has none
+export const seedDefaultShopItems = async (classCode) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    if (!data.shopItems) data.shopItems = {};
+    if (!data.shopItems[classCode]) data.shopItems[classCode] = {};
+
+    // Seed any items that don't already exist (by name)
+    const existingNames = new Set(Object.values(data.shopItems[classCode]).map(i => i.name));
+    let added = false;
+    defaultShopItems.forEach((item, i) => {
+      if (existingNames.has(item.name)) return;
+      const id = `shop_default_${Date.now()}_${i}`;
+      data.shopItems[classCode][id] = {
+        ...item,
+        createdAt: new Date().toISOString()
+      };
+      added = true;
+    });
+    if (added) {
+      saveDemoData(data);
+      notifyDemoSubscribers(`shopItems:${classCode}`);
+    }
+    return;
+  }
+
+  if (!db) return;
+
+  const shopRef = collection(db, CLASSES_COLLECTION, classCode, 'shopItems');
+  const snapshot = await getDocs(shopRef);
+
+  // Build set of existing item names to avoid duplicates
+  const existingNames = new Set();
+  snapshot.docs.forEach(d => {
+    const name = d.data().name;
+    if (name) existingNames.add(name);
+  });
+
+  // Seed any default items not already present
+  for (const item of defaultShopItems) {
+    if (existingNames.has(item.name)) continue;
+    const docRef = doc(shopRef);
+    await setDoc(docRef, { ...item, createdAt: serverTimestamp() });
+  }
+};
+
+// Get shop items (one-time fetch)
+export const getShopItems = async (classCode) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    return Object.entries(data.shopItems?.[classCode] || {}).map(([id, item]) => ({ id, ...item }));
+  }
+
+  if (!db) return [];
+
+  const shopRef = collection(db, CLASSES_COLLECTION, classCode, 'shopItems');
+  const snapshot = await getDocs(shopRef);
+  return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+};
+
+// Subscribe to shop items (real-time)
+export const subscribeToShopItems = (classCode, callback) => {
+  if (isDemoMode()) {
+    const key = `shopItems:${classCode}`;
+    const callbacks = demoSubscriptions.get(key) || [];
+    callbacks.push(callback);
+    demoSubscriptions.set(key, callbacks);
+
+    // Initial call
+    const data = getDemoData();
+    const items = Object.entries(data.shopItems?.[classCode] || {}).map(([id, item]) => ({ id, ...item }));
+    callback(items);
+
+    return () => {
+      const cbs = demoSubscriptions.get(key) || [];
+      demoSubscriptions.set(key, cbs.filter(cb => cb !== callback));
+    };
+  }
+
+  if (!db) {
+    callback([]);
+    return () => {};
+  }
+
+  const shopRef = collection(db, CLASSES_COLLECTION, classCode, 'shopItems');
+  return onSnapshot(shopRef, (snapshot) => {
+    const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    callback(items);
+  });
+};
+
+// Add a shop item
+export const addShopItem = async (classCode, item) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    if (!data.shopItems) data.shopItems = {};
+    if (!data.shopItems[classCode]) data.shopItems[classCode] = {};
+
+    const id = `shop_${Date.now()}`;
+    data.shopItems[classCode][id] = {
+      ...item,
+      createdAt: new Date().toISOString()
+    };
+    saveDemoData(data);
+    notifyDemoSubscribers(`shopItems:${classCode}`);
+    return { id };
+  }
+
+  if (!db) return null;
+
+  const shopRef = collection(db, CLASSES_COLLECTION, classCode, 'shopItems');
+  const docRef = doc(shopRef);
+  await setDoc(docRef, { ...item, createdAt: serverTimestamp() });
+  return { id: docRef.id };
+};
+
+// Update a shop item
+export const updateShopItem = async (classCode, itemId, updates) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    if (data.shopItems?.[classCode]?.[itemId]) {
+      data.shopItems[classCode][itemId] = { ...data.shopItems[classCode][itemId], ...updates };
+      saveDemoData(data);
+      notifyDemoSubscribers(`shopItems:${classCode}`);
+    }
+    return;
+  }
+
+  if (!db) return;
+
+  const itemRef = doc(db, CLASSES_COLLECTION, classCode, 'shopItems', itemId);
+  await updateDoc(itemRef, updates);
+};
+
+// Delete a shop item
+export const deleteShopItem = async (classCode, itemId) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    if (data.shopItems?.[classCode]?.[itemId]) {
+      delete data.shopItems[classCode][itemId];
+      saveDemoData(data);
+      notifyDemoSubscribers(`shopItems:${classCode}`);
+    }
+    return;
+  }
+
+  if (!db) return;
+
+  const itemRef = doc(db, CLASSES_COLLECTION, classCode, 'shopItems', itemId);
+  await deleteDoc(itemRef);
+};
+
+// Create a purchase request (student)
+export const createPurchaseRequest = async (classCode, purchaseData) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    if (!data.purchases) data.purchases = {};
+    if (!data.purchases[classCode]) data.purchases[classCode] = {};
+
+    const id = `purchase_${Date.now()}`;
+    data.purchases[classCode][id] = {
+      studentId: purchaseData.studentId,
+      studentName: purchaseData.studentName,
+      itemId: purchaseData.itemId,
+      itemName: purchaseData.itemName,
+      itemCost: purchaseData.itemCost,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      resolvedAt: null,
+      resolvedBy: null
+    };
+    saveDemoData(data);
+    notifyDemoSubscribers(`purchases:${classCode}`);
+    return { id };
+  }
+
+  if (!db) return null;
+
+  const purchasesRef = collection(db, CLASSES_COLLECTION, classCode, 'purchases');
+  const docRef = doc(purchasesRef);
+  await setDoc(docRef, {
+    studentId: purchaseData.studentId,
+    studentName: purchaseData.studentName,
+    itemId: purchaseData.itemId,
+    itemName: purchaseData.itemName,
+    itemCost: purchaseData.itemCost,
+    status: 'pending',
+    createdAt: serverTimestamp(),
+    resolvedAt: null,
+    resolvedBy: null
+  });
+  return { id: docRef.id };
+};
+
+// Approve a purchase (teacher) — increments student spentPoints
+export const approvePurchase = async (classCode, purchaseId, resolvedBy) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    const purchase = data.purchases?.[classCode]?.[purchaseId];
+    if (!purchase || purchase.status !== 'pending') return;
+
+    purchase.status = 'approved';
+    purchase.resolvedAt = new Date().toISOString();
+    purchase.resolvedBy = resolvedBy;
+
+    // Increment student's spentPoints
+    const student = data.students[purchase.studentId];
+    if (student) {
+      student.spentPoints = (student.spentPoints || 0) + purchase.itemCost;
+    }
+
+    saveDemoData(data);
+    notifyDemoSubscribers(`purchases:${classCode}`);
+    notifyDemoSubscribers(`class:${classCode}`);
+    return purchase.itemCost;
+  }
+
+  if (!db) return 0;
+
+  const purchaseRef = doc(db, CLASSES_COLLECTION, classCode, 'purchases', purchaseId);
+  const purchaseSnap = await getDoc(purchaseRef);
+  if (!purchaseSnap.exists() || purchaseSnap.data().status !== 'pending') return 0;
+
+  const purchaseData = purchaseSnap.data();
+
+  await updateDoc(purchaseRef, {
+    status: 'approved',
+    resolvedAt: serverTimestamp(),
+    resolvedBy
+  });
+
+  // Increment student's spentPoints
+  const studentRef = doc(db, STUDENTS_COLLECTION, purchaseData.studentId);
+  await updateDoc(studentRef, {
+    spentPoints: increment(purchaseData.itemCost)
+  });
+
+  return purchaseData.itemCost;
+};
+
+// Deny a purchase (teacher)
+export const denyPurchase = async (classCode, purchaseId, resolvedBy) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    const purchase = data.purchases?.[classCode]?.[purchaseId];
+    if (!purchase || purchase.status !== 'pending') return;
+
+    purchase.status = 'denied';
+    purchase.resolvedAt = new Date().toISOString();
+    purchase.resolvedBy = resolvedBy;
+
+    saveDemoData(data);
+    notifyDemoSubscribers(`purchases:${classCode}`);
+    return;
+  }
+
+  if (!db) return;
+
+  const purchaseRef = doc(db, CLASSES_COLLECTION, classCode, 'purchases', purchaseId);
+  await updateDoc(purchaseRef, {
+    status: 'denied',
+    resolvedAt: serverTimestamp(),
+    resolvedBy
+  });
+};
+
+// Subscribe to all purchases for a class (teacher view)
+export const subscribeToPurchases = (classCode, callback) => {
+  if (isDemoMode()) {
+    const key = `purchases:${classCode}`;
+    const callbacks = demoSubscriptions.get(key) || [];
+    callbacks.push(callback);
+    demoSubscriptions.set(key, callbacks);
+
+    const data = getDemoData();
+    const purchases = Object.entries(data.purchases?.[classCode] || {})
+      .map(([id, p]) => ({
+        id,
+        ...p,
+        createdAt: p.createdAt ? new Date(p.createdAt) : null,
+        resolvedAt: p.resolvedAt ? new Date(p.resolvedAt) : null
+      }))
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+    callback(purchases);
+
+    return () => {
+      const cbs = demoSubscriptions.get(key) || [];
+      demoSubscriptions.set(key, cbs.filter(cb => cb !== callback));
+    };
+  }
+
+  if (!db) {
+    callback([]);
+    return () => {};
+  }
+
+  const purchasesRef = collection(db, CLASSES_COLLECTION, classCode, 'purchases');
+  const purchasesQuery = query(purchasesRef, orderBy('createdAt', 'desc'));
+
+  return onSnapshot(purchasesQuery, (snapshot) => {
+    const purchases = snapshot.docs.map(d => ({
+      id: d.id,
+      ...d.data(),
+      createdAt: d.data().createdAt?.toDate?.() || null,
+      resolvedAt: d.data().resolvedAt?.toDate?.() || null
+    }));
+    callback(purchases);
+  });
+};
+
+// Subscribe to a student's own purchases (student view)
+export const subscribeToStudentPurchases = (classCode, studentId, callback) => {
+  if (isDemoMode()) {
+    const key = `purchases:${classCode}`;
+    // Wrap callback to filter by student
+    const wrappedCb = () => {
+      const data = getDemoData();
+      const purchases = Object.entries(data.purchases?.[classCode] || {})
+        .filter(([_, p]) => p.studentId === studentId)
+        .map(([id, p]) => ({
+          id,
+          ...p,
+          createdAt: p.createdAt ? new Date(p.createdAt) : null,
+          resolvedAt: p.resolvedAt ? new Date(p.resolvedAt) : null
+        }))
+        .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+      callback(purchases);
+    };
+
+    const callbacks = demoSubscriptions.get(key) || [];
+    callbacks.push(wrappedCb);
+    demoSubscriptions.set(key, callbacks);
+
+    // Initial call
+    wrappedCb();
+
+    return () => {
+      const cbs = demoSubscriptions.get(key) || [];
+      demoSubscriptions.set(key, cbs.filter(cb => cb !== wrappedCb));
+    };
+  }
+
+  if (!db) {
+    callback([]);
+    return () => {};
+  }
+
+  const purchasesRef = collection(db, CLASSES_COLLECTION, classCode, 'purchases');
+  const purchasesQuery = query(
+    purchasesRef,
+    where('studentId', '==', studentId),
+    orderBy('createdAt', 'desc')
+  );
+
+  return onSnapshot(purchasesQuery, (snapshot) => {
+    const purchases = snapshot.docs.map(d => ({
+      id: d.id,
+      ...d.data(),
+      createdAt: d.data().createdAt?.toDate?.() || null,
+      resolvedAt: d.data().resolvedAt?.toDate?.() || null
+    }));
+    callback(purchases);
+  });
+};
+
+// ============================================
+// TEACHER AWARD POINTS FUNCTIONS
+// ============================================
+
+// Award points to a student (teacher action)
+export const awardStudentPoints = async (studentId, points) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    if (data.students[studentId]) {
+      data.students[studentId].totalPoints = (data.students[studentId].totalPoints || 0) + points;
+      saveDemoData(data);
+      const classCode = data.students[studentId].classCode;
+      notifyDemoSubscribers(`class:${classCode}`);
+    }
+    return;
+  }
+
+  if (!db) return;
+
+  const studentRef = doc(db, STUDENTS_COLLECTION, studentId);
+  await updateDoc(studentRef, {
+    totalPoints: increment(points)
+  });
+};
+
+// Subscribe to a student's own document for real-time point updates
+export const subscribeToStudentPoints = (studentId, callback) => {
+  if (isDemoMode()) {
+    // In demo mode, poll for changes via the class subscription
+    const data = getDemoData();
+    const student = data.students[studentId];
+    if (student) {
+      callback({ totalPoints: student.totalPoints || 0, spentPoints: student.spentPoints || 0 });
+
+      // Listen via class subscription
+      const classCode = student.classCode;
+      const key = `class:${classCode}`;
+      const wrappedCb = () => {
+        const freshData = getDemoData();
+        const s = freshData.students[studentId];
+        if (s) {
+          callback({ totalPoints: s.totalPoints || 0, spentPoints: s.spentPoints || 0 });
+        }
+      };
+      const callbacks = demoSubscriptions.get(key) || [];
+      callbacks.push(wrappedCb);
+      demoSubscriptions.set(key, callbacks);
+
+      return () => {
+        const cbs = demoSubscriptions.get(key) || [];
+        demoSubscriptions.set(key, cbs.filter(cb => cb !== wrappedCb));
+      };
+    }
+    return () => {};
+  }
+
+  if (!db) {
+    callback({ totalPoints: 0, spentPoints: 0 });
+    return () => {};
+  }
+
+  const studentRef = doc(db, STUDENTS_COLLECTION, studentId);
+  return onSnapshot(studentRef, (snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      callback({ totalPoints: data.totalPoints || 0, spentPoints: data.spentPoints || 0 });
+    }
+  });
+};
+
+// ============================================
+// AVATAR CONFIG FUNCTIONS
+// ============================================
+
+// Save avatar config for a student
+export const saveAvatarConfig = async (studentId, avatarConfig) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    if (data.students[studentId]) {
+      data.students[studentId].avatarConfig = avatarConfig;
+      saveDemoData(data);
+    }
+    return;
+  }
+
+  if (!db) return;
+
+  const studentRef = doc(db, STUDENTS_COLLECTION, studentId);
+  await updateDoc(studentRef, { avatarConfig });
+};
+
+// Get avatar config for a student
+export const getAvatarConfig = async (studentId) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    return data.students[studentId]?.avatarConfig || null;
+  }
+
+  if (!db) return null;
+
+  const studentRef = doc(db, STUDENTS_COLLECTION, studentId);
+  const studentDoc = await getDoc(studentRef);
+  if (studentDoc.exists()) {
+    return studentDoc.data().avatarConfig || null;
+  }
+  return null;
+};
+
+// Get student's owned clothing items (approved purchases that have clothingType)
+export const getStudentOwnedClothing = async (classCode, studentId) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    const purchases = Object.entries(data.purchases?.[classCode] || {})
+      .filter(([_, p]) => p.studentId === studentId && p.status === 'approved');
+
+    const items = [];
+    for (const [, purchase] of purchases) {
+      const shopItem = data.shopItems?.[classCode]?.[purchase.itemId];
+      if (shopItem?.clothingType) {
+        items.push({ id: purchase.itemId, ...shopItem });
+      }
+    }
+    return items;
+  }
+
+  if (!db) return [];
+
+  // Get approved purchases for this student
+  const purchasesRef = collection(db, CLASSES_COLLECTION, classCode, 'purchases');
+  const purchasesQuery = query(
+    purchasesRef,
+    where('studentId', '==', studentId),
+    where('status', '==', 'approved')
+  );
+  const purchaseSnap = await getDocs(purchasesQuery);
+
+  const itemIds = purchaseSnap.docs.map(d => d.data().itemId);
+  if (itemIds.length === 0) return [];
+
+  // Fetch the shop items to check clothingType
+  const shopRef = collection(db, CLASSES_COLLECTION, classCode, 'shopItems');
+  const shopSnap = await getDocs(shopRef);
+  const shopMap = {};
+  shopSnap.docs.forEach(d => { shopMap[d.id] = { id: d.id, ...d.data() }; });
+
+  return itemIds
+    .map(id => shopMap[id])
+    .filter(item => item && item.clothingType);
+};
+
+// ============================================
+// TEACHER AVATAR FUNCTIONS
+// ============================================
+
+// Save avatar config for a teacher
+export const saveTeacherAvatarConfig = async (teacherId, avatarConfig) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    if (!data.teachers) data.teachers = {};
+    if (data.teachers[teacherId]) {
+      data.teachers[teacherId].avatarConfig = avatarConfig;
+      saveDemoData(data);
+    }
+    return;
+  }
+
+  if (!db) return;
+
+  const teacherRef = doc(db, TEACHERS_COLLECTION, teacherId);
+  await updateDoc(teacherRef, { avatarConfig });
+};
+
+// Get avatar config for a teacher
+export const getTeacherAvatarConfig = async (teacherId) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    return data.teachers?.[teacherId]?.avatarConfig || null;
+  }
+
+  if (!db) return null;
+
+  const teacherRef = doc(db, TEACHERS_COLLECTION, teacherId);
+  const teacherDoc = await getDoc(teacherRef);
+  if (teacherDoc.exists()) {
+    return teacherDoc.data().avatarConfig || null;
+  }
+  return null;
+};
+
+// Get teacher info for a class (name + avatarConfig)
+export const getTeacherInfoForClass = async (classCode) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    const classInfo = data.classes?.[classCode];
+    if (!classInfo?.teacherId) return null;
+    const teacher = data.teachers?.[classInfo.teacherId];
+    if (!teacher) return null;
+    return { name: teacher.name, avatarConfig: teacher.avatarConfig || null };
+  }
+
+  if (!db) return null;
+
+  const classRef = doc(db, CLASSES_COLLECTION, classCode);
+  const classDoc = await getDoc(classRef);
+  if (!classDoc.exists()) return null;
+
+  const teacherId = classDoc.data().teacherId;
+  if (!teacherId) return null;
+
+  const teacherRef = doc(db, TEACHERS_COLLECTION, teacherId);
+  const teacherDoc = await getDoc(teacherRef);
+  if (!teacherDoc.exists()) return null;
+
+  const teacher = teacherDoc.data();
+  return { name: teacher.name, avatarConfig: teacher.avatarConfig || null };
+};
+
+// ============================================
+// TEAM FUNCTIONS
+// ============================================
+
+// Create a team
+export const createTeam = async (classCode, teamData) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    if (!data.teams) data.teams = {};
+    if (!data.teams[classCode]) data.teams[classCode] = {};
+
+    const id = `team_${Date.now()}`;
+    data.teams[classCode][id] = {
+      name: teamData.name,
+      memberIds: teamData.memberIds || [],
+      color: teamData.color || '#00FFFF',
+      createdAt: new Date().toISOString()
+    };
+    saveDemoData(data);
+    notifyDemoSubscribers(`teams:${classCode}`);
+    return { id };
+  }
+
+  if (!db) return null;
+
+  const teamsRef = collection(db, CLASSES_COLLECTION, classCode, 'teams');
+  const docRef = doc(teamsRef);
+  await setDoc(docRef, {
+    name: teamData.name,
+    memberIds: teamData.memberIds || [],
+    color: teamData.color || '#00FFFF',
+    createdAt: serverTimestamp()
+  });
+  return { id: docRef.id };
+};
+
+// Update a team
+export const updateTeam = async (classCode, teamId, updates) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    if (data.teams?.[classCode]?.[teamId]) {
+      data.teams[classCode][teamId] = { ...data.teams[classCode][teamId], ...updates };
+      saveDemoData(data);
+      notifyDemoSubscribers(`teams:${classCode}`);
+    }
+    return;
+  }
+
+  if (!db) return;
+
+  const teamRef = doc(db, CLASSES_COLLECTION, classCode, 'teams', teamId);
+  await updateDoc(teamRef, updates);
+};
+
+// Delete a team
+export const deleteTeam = async (classCode, teamId) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    if (data.teams?.[classCode]?.[teamId]) {
+      delete data.teams[classCode][teamId];
+      saveDemoData(data);
+      notifyDemoSubscribers(`teams:${classCode}`);
+    }
+    return;
+  }
+
+  if (!db) return;
+
+  const teamRef = doc(db, CLASSES_COLLECTION, classCode, 'teams', teamId);
+  await deleteDoc(teamRef);
+};
+
+// Subscribe to teams (real-time)
+export const subscribeToTeams = (classCode, callback) => {
+  if (isDemoMode()) {
+    const key = `teams:${classCode}`;
+    const callbacks = demoSubscriptions.get(key) || [];
+    callbacks.push(callback);
+    demoSubscriptions.set(key, callbacks);
+
+    const data = getDemoData();
+    const teams = Object.entries(data.teams?.[classCode] || {}).map(([id, t]) => ({ id, ...t }));
+    callback(teams);
+
+    return () => {
+      const cbs = demoSubscriptions.get(key) || [];
+      demoSubscriptions.set(key, cbs.filter(cb => cb !== callback));
+    };
+  }
+
+  if (!db) {
+    callback([]);
+    return () => {};
+  }
+
+  const teamsRef = collection(db, CLASSES_COLLECTION, classCode, 'teams');
+  return onSnapshot(teamsRef, (snapshot) => {
+    const teams = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    callback(teams);
+  });
+};
+
+// Get student's team
+export const getStudentTeam = async (classCode, studentId) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    const teams = Object.entries(data.teams?.[classCode] || {});
+    for (const [id, team] of teams) {
+      if (team.memberIds?.includes(studentId)) {
+        return { id, ...team };
+      }
+    }
+    return null;
+  }
+
+  if (!db) return null;
+
+  const teamsRef = collection(db, CLASSES_COLLECTION, classCode, 'teams');
+  const snapshot = await getDocs(teamsRef);
+  for (const d of snapshot.docs) {
+    const team = d.data();
+    if (team.memberIds?.includes(studentId)) {
+      return { id: d.id, ...team };
+    }
+  }
+  return null;
+};
+
+// ============================================
+// TEAM MESSAGING FUNCTIONS
+// ============================================
+
+// Send a team message
+export const sendTeamMessage = async (classCode, messageData) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    if (!data.messages) data.messages = {};
+    if (!data.messages[classCode]) data.messages[classCode] = {};
+
+    const id = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    data.messages[classCode][id] = {
+      teamId: messageData.teamId,
+      senderId: messageData.senderId,
+      senderName: messageData.senderName,
+      text: (messageData.text || '').slice(0, 500),
+      createdAt: new Date().toISOString()
+    };
+    saveDemoData(data);
+    notifyDemoSubscribers(`messages:${classCode}:${messageData.teamId}`);
+    notifyDemoSubscribers(`allMessages:${classCode}`);
+    return { id };
+  }
+
+  if (!db) return null;
+
+  const messagesRef = collection(db, CLASSES_COLLECTION, classCode, 'messages');
+  const docRef = doc(messagesRef);
+  await setDoc(docRef, {
+    teamId: messageData.teamId,
+    senderId: messageData.senderId,
+    senderName: messageData.senderName,
+    text: (messageData.text || '').slice(0, 500),
+    createdAt: serverTimestamp()
+  });
+  return { id: docRef.id };
+};
+
+// Subscribe to team messages (for students)
+export const subscribeToTeamMessages = (classCode, teamId, callback) => {
+  if (isDemoMode()) {
+    const key = `messages:${classCode}:${teamId}`;
+    const wrappedCb = () => {
+      const data = getDemoData();
+      const messages = Object.entries(data.messages?.[classCode] || {})
+        .filter(([_, m]) => m.teamId === teamId)
+        .map(([id, m]) => ({
+          id,
+          ...m,
+          createdAt: m.createdAt ? new Date(m.createdAt) : null
+        }))
+        .sort((a, b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0));
+      callback(messages);
+    };
+
+    const callbacks = demoSubscriptions.get(key) || [];
+    callbacks.push(wrappedCb);
+    demoSubscriptions.set(key, callbacks);
+
+    wrappedCb();
+
+    return () => {
+      const cbs = demoSubscriptions.get(key) || [];
+      demoSubscriptions.set(key, cbs.filter(cb => cb !== wrappedCb));
+    };
+  }
+
+  if (!db) {
+    callback([]);
+    return () => {};
+  }
+
+  const messagesRef = collection(db, CLASSES_COLLECTION, classCode, 'messages');
+  const messagesQuery = query(
+    messagesRef,
+    where('teamId', '==', teamId),
+    orderBy('createdAt', 'asc')
+  );
+
+  return onSnapshot(messagesQuery, (snapshot) => {
+    const messages = snapshot.docs.map(d => ({
+      id: d.id,
+      ...d.data(),
+      createdAt: d.data().createdAt?.toDate?.() || null
+    }));
+    callback(messages);
+  });
+};
+
+// Subscribe to all messages (for teacher)
+export const subscribeToAllMessages = (classCode, callback) => {
+  if (isDemoMode()) {
+    const key = `allMessages:${classCode}`;
+    const wrappedCb = () => {
+      const data = getDemoData();
+      const messages = Object.entries(data.messages?.[classCode] || {})
+        .map(([id, m]) => ({
+          id,
+          ...m,
+          createdAt: m.createdAt ? new Date(m.createdAt) : null
+        }))
+        .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+      callback(messages);
+    };
+
+    const callbacks = demoSubscriptions.get(key) || [];
+    callbacks.push(wrappedCb);
+    demoSubscriptions.set(key, callbacks);
+
+    wrappedCb();
+
+    return () => {
+      const cbs = demoSubscriptions.get(key) || [];
+      demoSubscriptions.set(key, cbs.filter(cb => cb !== wrappedCb));
+    };
+  }
+
+  if (!db) {
+    callback([]);
+    return () => {};
+  }
+
+  const messagesRef = collection(db, CLASSES_COLLECTION, classCode, 'messages');
+  const messagesQuery = query(messagesRef, orderBy('createdAt', 'desc'));
+
+  return onSnapshot(messagesQuery, (snapshot) => {
+    const messages = snapshot.docs.map(d => ({
+      id: d.id,
+      ...d.data(),
+      createdAt: d.data().createdAt?.toDate?.() || null
+    }));
+    callback(messages);
+  });
+};
+
+// Delete a message (teacher moderation)
+export const deleteMessage = async (classCode, messageId) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    if (data.messages?.[classCode]?.[messageId]) {
+      delete data.messages[classCode][messageId];
+      saveDemoData(data);
+      // Notify all possible subscriptions
+      notifyDemoSubscribers(`allMessages:${classCode}`);
+    }
+    return;
+  }
+
+  if (!db) return;
+
+  const messageRef = doc(db, CLASSES_COLLECTION, classCode, 'messages', messageId);
+  await deleteDoc(messageRef);
 };
 
 // ============================================

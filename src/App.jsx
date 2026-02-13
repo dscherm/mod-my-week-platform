@@ -9,10 +9,12 @@ import ChallengeList from './components/ChallengeList';
 import ChallengeDetail from './components/ChallengeDetail';
 import VocabularyPage from './components/VocabularyPage';
 import FlashcardPage from './components/FlashcardPage';
+import RewardShop from './components/RewardShop';
 import NetworkMonitor from './components/NetworkMonitor';
 import InteractiveTools from './components/InteractiveTools';
 import StudentLogin from './components/StudentLogin';
 import TeacherDashboard from './components/TeacherDashboard';
+import ClassSidebar from './components/ClassSidebar';
 import WeekView from './components/arrays-loops/WeekView';
 import ExerciseDetail from './components/arrays-loops/ExerciseDetail';
 import PseudocodeHub from './components/pseudocode/PseudocodeHub';
@@ -33,7 +35,7 @@ import ObjectsImagesExerciseDetail from './components/objects-images/ObjectsImag
 import FunctionsScopeWeekView from './components/functions-scope/FunctionsScopeWeekView';
 import FunctionsScopeExerciseDetail from './components/functions-scope/FunctionsScopeExerciseDetail';
 import VisualizationsPage from './components/VisualizationsPage';
-import { saveStudentProgress, getStudentProgress, subscribeToAssignments, isFirebaseConfigured, saveStudentSubmission } from './services/firebaseService';
+import { saveStudentProgress, getStudentProgress, subscribeToAssignments, isFirebaseConfigured, saveStudentSubmission, seedDefaultShopItems, saveAvatarConfig, getAvatarConfig, getStudentOwnedClothing, getShopItems, subscribeToStudentPoints, subscribeToStudentPurchases } from './services/firebaseService';
 
 function App() {
   // Initialize theme on load
@@ -54,9 +56,12 @@ function App() {
   const [completedScenarios, setCompletedScenarios] = useState([]);
   const [completedExercises, setCompletedExercises] = useState([]);
   const [totalPoints, setTotalPoints] = useState(0);
+  const [spentPoints, setSpentPoints] = useState(0);
 
   // Store unsubscribe function for assignment subscription cleanup
   const assignmentUnsubscribeRef = useRef(null);
+  const pointsUnsubscribeRef = useRef(null);
+  const purchasesUnsubscribeRef = useRef(null);
 
   // Assignments & arrays-loops state
   const [assignments, setAssignments] = useState([]);
@@ -88,6 +93,14 @@ function App() {
 
   // Planning Tools state
   const [completedPlanningTools, setCompletedPlanningTools] = useState([]);
+
+  // Avatar state
+  const [avatarConfig, setAvatarConfig] = useState(null);
+  const [ownedClothing, setOwnedClothing] = useState([]);
+  const [clothingItemsMap, setClothingItemsMap] = useState({});
+
+  // Sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Network Monitor simulation link state
   const [initialScenario, setInitialScenario] = useState(null);
@@ -121,11 +134,19 @@ function App() {
       }
     }
 
-    // Cleanup subscription on unmount
+    // Cleanup subscriptions on unmount
     return () => {
       if (assignmentUnsubscribeRef.current) {
         assignmentUnsubscribeRef.current();
         assignmentUnsubscribeRef.current = null;
+      }
+      if (pointsUnsubscribeRef.current) {
+        pointsUnsubscribeRef.current();
+        pointsUnsubscribeRef.current = null;
+      }
+      if (purchasesUnsubscribeRef.current) {
+        purchasesUnsubscribeRef.current();
+        purchasesUnsubscribeRef.current = null;
       }
     };
   }, []);
@@ -147,6 +168,7 @@ function App() {
           setCompletedPlanningTools(progress.completedPlanningTools || []);
           setExitTicketResponses(progress.exitTicketResponses || {});
           setTotalPoints(progress.totalPoints || 0);
+          setSpentPoints(progress.spentPoints || 0);
         }
 
         // Subscribe to assignments for the user's class
@@ -159,6 +181,12 @@ function App() {
           // Store unsubscribe function for cleanup
           assignmentUnsubscribeRef.current = unsubscribe;
         }
+
+        // Load avatar config and owned clothing
+        loadAvatarData(user);
+
+        // Subscribe to real-time point updates (teacher awards)
+        subscribeToPoints(user);
       } catch (e) {
         console.error('Error loading Firebase progress:', e);
         loadLocalProgress();
@@ -173,6 +201,12 @@ function App() {
         });
         assignmentUnsubscribeRef.current = unsubscribe;
       }
+
+      // Load avatar data in demo mode too
+      loadAvatarData(user);
+
+      // Subscribe to real-time point updates (teacher awards)
+      subscribeToPoints(user);
     }
   };
 
@@ -193,14 +227,76 @@ function App() {
         setCompletedPlanningTools(data.completedPlanningTools || []);
         setExitTicketResponses(data.exitTicketResponses || {});
         setTotalPoints(data.points || 0);
+        setSpentPoints(data.spentPoints || 0);
       } catch (e) {
         console.error('Error loading local progress:', e);
       }
     }
   };
 
+  // Subscribe to real-time point updates from Firebase
+  const subscribeToPoints = (user) => {
+    if (pointsUnsubscribeRef.current) {
+      pointsUnsubscribeRef.current();
+    }
+    const unsub = subscribeToStudentPoints(user.id, ({ totalPoints: pts, spentPoints: sp }) => {
+      setTotalPoints(pts);
+      setSpentPoints(sp);
+    });
+    pointsUnsubscribeRef.current = unsub;
+
+    // Subscribe to purchases — refresh owned clothing when a purchase is approved
+    if (purchasesUnsubscribeRef.current) {
+      purchasesUnsubscribeRef.current();
+    }
+    if (user.classCode) {
+      const unsubPurchases = subscribeToStudentPurchases(user.classCode, user.id, async () => {
+        try {
+          const clothing = await getStudentOwnedClothing(user.classCode, user.id);
+          setOwnedClothing(clothing);
+        } catch (e) {
+          console.error('Error refreshing owned clothing:', e);
+        }
+      });
+      purchasesUnsubscribeRef.current = unsubPurchases;
+    }
+  };
+
+  // Load avatar config and owned clothing
+  const loadAvatarData = async (user) => {
+    try {
+      const config = await getAvatarConfig(user.id);
+      if (config) setAvatarConfig(config);
+
+      if (user.classCode) {
+        const clothing = await getStudentOwnedClothing(user.classCode, user.id);
+        setOwnedClothing(clothing);
+
+        // Build a map of all shop items for rendering
+        const allItems = await getShopItems(user.classCode);
+        const map = {};
+        allItems.forEach(item => { map[item.id] = item; });
+        setClothingItemsMap(map);
+      }
+    } catch (e) {
+      console.error('Error loading avatar data:', e);
+    }
+  };
+
+  // Save avatar config
+  const handleSaveAvatar = async (newConfig) => {
+    setAvatarConfig(newConfig);
+    if (currentUser) {
+      try {
+        await saveAvatarConfig(currentUser.id, newConfig);
+      } catch (e) {
+        console.error('Error saving avatar config:', e);
+      }
+    }
+  };
+
   // Save progress (to Firebase and localStorage)
-  const saveProgress = useCallback(async (challenges, scenarios, exercises, pseudocode, flowcharts, dataApis, objectsImages, functionsScope, planningTools, exitTickets, points) => {
+  const saveProgress = useCallback(async (challenges, scenarios, exercises, pseudocode, flowcharts, dataApis, objectsImages, functionsScope, planningTools, exitTickets, points, spent) => {
     // Always save to localStorage as backup
     localStorage.setItem('cyberrange-progress', JSON.stringify({
       completed: challenges,
@@ -213,7 +309,8 @@ function App() {
       completedFunctionsScopeExercises: functionsScope,
       completedPlanningTools: planningTools,
       exitTicketResponses: exitTickets,
-      points: points
+      points: points,
+      spentPoints: spent
     }));
 
     // Save to Firebase if configured and user is logged in
@@ -230,7 +327,8 @@ function App() {
           completedFunctionsScopeExercises: functionsScope,
           completedPlanningTools: planningTools,
           exitTicketResponses: exitTickets,
-          totalPoints: points
+          totalPoints: points,
+          spentPoints: spent
         });
       } catch (e) {
         console.error('Error saving to Firebase:', e);
@@ -241,9 +339,9 @@ function App() {
   // Save progress when it changes
   useEffect(() => {
     if (currentUser) {
-      saveProgress(completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, completedDataApisExercises, completedObjectsImagesExercises, completedFunctionsScopeExercises, completedPlanningTools, exitTicketResponses, totalPoints);
+      saveProgress(completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, completedDataApisExercises, completedObjectsImagesExercises, completedFunctionsScopeExercises, completedPlanningTools, exitTicketResponses, totalPoints, spentPoints);
     }
-  }, [completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, completedDataApisExercises, completedObjectsImagesExercises, completedFunctionsScopeExercises, completedPlanningTools, exitTicketResponses, totalPoints, currentUser, saveProgress]);
+  }, [completedChallenges, completedScenarios, completedExercises, completedPseudocode, completedFlowcharts, completedDataApisExercises, completedObjectsImagesExercises, completedFunctionsScopeExercises, completedPlanningTools, exitTicketResponses, totalPoints, spentPoints, currentUser, saveProgress]);
 
   // Handle student login
   const handleLogin = (user) => {
@@ -294,10 +392,18 @@ function App() {
 
   // Handle logout
   const handleLogout = () => {
-    // Clean up assignment subscription to prevent stale data
+    // Clean up subscriptions to prevent stale data
     if (assignmentUnsubscribeRef.current) {
       assignmentUnsubscribeRef.current();
       assignmentUnsubscribeRef.current = null;
+    }
+    if (pointsUnsubscribeRef.current) {
+      pointsUnsubscribeRef.current();
+      pointsUnsubscribeRef.current = null;
+    }
+    if (purchasesUnsubscribeRef.current) {
+      purchasesUnsubscribeRef.current();
+      purchasesUnsubscribeRef.current = null;
     }
 
     setCurrentUser(null);
@@ -314,6 +420,7 @@ function App() {
     setExitTicketResponses({});
     setAssignments([]);
     setTotalPoints(0);
+    setSpentPoints(0);
     setCurrentView('dashboard');
     setSelectedWeek(null);
     setSelectedExercise(null);
@@ -382,6 +489,7 @@ function App() {
       setCompletedPlanningTools([]);
       setExitTicketResponses({});
       setTotalPoints(0);
+      setSpentPoints(0);
       localStorage.removeItem('cyberrange-progress');
       setCurrentView('dashboard');
     }
@@ -616,6 +724,7 @@ function App() {
     return (
       <TeacherDashboard
         classCode={teacherClassCode}
+        teacherId={currentTeacher.id}
         onBack={handleBackToClassList}
       />
     );
@@ -675,6 +784,12 @@ function App() {
               Flashcards
             </button>
             <button
+              className={`nav-btn ${currentView === 'shop' ? 'active' : ''}`}
+              onClick={() => setCurrentView('shop')}
+            >
+              Shop
+            </button>
+            <button
               className="nav-btn theme-btn"
               onClick={() => setShowThemeSwitcher(true)}
               title="Change Theme"
@@ -718,6 +833,10 @@ function App() {
             onSelectDataApisWeek={handleSelectDataApisWeek}
             onSelectObjectsImagesWeek={handleSelectObjectsImagesWeek}
             onSelectFunctionsScopeWeek={handleSelectFunctionsScopeWeek}
+            avatarConfig={avatarConfig}
+            onSaveAvatar={handleSaveAvatar}
+            ownedClothing={ownedClothing}
+            clothingItemsMap={clothingItemsMap}
           />
         )}
 
@@ -782,6 +901,15 @@ function App() {
 
         {currentView === 'flashcards' && (
           <FlashcardPage onBack={handleBackToDashboard} />
+        )}
+
+        {currentView === 'shop' && (
+          <RewardShop
+            currentUser={currentUser}
+            totalPoints={totalPoints}
+            spentPoints={spentPoints}
+            onBack={handleBackToDashboard}
+          />
         )}
 
         {currentView === 'tools' && <InteractiveTools />}
@@ -934,6 +1062,18 @@ function App() {
 
       {showThemeSwitcher && (
         <ThemeSwitcher onClose={() => setShowThemeSwitcher(false)} />
+      )}
+
+      {currentUser?.classCode && (
+        <ClassSidebar
+          classCode={currentUser.classCode}
+          isOpen={sidebarOpen}
+          onToggle={() => setSidebarOpen(o => !o)}
+          currentUserId={currentUser.id}
+          currentUserRole="student"
+          currentUser={currentUser}
+          clothingItemsMap={clothingItemsMap}
+        />
       )}
     </div>
   );

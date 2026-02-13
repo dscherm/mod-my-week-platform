@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { challenges } from '../data/challenges';
 import { scenarios } from '../data/networkScenarios';
 import { exercises, getWeekExercises } from '../data/exercises';
@@ -7,6 +8,8 @@ import { flowchartExercises } from '../data/flowcharts';
 import { dataApisExercises, getDataApisWeekExercises } from '../data/data-apis-exercises';
 import { objectsImagesExercises, getObjectsImagesWeekExercises } from '../data/objects-images-exercises';
 import { functionsScopeExercises, getFunctionsScopeWeekExercises } from '../data/functions-scope-exercises';
+import PixelAvatar from './PixelAvatar';
+import AvatarEditor from './AvatarEditor';
 
 const UnifiedDashboard = ({
   studentName,
@@ -26,8 +29,13 @@ const UnifiedDashboard = ({
   onSelectAPCSP,
   onSelectDataApisWeek,
   onSelectObjectsImagesWeek,
-  onSelectFunctionsScopeWeek
+  onSelectFunctionsScopeWeek,
+  avatarConfig,
+  onSaveAvatar,
+  ownedClothing = [],
+  clothingItemsMap = {}
 }) => {
+  const [showAvatarEditor, setShowAvatarEditor] = useState(false);
   // Check if entire modules are assigned
   const hasCyberModule = assignments.some(a => a.type === 'cyber-range');
   const hasProgrammingModule = assignments.some(a => a.type === 'arrays-loops');
@@ -142,9 +150,30 @@ const UnifiedDashboard = ({
   return (
     <div className="unified-dashboard">
       <div className="welcome-section">
-        <h1>Welcome, {studentName}!</h1>
-        <p>Complete your assigned work below. Track your progress across both cybersecurity and programming content.</p>
+        <div className="welcome-avatar-row">
+          <div className="welcome-avatar" onClick={() => setShowAvatarEditor(true)} title="Edit Avatar">
+            <PixelAvatar avatarConfig={avatarConfig} size={80} clothingItems={clothingItemsMap} />
+            <span className="avatar-edit-hint">Edit</span>
+          </div>
+          <div className="welcome-text">
+            <h1>Welcome, {studentName}!</h1>
+            <p>Complete your assigned work below. Track your progress across both cybersecurity and programming content.</p>
+          </div>
+        </div>
       </div>
+
+      {showAvatarEditor && (
+        <AvatarEditor
+          avatarConfig={avatarConfig}
+          onSave={(newConfig) => {
+            onSaveAvatar(newConfig);
+            setShowAvatarEditor(false);
+          }}
+          onClose={() => setShowAvatarEditor(false)}
+          ownedClothing={ownedClothing}
+          clothingItemsMap={clothingItemsMap}
+        />
+      )}
 
       <div className="stats">
         <div className="stat-card">

@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
-import { subscribeToClassProgress, getClassInfo, subscribeToAssignments, subscribeToHelpRequests } from '../services/firebaseService';
+import { subscribeToClassProgress, getClassInfo, subscribeToAssignments, subscribeToHelpRequests, subscribeToPurchases, awardStudentPoints, saveTeacherAvatarConfig, getTeacherAvatarConfig, getShopItems } from '../services/firebaseService';
 import { challenges } from '../data/challenges';
 import { scenarios } from '../data/networkScenarios';
+import defaultClothingItems from '../data/defaultClothingItems';
+import PixelAvatar from './PixelAvatar';
+import AvatarEditor from './AvatarEditor';
 import AssignmentManager from './teacher/AssignmentManager';
 import ActivityManager from './teacher/ActivityManager';
 import ModuleEditor from './teacher/ModuleEditor';
@@ -9,9 +12,13 @@ import SubmissionViewer from './teacher/SubmissionViewer';
 import PlanningToolViewer from './teacher/PlanningToolViewer';
 import HelpRequestViewer from './teacher/HelpRequestViewer';
 import TeamModeViewer from './teacher/TeamModeViewer';
+import ShopManager from './teacher/ShopManager';
+import TeamManager from './teacher/TeamManager';
+import MessageViewer from './teacher/MessageViewer';
+import ClassSidebar from './ClassSidebar';
 import ThemeSwitcher, { useTheme } from './ThemeSwitcher';
 
-const TeacherDashboard = ({ classCode, onBack }) => {
+const TeacherDashboard = ({ classCode, teacherId, onBack }) => {
   useTheme();
 
   const [students, setStudents] = useState([]);
@@ -23,9 +30,75 @@ const TeacherDashboard = ({ classCode, onBack }) => {
   const [activeTab, setActiveTab] = useState('students'); // 'students', 'assignments', 'activities', 'modules'
   const [showThemeSwitcher, setShowThemeSwitcher] = useState(false);
   const [pendingHelpCount, setPendingHelpCount] = useState(0);
+  const [pendingPurchaseCount, setPendingPurchaseCount] = useState(0);
+  const [showGivePoints, setShowGivePoints] = useState(false);
+  const [givePointsAmount, setGivePointsAmount] = useState('');
+  const [givingPoints, setGivingPoints] = useState(false);
+
+  // Teacher avatar state
+  const [teacherAvatarConfig, setTeacherAvatarConfig] = useState(null);
+  const [showAvatarEditor, setShowAvatarEditor] = useState(false);
+
+  // Initialize clothing map immediately with defaults
+  const [teacherClothingMap, setTeacherClothingMap] = useState(() => {
+    const map = {};
+    defaultClothingItems.forEach((item, i) => {
+      map[`teacher_default_${i}`] = item;
+    });
+    return map;
+  });
+
+  // Sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Build "owned clothing" for teacher — all default clothing items for free
+  const teacherOwnedClothing = defaultClothingItems.map((item, i) => ({
+    ...item,
+    id: `teacher_default_${i}`
+  }));
 
   const totalChallenges = Object.values(challenges).flat().length;
   const totalScenarios = scenarios.length;
+
+  // Load teacher avatar config
+  useEffect(() => {
+    if (teacherId) {
+      const loadTeacherAvatar = async () => {
+        try {
+          const config = await getTeacherAvatarConfig(teacherId);
+          if (config) setTeacherAvatarConfig(config);
+        } catch (e) {
+          console.error('Error loading teacher avatar:', e);
+        }
+      };
+      loadTeacherAvatar();
+    }
+
+    // Also load shop items for sidebar avatar rendering (merge with defaults)
+    const loadShopItems = async () => {
+      try {
+        const items = await getShopItems(classCode);
+        if (items.length > 0) {
+          setTeacherClothingMap(prev => {
+            const updated = { ...prev };
+            items.forEach(item => { updated[item.id] = item; });
+            return updated;
+          });
+        }
+      } catch (e) {
+        console.error('Error loading shop items:', e);
+      }
+    };
+    loadShopItems();
+  }, [teacherId, classCode]);
+
+  const handleSaveTeacherAvatar = async (newConfig) => {
+    setTeacherAvatarConfig(newConfig);
+    setShowAvatarEditor(false);
+    if (teacherId) {
+      await saveTeacherAvatarConfig(teacherId, newConfig);
+    }
+  };
 
   useEffect(() => {
     // Load class info
@@ -52,10 +125,17 @@ const TeacherDashboard = ({ classCode, onBack }) => {
       setPendingHelpCount(pending);
     });
 
+    // Subscribe to real-time purchase request updates
+    const unsubscribePurchases = subscribeToPurchases(classCode, (purchases) => {
+      const pending = purchases.filter(p => p.status === 'pending').length;
+      setPendingPurchaseCount(pending);
+    });
+
     return () => {
       unsubscribeStudents();
       unsubscribeAssignments();
       unsubscribeHelp();
+      unsubscribePurchases();
     };
   }, [classCode]);
 
@@ -110,6 +190,21 @@ const TeacherDashboard = ({ classCode, onBack }) => {
       : 0
   };
 
+  const handleGivePoints = async () => {
+    const pts = parseInt(givePointsAmount, 10);
+    if (!pts || !selectedStudent) return;
+    setGivingPoints(true);
+    try {
+      await awardStudentPoints(selectedStudent.id, pts);
+      setGivePointsAmount('');
+      setShowGivePoints(false);
+    } catch (err) {
+      console.error('Error awarding points:', err);
+    } finally {
+      setGivingPoints(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="teacher-dashboard">
@@ -126,7 +221,16 @@ const TeacherDashboard = ({ classCode, onBack }) => {
       <header className="td-header">
         <button className="back-btn" onClick={onBack}>&larr; Exit Dashboard</button>
         <div className="td-title">
-          <h1>{classInfo?.name || 'Class Dashboard'}</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div
+              onClick={() => setShowAvatarEditor(true)}
+              className="td-header-avatar"
+              title="Click to edit your avatar"
+            >
+              <PixelAvatar avatarConfig={teacherAvatarConfig} size={48} clothingItems={teacherClothingMap} />
+            </div>
+            <h1>{classInfo?.name || 'Class Dashboard'}</h1>
+          </div>
           <div className="class-code-badge">
             Class Code: <strong>{classCode}</strong>
           </div>
@@ -209,6 +313,25 @@ const TeacherDashboard = ({ classCode, onBack }) => {
           Help Requests
           {pendingHelpCount > 0 && <span className="help-request-badge">{pendingHelpCount}</span>}
         </button>
+        <button
+          className={`td-tab ${activeTab === 'shop' ? 'active' : ''}`}
+          onClick={() => setActiveTab('shop')}
+        >
+          Shop
+          {pendingPurchaseCount > 0 && <span className="help-request-badge">{pendingPurchaseCount}</span>}
+        </button>
+        <button
+          className={`td-tab ${activeTab === 'teams' ? 'active' : ''}`}
+          onClick={() => setActiveTab('teams')}
+        >
+          Teams
+        </button>
+        <button
+          className={`td-tab ${activeTab === 'messages' ? 'active' : ''}`}
+          onClick={() => setActiveTab('messages')}
+        >
+          Messages
+        </button>
       </div>
 
       {activeTab === 'submissions' && (
@@ -252,6 +375,18 @@ const TeacherDashboard = ({ classCode, onBack }) => {
         <HelpRequestViewer
           classCode={classCode}
         />
+      )}
+
+      {activeTab === 'shop' && (
+        <ShopManager classCode={classCode} />
+      )}
+
+      {activeTab === 'teams' && (
+        <TeamManager classCode={classCode} students={students} />
+      )}
+
+      {activeTab === 'messages' && (
+        <MessageViewer classCode={classCode} />
       )}
 
       {activeTab === 'students' && (
@@ -342,6 +477,38 @@ const TeacherDashboard = ({ classCode, onBack }) => {
                     <span className="detail-stat-label">Total Points</span>
                   </div>
                 </div>
+                {!showGivePoints ? (
+                  <button
+                    className="give-points-btn"
+                    onClick={() => setShowGivePoints(true)}
+                  >
+                    + Give Points
+                  </button>
+                ) : (
+                  <div className="give-points-form">
+                    <input
+                      type="number"
+                      value={givePointsAmount}
+                      onChange={e => setGivePointsAmount(e.target.value)}
+                      placeholder="Points"
+                      min="1"
+                      autoFocus
+                    />
+                    <button
+                      className="give-points-submit"
+                      onClick={handleGivePoints}
+                      disabled={givingPoints || !givePointsAmount || parseInt(givePointsAmount, 10) <= 0}
+                    >
+                      {givingPoints ? '...' : 'Award'}
+                    </button>
+                    <button
+                      className="give-points-cancel"
+                      onClick={() => { setShowGivePoints(false); setGivePointsAmount(''); }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="detail-section">
@@ -409,6 +576,28 @@ const TeacherDashboard = ({ classCode, onBack }) => {
       {showThemeSwitcher && (
         <ThemeSwitcher onClose={() => setShowThemeSwitcher(false)} />
       )}
+
+      {showAvatarEditor && (
+        <AvatarEditor
+          avatarConfig={teacherAvatarConfig}
+          onSave={handleSaveTeacherAvatar}
+          onClose={() => setShowAvatarEditor(false)}
+          ownedClothing={teacherOwnedClothing}
+          clothingItemsMap={teacherClothingMap}
+        />
+      )}
+
+      <ClassSidebar
+        classCode={classCode}
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(o => !o)}
+        currentUserRole="teacher"
+        clothingItemsMap={teacherClothingMap}
+        onSelectStudent={(student) => {
+          setSelectedStudent(student);
+          setActiveTab('students');
+        }}
+      />
     </div>
   );
 };

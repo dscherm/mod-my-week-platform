@@ -67,7 +67,7 @@ const ScenarioSelector = ({ scenarios, completedScenarios, onSelectScenario }) =
                 </div>
                 <div className="meta-item">
                   <span className="meta-icon">⏱</span>
-                  <span>{scenario.duration}s</span>
+                  <span>{scenario.noTimer ? 'No Timer' : `${scenario.duration}s`}</span>
                 </div>
               </div>
 

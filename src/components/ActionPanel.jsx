@@ -83,25 +83,27 @@ const ActionPanel = ({
         </div>
       </div>
 
-      <div className="action-section hints-section">
-        <button
-          className="hints-toggle"
-          onClick={() => setShowHints(!showHints)}
-        >
-          {showHints ? 'Hide Hints' : 'Show Hints'} 💡
-        </button>
+      {hints && hints.length > 0 && (
+        <div className="action-section hints-section">
+          <button
+            className="hints-toggle"
+            onClick={() => setShowHints(!showHints)}
+          >
+            {showHints ? 'Hide Hints' : 'Show Hints'} 💡
+          </button>
 
-        {showHints && hints && hints.length > 0 && (
-          <div className="hints-list">
-            {hints.map((hint, index) => (
-              <div key={index} className="hint-item">
-                <span className="hint-number">{index + 1}</span>
-                <span className="hint-text">{hint}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+          {showHints && (
+            <div className="hints-list">
+              {hints.map((hint, index) => (
+                <div key={index} className="hint-item">
+                  <span className="hint-number">{index + 1}</span>
+                  <span className="hint-text">{hint}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
