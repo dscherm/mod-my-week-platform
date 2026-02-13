@@ -12669,11 +12669,21 @@ a:hover {
    V2.0 RESPONSIVE STYLES
    ============================================ */
 
-/* Tabs: scrollable on narrow screens (now 11 tabs) */
+/* --- Tabs: scrollable with fade hints (11 tabs) --- */
 .td-tabs {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+  position: relative;
+}
+
+.td-tab {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: clamp(0.7rem, 1.5vw, 0.95rem);
+  padding: clamp(0.4rem, 1vw, 0.75rem) clamp(0.6rem, 1.5vw, 1.5rem);
 }
 
 .td-tabs::-webkit-scrollbar {
@@ -12683,6 +12693,41 @@ a:hover {
 .td-tabs::-webkit-scrollbar-thumb {
   background: rgba(0, 255, 255, 0.3);
   border-radius: 2px;
+}
+
+/* --- Teacher header: flexible layout --- */
+.td-header {
+  flex-wrap: wrap;
+  gap: clamp(0.5rem, 1vw, 1rem);
+  padding: clamp(0.75rem, 2vw, 1.5rem) clamp(1rem, 2vw, 2rem);
+}
+
+.td-title h1 {
+  font-size: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+/* --- Stats grid: fluid columns --- */
+.td-stats {
+  grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr));
+  padding: clamp(0.5rem, 1.5vw, 1rem) clamp(1rem, 2vw, 2rem);
+}
+
+.td-stat-value {
+  font-size: clamp(1.2rem, 4vw, 2.5rem);
+}
+
+.td-stat-label {
+  font-size: clamp(0.65rem, 1.5vw, 0.85rem);
+}
+
+/* --- Teacher dashboard content: fluid grid --- */
+.td-content {
+  padding: 0 clamp(0.75rem, 2vw, 2rem) clamp(0.75rem, 2vw, 2rem);
+}
+
+/* --- Module grids: dynamic minmax --- */
+.am-modules {
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
 }
 
 /* --- Sidebar responsive --- */
@@ -12849,7 +12894,52 @@ a:hover {
   }
 }
 
-/* --- General: ensure no horizontal overflow on small screens --- */
+/* --- General: dynamic scaling for all screen sizes --- */
+
+@media (max-width: 900px) {
+  .td-content {
+    grid-template-columns: 1fr;
+  }
+
+  .student-detail-panel {
+    order: -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .td-tabs {
+    padding: 0.5rem clamp(0.5rem, 2vw, 1rem);
+    gap: 0.25rem;
+  }
+
+  .header-content {
+    padding: 0;
+  }
+
+  .nav {
+    gap: 0.4rem;
+  }
+
+  .nav-btn {
+    padding: 0.4rem 0.6rem;
+    font-size: clamp(0.65rem, 1.5vw, 0.8rem);
+  }
+
+  .student-card {
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .student-progress {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .student-rank {
+    font-size: 0.85rem;
+    min-width: 28px;
+  }
+}
 
 @media (max-width: 480px) {
   .teacher-dashboard {
@@ -12866,19 +12956,25 @@ a:hover {
     padding: 0.75rem;
   }
 
-  .td-stat-value {
-    font-size: 1.2rem;
-  }
-
-  .td-stat-label {
-    font-size: 0.7rem;
-  }
-
-  .student-card {
+  .td-header {
     padding: 0.75rem;
   }
 
-  .student-progress {
+  .class-code-badge {
+    font-size: 0.75rem;
+  }
+
+  .td-controls {
+    flex-direction: column;
     gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .sort-controls {
+    width: 100%;
+  }
+
+  .sort-controls select {
+    flex: 1;
   }
 }
