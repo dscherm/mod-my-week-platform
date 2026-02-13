@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { subscribeToClassProgress, getClassInfo, subscribeToAssignments, subscribeToHelpRequests, subscribeToPurchases, awardStudentPoints, saveTeacherAvatarConfig, getTeacherAvatarConfig, getShopItems } from '../services/firebaseService';
+import { subscribeToClassProgress, getClassInfo, subscribeToAssignments, subscribeToHelpRequests, subscribeToPurchases, awardStudentPoints, saveTeacherAvatarConfig, getTeacherAvatarConfig, getShopItems, deleteStudent } from '../services/firebaseService';
 import { challenges } from '../data/challenges';
 import { scenarios } from '../data/networkScenarios';
 import defaultClothingItems from '../data/defaultClothingItems';
@@ -202,6 +202,18 @@ const TeacherDashboard = ({ classCode, teacherId, onBack }) => {
       console.error('Error awarding points:', err);
     } finally {
       setGivingPoints(false);
+    }
+  };
+
+  const handleDeleteStudent = async (student) => {
+    if (!window.confirm(`Remove "${student.name}" from this class? This will delete all their progress and cannot be undone.`)) return;
+    try {
+      await deleteStudent(student.id);
+      if (selectedStudent?.id === student.id) {
+        setSelectedStudent(null);
+      }
+    } catch (err) {
+      console.error('Error deleting student:', err);
     }
   };
 
@@ -509,6 +521,12 @@ const TeacherDashboard = ({ classCode, teacherId, onBack }) => {
                     </button>
                   </div>
                 )}
+                <button
+                  className="delete-student-btn"
+                  onClick={() => handleDeleteStudent(selectedStudent)}
+                >
+                  Remove Student
+                </button>
               </div>
 
               <div className="detail-section">

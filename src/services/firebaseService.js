@@ -1816,6 +1816,30 @@ export const getStudentOwnedClothing = async (classCode, studentId) => {
 };
 
 // ============================================
+// DELETE STUDENT FUNCTION
+// ============================================
+
+// Delete a student from a class (teacher action)
+export const deleteStudent = async (studentId) => {
+  if (isDemoMode()) {
+    const data = getDemoData();
+    const student = data.students[studentId];
+    if (student) {
+      const classCode = student.classCode;
+      delete data.students[studentId];
+      saveDemoData(data);
+      notifyDemoSubscribers(`class:${classCode}`);
+    }
+    return;
+  }
+
+  if (!db) return;
+
+  const studentRef = doc(db, STUDENTS_COLLECTION, studentId);
+  await deleteDoc(studentRef);
+};
+
+// ============================================
 // TEACHER AVATAR FUNCTIONS
 // ============================================
 

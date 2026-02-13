@@ -8,7 +8,6 @@ const TeamManager = ({ classCode, students }) => {
   const [newTeamName, setNewTeamName] = useState('');
   const [newTeamColor, setNewTeamColor] = useState(TEAM_COLORS[0]);
   const [selectedMembers, setSelectedMembers] = useState([]);
-  const [editingTeam, setEditingTeam] = useState(null);
   const [autoTeamCount, setAutoTeamCount] = useState(2);
 
   useEffect(() => {
@@ -17,11 +16,15 @@ const TeamManager = ({ classCode, students }) => {
     return () => unsub();
   }, [classCode]);
 
-  // Students already in a team
-  const assignedStudentIds = new Set();
-  teams.forEach(t => t.memberIds?.forEach(id => assignedStudentIds.add(id)));
+  // Build a map: studentId -> team
+  const studentTeamMap = {};
+  teams.forEach(t => {
+    t.memberIds?.forEach(id => {
+      studentTeamMap[id] = t;
+    });
+  });
 
-  const unassignedStudents = students.filter(s => !assignedStudentIds.has(s.id));
+  const unassignedStudents = students.filter(s => !studentTeamMap[s.id]);
 
   const toggleMember = (studentId) => {
     setSelectedMembers(prev =>
@@ -84,6 +87,32 @@ const TeamManager = ({ classCode, students }) => {
     <div className="team-manager">
       <h2>Team Manager</h2>
 
+      {/* Full class roster with team assignments */}
+      <div className="team-roster">
+        <h3>All Students ({students.length})</h3>
+        {students.length === 0 ? (
+          <p className="team-empty">No students in this class yet.</p>
+        ) : (
+          <div className="team-roster-list">
+            {students.map(student => {
+              const team = studentTeamMap[student.id];
+              return (
+                <div key={student.id} className="team-roster-row">
+                  <span className="team-roster-name">{student.name}</span>
+                  {team ? (
+                    <span className="team-roster-badge" style={{ borderColor: team.color, color: team.color }}>
+                      {team.name}
+                    </span>
+                  ) : (
+                    <span className="team-roster-badge unassigned">Unassigned</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* Create Team Form */}
       <div className="team-create-form">
         <h3>Create New Team</h3>
@@ -108,7 +137,7 @@ const TeamManager = ({ classCode, students }) => {
         </div>
 
         <div className="team-member-select">
-          <label>Select members:</label>
+          <label>Select members ({unassignedStudents.length} unassigned):</label>
           <div className="team-member-checkboxes">
             {unassignedStudents.map(student => (
               <label key={student.id} className="team-member-checkbox">
@@ -120,7 +149,7 @@ const TeamManager = ({ classCode, students }) => {
                 {student.name}
               </label>
             ))}
-            {unassignedStudents.length === 0 && (
+            {unassignedStudents.length === 0 && students.length > 0 && (
               <span className="team-no-unassigned">All students are assigned to teams</span>
             )}
           </div>
@@ -136,7 +165,7 @@ const TeamManager = ({ classCode, students }) => {
       </div>
 
       {/* Auto-Assign */}
-      {unassignedStudents.length > 0 && (
+      {unassignedStudents.length >= 2 && (
         <div className="team-auto-assign">
           <h3>Auto-Assign Unassigned Students</h3>
           <div className="team-form-row">
@@ -163,7 +192,9 @@ const TeamManager = ({ classCode, students }) => {
         {teams.map(team => (
           <div key={team.id} className="team-card" style={{ borderColor: team.color }}>
             <div className="team-card-header">
-              <span className="team-card-name" style={{ color: team.color }}>{team.name}</span>
+              <span className="team-card-name" style={{ color: team.color }}>
+                {team.name} ({team.memberIds?.length || 0})
+              </span>
               <div className="team-card-actions">
                 <button
                   className="team-delete-btn"
@@ -213,18 +244,6 @@ const TeamManager = ({ classCode, students }) => {
           </div>
         ))}
       </div>
-
-      {/* Unassigned Students */}
-      {unassignedStudents.length > 0 && (
-        <div className="team-unassigned">
-          <h3>Unassigned Students ({unassignedStudents.length})</h3>
-          <div className="team-unassigned-list">
-            {unassignedStudents.map(s => (
-              <span key={s.id} className="team-unassigned-chip">{s.name}</span>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
