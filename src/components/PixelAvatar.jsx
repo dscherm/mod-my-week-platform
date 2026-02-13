@@ -287,6 +287,97 @@ function drawHairAfro(ctx, color) {
   block(ctx, 23, 16, 2, 1, color);
 }
 
+function drawHairTwists(ctx, color) {
+  const dark = darken(color, 25);
+  const light = lighten(color, 15);
+  // Top base
+  block(ctx, 9, 2, 14, 2, color);
+  block(ctx, 8, 3, 16, 2, color);
+  // Individual twists standing up and falling
+  // Left twists
+  for (let y = 5; y <= 20; y++) {
+    const twist = y % 2 === 0;
+    px(ctx, 7, y, 2, 1, twist ? color : dark);
+    px(ctx, 10, y, 1, 1, twist ? dark : color);
+  }
+  // Right twists
+  for (let y = 5; y <= 20; y++) {
+    const twist = y % 2 === 0;
+    px(ctx, 23, y, 2, 1, twist ? color : dark);
+    px(ctx, 21, y, 1, 1, twist ? dark : color);
+  }
+  // Center top twists (shorter, standing up)
+  for (let y = 1; y <= 4; y++) {
+    px(ctx, 12, y, 1, 1, y % 2 === 0 ? dark : color);
+    px(ctx, 14, y, 1, 1, y % 2 === 0 ? color : dark);
+    px(ctx, 16, y, 1, 1, y % 2 === 0 ? dark : color);
+    px(ctx, 18, y, 1, 1, y % 2 === 0 ? color : dark);
+    px(ctx, 20, y, 1, 1, y % 2 === 0 ? dark : color);
+  }
+  // Twist tips
+  px(ctx, 7, 20, 2, 1, light);
+  px(ctx, 23, 20, 2, 1, light);
+  block(ctx, 10, 4, 12, 2, dark);
+}
+
+function drawHairLocs(ctx, color) {
+  const dark = darken(color, 20);
+  const light = lighten(color, 10);
+  // Top crown
+  block(ctx, 9, 2, 14, 2, color);
+  block(ctx, 8, 3, 16, 2, color);
+  block(ctx, 10, 4, 12, 1, dark);
+  // Locs falling down — thick rope-like strands
+  // Left locs
+  for (let y = 5; y <= 26; y++) {
+    const seg = Math.floor(y / 3) % 2 === 0;
+    px(ctx, 6, y, 3, 1, seg ? color : dark);
+  }
+  // Center-left locs
+  for (let y = 5; y <= 24; y++) {
+    const seg = Math.floor(y / 3) % 2 === 0;
+    px(ctx, 9, y, 2, 1, seg ? dark : color);
+  }
+  // Center-right locs
+  for (let y = 5; y <= 24; y++) {
+    const seg = Math.floor(y / 3) % 2 === 0;
+    px(ctx, 21, y, 2, 1, seg ? color : dark);
+  }
+  // Right locs
+  for (let y = 5; y <= 26; y++) {
+    const seg = Math.floor(y / 3) % 2 === 0;
+    px(ctx, 23, y, 3, 1, seg ? dark : color);
+  }
+  // Loc tips tapered
+  px(ctx, 7, 26, 1, 1, dark);
+  px(ctx, 24, 26, 1, 1, dark);
+  px(ctx, 9, 24, 1, 1, dark);
+  px(ctx, 22, 24, 1, 1, dark);
+  // Highlights on crown
+  px(ctx, 11, 2, 2, 1, light);
+  px(ctx, 17, 2, 2, 1, light);
+}
+
+function drawHairFlattop(ctx, color) {
+  const dark = darken(color, 20);
+  const light = lighten(color, 20);
+  // Flat top — perfectly level top edge, tall sides
+  // Flat top surface
+  block(ctx, 8, 0, 16, 1, color);
+  block(ctx, 7, 1, 18, 1, light);
+  block(ctx, 7, 2, 18, 3, color);
+  // Sides — tall and squared off
+  block(ctx, 7, 5, 3, 4, color);
+  block(ctx, 22, 5, 3, 4, color);
+  // Interior shading
+  block(ctx, 10, 3, 12, 2, dark);
+  // Fade on lower sides
+  px(ctx, 8, 8, 2, 1, darken(color, 35));
+  px(ctx, 22, 8, 2, 1, darken(color, 35));
+  // Top edge highlight for the flat cut
+  block(ctx, 9, 0, 14, 1, light);
+}
+
 const HAIR_DRAWERS = {
   short: drawHairShort,
   long: drawHairLong,
@@ -301,6 +392,9 @@ const HAIR_DRAWERS = {
   fauxhawk: drawHairFauxhawk,
   braids: drawHairBraids,
   afro: drawHairAfro,
+  twists: drawHairTwists,
+  locs: drawHairLocs,
+  flattop: drawHairFlattop,
 };
 
 // ==============================

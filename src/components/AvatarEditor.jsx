@@ -32,6 +32,9 @@ const HAIR_STYLE_OPTIONS = [
   { id: 'fauxhawk', label: 'Faux Hawk' },
   { id: 'braids', label: 'Braids' },
   { id: 'afro', label: 'Afro' },
+  { id: 'twists', label: 'Twists' },
+  { id: 'locs', label: 'Locs' },
+  { id: 'flattop', label: 'Flat Top' },
 ];
 
 const SLOT_LABELS = {
