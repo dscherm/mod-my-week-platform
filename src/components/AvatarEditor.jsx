@@ -31,6 +31,7 @@ const HAIR_STYLE_OPTIONS = [
   { id: 'cyberdreads', label: 'Cyber Dreads' },
   { id: 'fauxhawk', label: 'Faux Hawk' },
   { id: 'braids', label: 'Braids' },
+  { id: 'afro', label: 'Afro' },
 ];
 
 const SLOT_LABELS = {

@@ -256,6 +256,37 @@ function drawHairBraids(ctx, color) {
   block(ctx, 10, 4, 12, 2, dark);
 }
 
+function drawHairAfro(ctx, color) {
+  const dark = darken(color, 15);
+  const light = lighten(color, 15);
+  // Big rounded afro shape — extends well beyond the head (x:10-21, y:4-17)
+  // Top dome
+  block(ctx, 11, 0, 10, 1, color);
+  block(ctx, 9, 1, 14, 1, color);
+  block(ctx, 7, 2, 18, 2, color);
+  block(ctx, 6, 4, 20, 2, color);
+  block(ctx, 5, 6, 22, 2, color);
+  // Sides flanking the head
+  block(ctx, 5, 8, 4, 7, color);   // left side
+  block(ctx, 23, 8, 4, 7, color);  // right side
+  // Top of head fill
+  block(ctx, 9, 4, 14, 4, dark);
+  // Texture / volume highlights
+  px(ctx, 8, 3, 2, 1, light);
+  px(ctx, 22, 3, 2, 1, light);
+  px(ctx, 6, 7, 2, 1, light);
+  px(ctx, 24, 7, 2, 1, light);
+  px(ctx, 6, 11, 1, 2, light);
+  px(ctx, 26, 11, 1, 2, light);
+  px(ctx, 12, 1, 3, 1, light);
+  px(ctx, 18, 1, 2, 1, light);
+  // Bottom rounded edge
+  block(ctx, 6, 15, 3, 1, color);
+  block(ctx, 23, 15, 3, 1, color);
+  block(ctx, 7, 16, 2, 1, color);
+  block(ctx, 23, 16, 2, 1, color);
+}
+
 const HAIR_DRAWERS = {
   short: drawHairShort,
   long: drawHairLong,
@@ -269,6 +300,7 @@ const HAIR_DRAWERS = {
   cyberdreads: drawHairCyberdreads,
   fauxhawk: drawHairFauxhawk,
   braids: drawHairBraids,
+  afro: drawHairAfro,
 };
 
 // ==============================
